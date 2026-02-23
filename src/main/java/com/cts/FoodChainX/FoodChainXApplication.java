@@ -8,6 +8,7 @@ public class FoodChainXApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(FoodChainXApplication.class, args);
+		System.out.println("FoodChainX Application Started Successfully!");
 	}
 
 }
