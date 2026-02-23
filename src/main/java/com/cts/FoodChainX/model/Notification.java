@@ -9,10 +9,10 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "notification")
-@Data               // Generates Getters, Setters, toString, equals, and hashCode
-@NoArgsConstructor  // Generates a no-args constructor required by JPA
-@AllArgsConstructor // Generates a constructor with all fields
-@Builder            // Allows you to create objects easily: Notification.builder().message("...").build()
+@Data               
+@NoArgsConstructor  
+@AllArgsConstructor 
+@Builder            
 public class Notification {
 
     @Id
