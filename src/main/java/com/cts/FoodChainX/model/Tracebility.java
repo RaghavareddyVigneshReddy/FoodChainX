@@ -1,5 +1,0 @@
-package com.cts.FoodChainX.model;
-
-public class Tracebility {
-    
-}
