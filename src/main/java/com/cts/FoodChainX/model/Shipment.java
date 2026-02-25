@@ -12,22 +12,24 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Shipment{
+public class Shipment {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     @Column(name="ShipmentID")
     private Integer shipmentID;
-    @ManyToOne
-    @JoinColumn(name="BatchID",nullable=false)
-    private Integer batch;
-    @ManyToOne
-    @JoinColumn(name="DistributorID",nullable=false)
-    private Integer distributor;
-    @Column(name="Departuredate",nullable=false)
+
+    @Column(name="BatchID", nullable=false)
+    private Integer batch; // REMOVED @ManyToOne
+
+    @Column(name="DistributorID", nullable=false)
+    private Integer distributor; // REMOVED @ManyToOne
+
+    @Column(name="Departuredate", nullable=false)
     private LocalDate departureDate;
+
     @Column(name="ArrivalDate")
     private LocalDate arrivalDate;
-    @Column(name="Status",length=50)
+
+    @Column(name="Status", length=50)
     private String status;
-  
 }
