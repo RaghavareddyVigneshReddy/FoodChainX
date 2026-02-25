@@ -6,3 +6,5 @@ import com.cts.FoodChainX.model.TraceRecord;
 public interface TraceRecordRepository extends JpaRepository<TraceRecord, Integer> {
     
 }
+
+
