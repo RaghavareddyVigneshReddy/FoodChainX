@@ -1,29 +1,29 @@
 package com.cts.FoodChainX.model;
+import java.time.LocalDate;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
-
-@Entity
-@Table(name = "QUALITY_CHECK")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Entity
+@Table(name = "QUALITY_CHECK")
 public class QualityLogging {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "QualityID")
     private Integer qualityId;
 
-    // Foreign keys as scalars (no cardinality mapping)
-    @Column(name = "BatchID")
+    // Keeping FK as scalar (no relation mapping)
+    @Column(name = "BatchID", nullable = false)
     private Integer batchId;
 
-    @Column(name = "InspectorID")
+    // Keeping FK as scalar (no relation mapping)
+    @Column(name = "InspectorID", nullable = false)
     private Integer inspectorId;
 
-    @Column(name = "Date")
+    @Column(name = "Date", nullable = false)
     private LocalDate date;
 
     @Lob
