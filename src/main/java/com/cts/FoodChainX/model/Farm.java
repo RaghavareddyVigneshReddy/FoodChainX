@@ -1,4 +1,12 @@
 package com.cts.FoodChainX.model;
+<<<<<<< HEAD
+=======
+
+
+import jakarta.persistence.*;
+import lombok.*;
+
+>>>>>>> 2d93daa2c6f88d0e2ebd9c037ab4656403ee15ac
 import jakarta.persistence.*;
 import lombok.*;
 @Entity
