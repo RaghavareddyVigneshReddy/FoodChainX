@@ -1,6 +1,8 @@
 package com.cts.FoodChainX.model;
+
 import jakarta.persistence.*;
 import lombok.*;
+
 @Entity
 @Table(name = "FARM")
 @Data

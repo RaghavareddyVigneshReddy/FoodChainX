@@ -16,6 +16,17 @@ public class Shipment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ShipmentID")
     private Integer shipmentID;
+    
+    @JoinColumn(name="BatchID",nullable=false)
+    private Integer batch;
+    @ManyToOne
+    @JoinColumn(name="DistributorID",nullable=false)
+    private Integer distributor;
+    @Column(name="Departuredate",nullable=false)
+    private LocalDate departureDate;
+    @Column(name="ArrivalDate")
+    private LocalDate arrivalDate;
+    @Column(name="Status",length=50)
 
     @Column(name = "BatchID")
     private Integer batchID;
