@@ -1,9 +1,4 @@
 package com.cts.FoodChainX.model;
-
-
-import jakarta.persistence.*;
-import lombok.*;
-
 import jakarta.persistence.*;
 import lombok.*;
 @Entity
