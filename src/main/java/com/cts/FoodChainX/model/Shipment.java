@@ -3,8 +3,10 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import java.time.LocalDate;
+import lombok.Builder;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 @Entity
 @Table(name="SHIPMENT")
 @Data
@@ -16,11 +18,19 @@ public class Shipment{
     @Column(name="ShipmentID")
     private Integer shipmentID;
     @ManyToOne
+
+    @JoinColumn(name="BatchID",nullable="false")
+    private ProductionBatch batch;
+    @ManyToOne
+    @JoinColumn(name="DistributorID",nullable=false)
+    private user distributor;
+
     @JoinColumn(name="BatchID",nullable=false)
     private Integer batch;
     @ManyToOne
     @JoinColumn(name="DistributorID",nullable=false)
     private Integer distributor;
+
     @Column(name="Departuredate",nullable=false)
     private LocalDate departureDate;
     @Column(name="ArrivalDate")
