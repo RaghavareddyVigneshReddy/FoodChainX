@@ -1,45 +1,46 @@
 package com.cts.FoodChainX.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "SHIPMENT")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Shipment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ShipmentID")
-    private Integer shipmentID;
-    
-    @JoinColumn(name="BatchID",nullable=false)
-    private Integer batch;
-    @ManyToOne
-    @JoinColumn(name="DistributorID",nullable=false)
-    private Integer distributor;
-    @Column(name="Departuredate",nullable=false)
-    private LocalDate departureDate;
-    @Column(name="ArrivalDate")
-    private LocalDate arrivalDate;
-    @Column(name="Status",length=50)
+    private int shipmentId;
 
-    @Column(name = "BatchID")
-    private Integer batchID;
+    @Column(name = "BatchID", nullable = false)
+    private int batchId;
 
-    @Column(name = "DistributorID")
-    private Integer distributorID;
+    @Column(name = "DistributorID", nullable = false)
+    private int distributorId;
 
     @Column(name = "DepartureDate")
-    private java.sql.Date departureDate;
+    private LocalDate departureDate;
 
     @Column(name = "ArrivalDate")
-    private java.sql.Date arrivalDate;
+    private LocalDate arrivalDate;
 
-    @Column(name = "Status", length = 50)
+    @Column(name = "Status")
     private String status;
+
+    @PrePersist
+    protected void onCreate() {
+        // Default status if not provided
+        if (this.status == null || this.status.isBlank()) {
+            this.status = "PENDING";
+        }
+    }
 }

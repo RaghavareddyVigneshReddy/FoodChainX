@@ -2,7 +2,7 @@ package com.cts.FoodChainX.model;
 import java.time.LocalDate;
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDate;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
