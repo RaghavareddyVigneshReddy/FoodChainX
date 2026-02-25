@@ -1,37 +1,28 @@
 package com.cts.FoodChainX.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.time.LocalDate;
+import lombok.*;
+import java.time.LocalDateTime;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
-@Table(name = "AUDIT")
+@Table(name = "AUDIT") // Keeping it aligned with your SQL schema name
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Audit {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "AuditID")
-    private Integer auditID;
+    private Integer auditId;
 
-    // Later can be mapped to a Regulator entity
-    @Column(name = "RegulatorID", nullable = false)
-    private Integer regulatorID;
+    @Column(name = "UserID")
+    private Integer userId;
 
-    @Column(name = "Scope", length = 255, nullable = false)
-    private String scope;
+    private String action;
+    private String resource;
 
-    @Column(name = "Findings", columnDefinition = "TEXT")
-    private String findings;
-
-    @Column(name = "Date", nullable = false)
-    private LocalDate date;
-
-    @Column(name = "Status", length = 50, nullable = false)
-    private String status;
+    @CreationTimestamp
+    private LocalDateTime timestamp;
 }
