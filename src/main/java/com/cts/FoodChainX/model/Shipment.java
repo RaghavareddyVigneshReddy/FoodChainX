@@ -1,4 +1,5 @@
 package com.cts.FoodChainX.model;
+
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -6,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 
 import java.time.LocalDate;
+
 import java.time.LocalDateTime;
 @Entity
 @Table(name="SHIPMENT")
@@ -18,6 +20,12 @@ public class Shipment{
     @Column(name="ShipmentID")
     private Integer shipmentID;
     @ManyToOne
+
+    @JoinColumn(name="BatchID",nullable="false")
+    private ProductionBatch batch;
+    @ManyToOne
+    @JoinColumn(name="DistributorID",nullable=false)
+    private user distributor;
     @JoinColumn(name="BatchID",nullable=false)
     private Integer batch;
     @ManyToOne
