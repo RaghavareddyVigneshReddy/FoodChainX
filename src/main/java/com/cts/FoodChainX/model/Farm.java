@@ -1,9 +1,11 @@
 package com.cts.FoodChainX.model;
-package com.example.agri.domain;
+
 
 import jakarta.persistence.*;
 import lombok.*;
 
+import jakarta.persistence.*;
+import lombok.*;
 @Entity
 @Table(name = "FARM")
 @Data
