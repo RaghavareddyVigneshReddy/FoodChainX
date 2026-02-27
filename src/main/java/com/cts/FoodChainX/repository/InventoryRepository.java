@@ -10,9 +10,9 @@ import java.util.List;
 @Repository
 public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
 
-    List<Inventory> findByRetailerID(Integer retailerID);
+    List<Inventory> findByRetailerId(Integer retailerId);
 
-    List<Inventory> findByBatchID(Integer batchID);
+    List<Inventory> findByBatchId(Integer batchId);
 
     List<Inventory> findByStatus(String status);
 }
