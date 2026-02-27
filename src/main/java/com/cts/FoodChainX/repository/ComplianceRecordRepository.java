@@ -10,7 +10,7 @@ import java.util.List;
 @Repository
 public interface ComplianceRecordRepository extends JpaRepository<ComplianceRecord, Integer> {
 
-    List<ComplianceRecord> findByEntityID(Integer entityID);
+    List<ComplianceRecord> findByEntityId(Integer entityId);
 
     List<ComplianceRecord> findByType(String type);
 
