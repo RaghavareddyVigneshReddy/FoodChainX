@@ -12,7 +12,7 @@ import java.time.LocalDate;
 public class ProductionBatch {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ProductionID") // If your PK is named differently, update here
+    @Column(name = "BatchID") // If your PK is named differently, update here
     private Integer productionId;
 
     // FK kept as scalar (no @ManyToOne)

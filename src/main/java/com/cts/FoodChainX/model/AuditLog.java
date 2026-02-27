@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
-@Table(name = "AUDIT") // Keeping it aligned with your SQL schema name
+@Table(name = "AUDITLOG") // Keeping it aligned with your SQL schema name
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
