@@ -21,22 +21,22 @@ public class TraceRecord {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "TraceID")
-    private Integer traceID;
+    private Integer traceId;
 
     @Column(name = "BatchID", nullable = false)
-    private Integer batchID; // FK to BATCH
+    private Integer batchId; // FK to BATCH
 
     @Column(name = "FarmID", nullable = false)
-    private Integer farmID; // FK to FARM
+    private Integer farmId; // FK to FARM
 
     @Column(name = "DistributorID", nullable = false)
-    private Integer distributorID; // FK to DISTRIBUTOR
+    private Integer distributorId; // FK to DISTRIBUTOR
 
     @Column(name = "RetailerID", nullable = false)
-    private Integer retailerID; // FK to RETAILER
+    private Integer retailerId; // FK to RETAILER
 
     @Column(name = "ConsumerID", nullable = false)
-    private Integer consumerID; // FK to USER (Consumer role)
+    private Integer consumerId; // FK to USER (Consumer role)
 
     @Column(name = "Date", nullable = false)
     private LocalDate date;

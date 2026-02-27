@@ -22,15 +22,15 @@ public class Delivery {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "DeliveryID")
-    private Integer deliveryID;
+    private Integer deliveryId;
 
     
     @Column(name = "ShipmentID")
-    private Integer shipmentID;
+    private Integer shipmentId;
 
    
     @Column(name = "RetailerID")
-    private Integer retailerID;
+    private Integer retailerId;
 
     @Column(name = "Date")
     private LocalDate date;

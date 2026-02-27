@@ -9,17 +9,17 @@ import com.cts.FoodChainX.model.Delivery;
 public interface DeliveryRepository extends JpaRepository<Delivery, Integer> {
 
     
-    List<Delivery> findByShipmentId(int shipmentId);
+    List<Delivery> findByShipmentId(Integer shipmentId);
 
     
-    List<Delivery> findByRetailerId(int retailerId);
+    List<Delivery> findByRetailerId(Integer retailerId);
 
     
     List<Delivery> findByStatus(String status);
 
     
-    List<Delivery> findByRetailerIdOrderByDateDesc(int retailerId);
+    List<Delivery> findByRetailerIdOrderByDateDesc(Integer retailerId);
 
     
-    List<Delivery> findByRetailerIdAndStatus(int retailerId, String status);
+    List<Delivery> findByRetailerIdAndStatus(Integer retailerId, String status);
 }

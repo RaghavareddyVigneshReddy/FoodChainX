@@ -1,25 +1,21 @@
 package com.cts.FoodChainX.repository;
 
 import java.util.List;
-
 import org.springframework.data.jpa.repository.JpaRepository;
-
 import com.cts.FoodChainX.model.Shipment;
 
 public interface ShipmentRepository extends JpaRepository<Shipment, Integer> {
 
-    
-    List<Shipment> findByDistributorId(int distributorId);
+    // Matches 'private Integer distributor'
+    List<Shipment> findByDistributor(Integer distributor);
 
-    
-    List<Shipment> findByBatchId(int batchId);
+    // Matches 'private Integer batch'
+    List<Shipment> findByBatch(Integer batch);
 
-    
     List<Shipment> findByStatus(String status);
 
-    
-    List<Shipment> findByDistributorIdOrderByDepartureDateDesc(int distributorId);
+    // Matches 'private Integer distributor' + 'private LocalDate departureDate'
+    List<Shipment> findByDistributorOrderByDepartureDateDesc(Integer distributor);
 
-    
-    List<Shipment> findByDistributorIdAndStatus(int distributorId, String status);
+    List<Shipment> findByDistributorAndStatus(Integer distributor, String status);
 }

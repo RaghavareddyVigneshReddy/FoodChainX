@@ -21,7 +21,7 @@ public class Report {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ReportID")
-    private Integer reportID;
+    private Integer reportId;
 
     @Column(name = "Scope", length = 255, nullable = false)
     private String scope;

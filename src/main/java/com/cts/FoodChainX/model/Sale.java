@@ -17,15 +17,15 @@ public class Sale {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "SaleID")
-    private Integer saleID;
+    private Integer saleId;
 
     // Consider @ManyToOne mapping if Inventory is an entity
     @Column(name = "InventoryID", nullable = false)
-    private Integer inventoryID;
+    private Integer inventoryId;
 
     // Consumer reference (can also be @ManyToOne if you have Consumer entity)
     @Column(name = "ConsumerID", nullable = false)
-    private Integer consumerID;
+    private Integer consumerId;
 
     @Column(name = "Date", nullable = false)
     private LocalDate date;

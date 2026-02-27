@@ -17,11 +17,11 @@ public class ComplianceRecord {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ComplianceID")
-    private Integer complianceID;
+    private Integer complianceI;
 
     // Could later be mapped to Supplier / Retailer / Entity table
     @Column(name = "EntityID", nullable = false)
-    private Integer entityID;
+    private Integer entityId;
 
     @Column(name = "Type", length = 100, nullable = false)
     private String type;

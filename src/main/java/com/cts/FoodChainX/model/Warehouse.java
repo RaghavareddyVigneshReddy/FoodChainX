@@ -19,11 +19,11 @@ public class Warehouse {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "WarehouseID")
-    private Integer warehouseID;
+    private Integer warehouseId;
 
 
     @Column(name = "DistributorID", nullable = false)
-    private Integer distributorID;
+    private Integer distributorId;
 
     @Column(name = "Location", length = 255, nullable = false)
     private String location;

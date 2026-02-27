@@ -23,10 +23,10 @@ public class Audit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "AuditID")
-    private Integer auditID;
+    private Integer auditId;
 
     @Column(name = "RegulatorID", nullable = false)
-    private Integer regulatorID;
+    private Integer regulatorId;
 
     @Column(name = "Scope", nullable = false, length = 50)
     private String scope;

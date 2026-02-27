@@ -16,7 +16,7 @@ public class Shipment {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     @Column(name="ShipmentID")
-    private Integer shipmentID;
+    private Integer shipmentId;
 
     @Column(name="BatchID", nullable=false)
     private Integer batch; // REMOVED @ManyToOne

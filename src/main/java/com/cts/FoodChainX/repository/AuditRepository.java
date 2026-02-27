@@ -10,7 +10,7 @@ import java.util.List;
 @Repository
 public interface AuditRepository extends JpaRepository<Audit, Integer> {
 
-    List<Audit> findByRegulatorID(Integer regulatorID);
+    List<Audit> findByRegulatorId(Integer regulatorId);
 
     List<Audit> findByStatus(String status);
 

@@ -22,14 +22,14 @@ public class Inventory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "InventoryID")
-    private Integer inventoryID;
+    private Integer inventoryId;
 
     // Consider mapping as @ManyToOne if you have Retailer and Batch entities
     @Column(name = "RetailerID", nullable = false)
-    private Integer retailerID;
+    private Integer retailerId;
 
     @Column(name = "BatchID", nullable = false)
-    private Integer batchID;
+    private Integer batchId;
 
     @Column(name = "Quantity", nullable = false)
     private Integer quantity;
