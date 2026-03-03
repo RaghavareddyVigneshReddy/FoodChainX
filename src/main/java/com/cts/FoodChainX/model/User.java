@@ -1,6 +1,5 @@
 package com.cts.FoodChainX.model;
-
-import com.fasterxml.jackson.annotation.JsonIgnore; // Necessary import
+ // Necessary import
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
