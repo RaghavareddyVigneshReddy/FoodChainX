@@ -13,15 +13,15 @@ public class QualityCheck {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "QualityID")
-    private Integer qualityId;
+    private Long qualityId;
 
     // Keeping FK as scalar (no relation mapping)
     @Column(name = "BatchID", nullable = false)
-    private Integer batchId;
+    private Long batchId;
 
     // Keeping FK as scalar (no relation mapping)
     @Column(name = "InspectorID", nullable = false)
-    private Integer inspectorId;
+    private Long inspectorId;
 
     @Column(name = "Date", nullable = false)
     private LocalDate date;

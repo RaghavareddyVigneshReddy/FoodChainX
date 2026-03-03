@@ -5,8 +5,8 @@ import java.time.LocalDate;
 
 @Builder
 public record TraceRecordResponse(
-    Integer traceId,
-    Integer batchId,
+    Long traceId,
+    Long batchId,
     String cropType,
     String farmName,
     String distributorName,

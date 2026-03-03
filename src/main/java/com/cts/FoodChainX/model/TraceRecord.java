@@ -20,7 +20,7 @@ public class TraceRecord {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "TraceID")
-    private Integer traceId;
+    private Long traceId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "BatchID")

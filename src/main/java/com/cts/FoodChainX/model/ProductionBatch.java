@@ -14,7 +14,7 @@ public class ProductionBatch {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "BatchID")
-    private Integer productionId;
+    private Long productionId;
 
     // Relationship instead of private Integer farmId
     @ManyToOne(fetch = FetchType.LAZY)
