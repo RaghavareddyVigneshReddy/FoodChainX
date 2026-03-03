@@ -1,18 +1,12 @@
 package com.cts.FoodChainX.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "notification")
-@Data               
-@NoArgsConstructor  
-@AllArgsConstructor 
-@Builder            
+@Data @NoArgsConstructor @AllArgsConstructor @Builder
 public class Notification {
 
     @Id
@@ -20,8 +14,9 @@ public class Notification {
     @Column(name = "NotificationID")
     private int notificationId;
 
-    @Column(name = "UserID", nullable = false)
-    private int userId;
+    @ManyToOne(fetch = FetchType.EAGER) // Change from LAZY to EAGER to ensure user is loaded
+    @JoinColumn(name = "UserID", nullable = false)
+    private User user;
 
     @Column(name = "EntityID")
     private int entityId;
