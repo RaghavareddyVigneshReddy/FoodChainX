@@ -1,4 +1,5 @@
 package com.cts.FoodChainX.model;
+
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
@@ -12,17 +13,17 @@ import java.time.LocalDate;
 public class ProductionBatch {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "BatchID") // If your PK is named differently, update here
+    @Column(name = "BatchID")
     private Integer productionId;
 
-    // FK kept as scalar (no @ManyToOne)
-    @Column(name = "FarmID", nullable = false)
-    private Integer farmId;
+    // Relationship instead of private Integer farmId
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "FarmID", nullable = false)
+    private Farm farm;
 
     @Column(name = "CropType", length = 100, nullable = false)
     private String cropType;
 
-    // Use Double for FLOAT; switch to BigDecimal if your DB uses DECIMAL
     @Column(name = "Quantity", nullable = false)
     private Double quantity;
 

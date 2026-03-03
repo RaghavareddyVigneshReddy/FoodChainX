@@ -65,41 +65,39 @@ public class SecurityConfig {
         return cfg.getAuthenticationManager();
     }
 
-    @Bean
-    public SecurityFilterChain filterChain(
-            HttpSecurity http,
-            DaoAuthenticationProvider authenticationProvider
-    ) throws Exception {
-        http
-            .csrf(csrf -> csrf.disable()) // Mandatory to prevent 403 on POST/PUT
-            .cors(Customizer.withDefaults())
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
-            .authenticationProvider(authenticationProvider)
-            .authorizeHttpRequests(auth -> auth
-                // 1. Unified Authentication Permits
-                .requestMatchers("/api/auth/**").permitAll() 
-                .requestMatchers("/actuator/health").permitAll()
+@Bean
+public SecurityFilterChain filterChain(
+        HttpSecurity http,
+        DaoAuthenticationProvider authenticationProvider
+) throws Exception {
+    http
+        .csrf(csrf -> csrf.disable()) // Mandatory to prevent 403 on POST/PUT
+        .cors(Customizer.withDefaults())
+        .sessionManagement(session -> session
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        )
+        .authenticationProvider(authenticationProvider)
+        .authorizeHttpRequests(auth -> auth
+            // 1. Unified Authentication Permits
+            .requestMatchers("/api/auth/**").permitAll() 
+            .requestMatchers("/actuator/health").permitAll()
 
-                // 2. Notifications & Alerts Module (Explicitly permit all HTTP methods)
-                .requestMatchers(HttpMethod.GET, "/foodchainx/notifications/**").permitAll() // US 1
-                .requestMatchers(HttpMethod.POST, "/foodchainx/notifications/**").permitAll() // US 3
-                .requestMatchers(HttpMethod.PUT, "/foodchainx/notifications/**").permitAll() // US 2
-                .requestMatchers(HttpMethod.DELETE, "/foodchainx/notifications/**").permitAll() // US 4
-                
-                // Also permit the shorthand path used in some controller mappings
-                .requestMatchers("/notifications/**").permitAll()
+            // 2. Notifications & Alerts Module
+            .requestMatchers(HttpMethod.GET, "/foodchainx/notifications/**").permitAll()
+            .requestMatchers(HttpMethod.POST, "/foodchainx/notifications/**").permitAll()
+            .requestMatchers(HttpMethod.PUT, "/foodchainx/notifications/**").permitAll()
+            .requestMatchers(HttpMethod.DELETE, "/foodchainx/notifications/**").permitAll()
+            .requestMatchers("/notifications/**").permitAll()
 
-                // 3. Traceability & Reporting Modules
-                .requestMatchers("/api/trace/**").permitAll()
-                .requestMatchers("/api/reports/**").permitAll()
+            // 3. Traceability & Reporting Modules (Your new feature/traceability changes)
+            .requestMatchers("/api/trace/**").permitAll()
+            .requestMatchers("/api/reports/**").permitAll()
 
-                // 4. Secure all other endpoints
-                .anyRequest().authenticated()
-            )
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            // 4. Secure all other endpoints
+            .anyRequest().authenticated()
+        )
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
+    return http.build();
+}
 }

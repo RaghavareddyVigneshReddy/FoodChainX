@@ -15,12 +15,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Warehouse {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "WarehouseID")
     private Integer warehouseId;
 
+    @Column(name = "WarehouseName") // Added for traceability display
+    private String name;
 
     @Column(name = "DistributorID", nullable = false)
     private Integer distributorId;
