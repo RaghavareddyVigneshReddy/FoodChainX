@@ -20,13 +20,13 @@ public class FarmService {
     private FarmRepository farmRepository;
 
     @Autowired
-    private UserRepository userRepository; // Added to fetch the actual User object
+    private UserRepository userRepository; // Needed to fetch the User object
 
     /**
-     * 1. CREATE: Register a new farm plot linked to a User entity
+     * 1. CREATE: Register a new farm plot linked to a User object
      */
     public FarmResponseDto creatingfarm(FarmRequestDto request, Long farmerId) {
-        // 1. Fetch the User entity from the database using the provided ID
+        // Find the farmer in the database first
         User farmer = userRepository.findById(farmerId)
                 .orElseThrow(() -> new RuntimeException("Farmer not found with ID: " + farmerId));
 
@@ -35,7 +35,7 @@ public class FarmService {
         farmEntity.setLocation(request.getLocation());
         farmEntity.setCertificationStatus("PENDING");
         
-        // 2. Set the User object itself, not just the ID
+        // Use setFarmer(User) instead of setFarmerId(Long)
         farmEntity.setFarmer(farmer); 
 
         Farm savedFarm = farmRepository.save(farmEntity);
@@ -43,10 +43,10 @@ public class FarmService {
     }
 
     /**
-     * 2. READ: Get all farms for a specific farmer using the property-expression method
+     * 2. READ: Get all farms for a specific farmer
      */
     public List<FarmResponseDto> getAllFarmsByFarmer(Long farmerId) {
-        // Updated to call findByFarmer_UserId from your repository
+        // Matches the method name in your FarmRepository
         List<Farm> farms = farmRepository.findByFarmer_UserId(farmerId);
         return farms.stream()
                     .map(this::mapToResponseDto)
@@ -85,9 +85,6 @@ public class FarmService {
         return "Farm successfully removed from the system.";
     }
 
-    /**
-     * HELPER: Private method to convert Entity to DTO
-     */
     private FarmResponseDto mapToResponseDto(Farm farm) {
         FarmResponseDto dto = new FarmResponseDto();
         dto.setFarmId(farm.getFarmId());

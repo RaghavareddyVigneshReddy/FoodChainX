@@ -37,8 +37,9 @@ public class SecurityConfig {
         return username -> {
             User u = userRepository.findByEmailIgnoreCase(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
+           // System.out.println("Login attempt: " + u.getEmail() + " | Role: " + u.getRole() + " | Status: " + u.getStatus());
             
-            boolean enabled = u.getStatus() == UserStatus.ACTIVE;
+           boolean enabled = u.getStatus() == UserStatus.ACTIVE;
             boolean accountNonLocked = u.getStatus() != UserStatus.SUSPENDED;
 
             return org.springframework.security.core.userdetails.User

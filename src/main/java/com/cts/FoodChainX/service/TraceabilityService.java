@@ -1,12 +1,14 @@
 package com.cts.FoodChainX.service;
 
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.cts.FoodChainX.dto.tracerecord.TraceRecordResponse;
 import com.cts.FoodChainX.model.TraceRecord;
 import com.cts.FoodChainX.repository.TraceRecordRepository;
+
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -14,7 +16,7 @@ public class TraceabilityService {
 
     private final TraceRecordRepository traceRecordRepository;
 @Transactional(readOnly = true)
-public TraceRecordResponse getTraceabilityData(Integer batchId) {
+public TraceRecordResponse getTraceabilityData(Long batchId) {
     // Change _BatchId to _ProductionId to match your Repository
     return traceRecordRepository.findByProductionBatch_ProductionId(batchId)
             .map(this::mapToResponse)
@@ -38,7 +40,7 @@ private TraceRecordResponse mapToResponse(TraceRecord record) {
 }
 
 @Transactional(readOnly = true)
-public String generateQrPayload(Integer batchId) {
+public String generateQrPayload(Long batchId) {
     return traceRecordRepository.findByProductionBatch_ProductionId(batchId)
             .map(record -> String.format(
                 "FoodChainX-Trace:%d|Batch:%d|Product:%s|Farm:%s|Status:%s",
