@@ -4,7 +4,7 @@ import com.cts.FoodChainX.dto.auth.LoginRequest;
 import com.cts.FoodChainX.dto.auth.RegisterRequest;
 import com.cts.FoodChainX.dto.auth.TokenResponse;
 import com.cts.FoodChainX.dto.user.UserResponse;
-import com.cts.FoodChainX.exception.UserAlreadyExistsException; // Import your custom exception
+import com.cts.FoodChainX.exception.UserAlreadyExistsException;
 import com.cts.FoodChainX.model.User;
 import com.cts.FoodChainX.model.UserStatus;
 import com.cts.FoodChainX.repository.UserRepository;
@@ -13,6 +13,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -36,7 +38,6 @@ public class AuthService {
     }
 
     public UserResponse register(RegisterRequest req) {
-        // Updated logic: Check for existing email and throw custom exception
         if (userRepository.existsByEmailIgnoreCase(req.email())) {
             throw new UserAlreadyExistsException("Email '" + req.email() + "' is already registered.");
         }
@@ -47,7 +48,7 @@ public class AuthService {
                 .email(req.email())
                 .phone(req.phone())
                 .status(UserStatus.ACTIVE)
-                .passwordHash(passwordEncoder.encode(req.password())) // hash securely
+                .passwordHash(passwordEncoder.encode(req.password()))
                 .build();
 
         user = userRepository.save(user);
@@ -61,5 +62,19 @@ public class AuthService {
                 user.getPhone(),
                 user.getStatus()
         );
+    }
+
+    /** NEW: used by AdminController */
+    public List<UserResponse> listUsers() {
+        return userRepository.findAll().stream()
+                .map(u -> new UserResponse(
+                        u.getUserId(),
+                        u.getName(),
+                        u.getRole(),
+                        u.getEmail(),
+                        u.getPhone(),
+                        u.getStatus()
+                ))
+                .toList();
     }
 }
