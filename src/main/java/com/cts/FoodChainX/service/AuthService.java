@@ -1,10 +1,10 @@
-
 package com.cts.FoodChainX.service;
 
 import com.cts.FoodChainX.dto.auth.LoginRequest;
 import com.cts.FoodChainX.dto.auth.RegisterRequest;
 import com.cts.FoodChainX.dto.auth.TokenResponse;
 import com.cts.FoodChainX.dto.user.UserResponse;
+import com.cts.FoodChainX.exception.UserAlreadyExistsException; // Import your custom exception
 import com.cts.FoodChainX.model.User;
 import com.cts.FoodChainX.model.UserStatus;
 import com.cts.FoodChainX.repository.UserRepository;
@@ -22,7 +22,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final AuditLogService auditLogService;
-    private final PasswordEncoder passwordEncoder; // <-- REQUIRED for register()
+    private final PasswordEncoder passwordEncoder;
 
     public TokenResponse login(LoginRequest request) {
         var authToken = new UsernamePasswordAuthenticationToken(request.email(), request.password());
@@ -32,13 +32,13 @@ public class AuthService {
         String token = jwtService.generateToken(user);
 
         auditLogService.log(user, "LOGIN", "auth/login");
-        // If you have the actual expiry configured in application properties, you can expose it via JwtService.
         return new TokenResponse(token, "Bearer", 60 * 60);
     }
 
     public UserResponse register(RegisterRequest req) {
+        // Updated logic: Check for existing email and throw custom exception
         if (userRepository.existsByEmailIgnoreCase(req.email())) {
-            throw new IllegalArgumentException("Email already registered");
+            throw new UserAlreadyExistsException("Email '" + req.email() + "' is already registered.");
         }
 
         User user = User.builder()

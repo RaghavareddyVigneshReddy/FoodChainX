@@ -1,9 +1,12 @@
 package com.cts.FoodChainX.model;
+
+import com.fasterxml.jackson.annotation.JsonIgnore; // Necessary import
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.*;
 
@@ -14,6 +17,7 @@ public class User implements UserDetails {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "user_id")
   private Long userId;
 
   @Column(nullable = false)
@@ -35,9 +39,13 @@ public class User implements UserDetails {
   @Column(nullable = false)
   private UserStatus status;
 
-  // Cardinality: User (1) -> (*) AuditLog
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = false)
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // Forces the API to never "read" this into JSON
   private List<AuditLog> auditLogs = new ArrayList<>();
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // Stops the Notification -> User -> Notification loop
+  private List<Notification> notifications = new ArrayList<>();
 
   // UserDetails for Spring Security
   @Override
@@ -52,4 +60,3 @@ public class User implements UserDetails {
   @Override public boolean isCredentialsNonExpired() { return true; }
   @Override public boolean isEnabled() { return status == UserStatus.ACTIVE; }
 }
-

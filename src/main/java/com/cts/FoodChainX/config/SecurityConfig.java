@@ -12,7 +12,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,27 +30,25 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    /** Maps your domain User to Spring Security's UserDetails */
     @Bean
     public UserDetailsService userDetailsService(UserRepository userRepository) {
         return username -> {
             User u = userRepository.findByEmailIgnoreCase(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
+            
             boolean enabled = u.getStatus() == UserStatus.ACTIVE;
             boolean accountNonLocked = u.getStatus() != UserStatus.SUSPENDED;
 
-            UserDetails details = org.springframework.security.core.userdetails.User
+            return org.springframework.security.core.userdetails.User
                     .withUsername(u.getEmail())
-                    .password(u.getPasswordHash())   // MUST be a BCrypt hash
-                    .roles(u.getRole().name())        // -> ROLE_<ROLE>
+                    .password(u.getPasswordHash())
+                    .roles(u.getRole().name())
                     .accountLocked(!accountNonLocked)
                     .disabled(!enabled)
                     .build();
-            return details;
         };
     }
 
-    /** Use the no-arg provider and set both dependencies explicitly */
     @Bean
     public DaoAuthenticationProvider authenticationProvider(
             UserDetailsService uds,
@@ -73,20 +71,33 @@ public class SecurityConfig {
             DaoAuthenticationProvider authenticationProvider
     ) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
+            .csrf(csrf -> csrf.disable()) // Mandatory to prevent 403 on POST/PUT
             .cors(Customizer.withDefaults())
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
             .authenticationProvider(authenticationProvider)
             .authorizeHttpRequests(auth -> auth
-                // ✅ Permit both register and login
-                .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                // 1. Unified Authentication Permits
+                .requestMatchers("/api/auth/**").permitAll() 
                 .requestMatchers("/actuator/health").permitAll()
 
-                // Admin endpoints are still protected by roles (via @PreAuthorize)
+                // 2. Notifications & Alerts Module (Explicitly permit all HTTP methods)
+                .requestMatchers(HttpMethod.GET, "/foodchainx/notifications/**").permitAll() // US 1
+                .requestMatchers(HttpMethod.POST, "/foodchainx/notifications/**").permitAll() // US 3
+                .requestMatchers(HttpMethod.PUT, "/foodchainx/notifications/**").permitAll() // US 2
+                .requestMatchers(HttpMethod.DELETE, "/foodchainx/notifications/**").permitAll() // US 4
+                
+                // Also permit the shorthand path used in some controller mappings
+                .requestMatchers("/notifications/**").permitAll()
+
+                // 3. Traceability & Reporting Modules
+                .requestMatchers("/api/trace/**").permitAll()
+                .requestMatchers("/api/reports/**").permitAll()
+
+                // 4. Secure all other endpoints
                 .anyRequest().authenticated()
             )
-            .httpBasic(Customizer.withDefaults())
-            // ✅ JWT filter goes before UsernamePasswordAuthenticationFilter
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
