@@ -13,11 +13,11 @@ public class ProductionBatch {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "BatchID") // If your PK is named differently, update here
-    private Integer productionId;
+    private Long batchId;
 
     // FK kept as scalar (no @ManyToOne)
     @Column(name = "FarmID", nullable = false)
-    private Integer farmId;
+    private Long farmId;
 
     @Column(name = "CropType", length = 100, nullable = false)
     private String cropType;

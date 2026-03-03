@@ -22,9 +22,6 @@ public class Farm {
     @Column(name = "Location", length = 255)
     private String location;
 
-    // Keeping FK as scalar (no cardinality)
-   // ✅ ADDED CARDINALITY HERE
-    // Many Farms belong to One User (Farmer)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "farmerid", referencedColumnName = "user_id", nullable = false)
     private User farmer;
