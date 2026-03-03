@@ -12,7 +12,6 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -71,31 +70,22 @@ public SecurityFilterChain filterChain(
         DaoAuthenticationProvider authenticationProvider
 ) throws Exception {
     http
-        .csrf(csrf -> csrf.disable()) // Mandatory to prevent 403 on POST/PUT
+        .csrf(csrf -> csrf.disable())
         .cors(Customizer.withDefaults())
-        .sessionManagement(session -> session
-            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-        )
         .authenticationProvider(authenticationProvider)
         .authorizeHttpRequests(auth -> auth
-            // 1. Unified Authentication Permits
-            .requestMatchers("/api/auth/**").permitAll() 
+            // Public Auth Endpoints
+            .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
+            .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
             .requestMatchers("/actuator/health").permitAll()
 
-            // 2. Notifications & Alerts Module
-            .requestMatchers(HttpMethod.GET, "/foodchainx/notifications/**").permitAll()
-            .requestMatchers(HttpMethod.POST, "/foodchainx/notifications/**").permitAll()
-            .requestMatchers(HttpMethod.PUT, "/foodchainx/notifications/**").permitAll()
-            .requestMatchers(HttpMethod.DELETE, "/foodchainx/notifications/**").permitAll()
-            .requestMatchers("/notifications/**").permitAll()
+            // ✅ Consumer Portal Access (Added for Traceability)
+            .requestMatchers("/api/consumer/**").hasAnyRole("CONSUMER", "ADMIN")
 
-            // 3. Traceability & Reporting Modules (Your new feature/traceability changes)
-            .requestMatchers("/api/trace/**").permitAll()
-            .requestMatchers("/api/reports/**").permitAll()
-
-            // 4. Secure all other endpoints
+            // Everything else requires authentication
             .anyRequest().authenticated()
         )
+        // Keep your existing JWT filter logic
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
