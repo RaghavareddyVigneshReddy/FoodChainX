@@ -6,7 +6,6 @@ import com.cts.FoodChainX.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
@@ -65,41 +64,45 @@ public class SecurityConfig {
         return cfg.getAuthenticationManager();
     }
 
-    @Bean
-    public SecurityFilterChain filterChain(
-            HttpSecurity http,
-            DaoAuthenticationProvider authenticationProvider
-    ) throws Exception {
-        http
-            .csrf(csrf -> csrf.disable()) // Mandatory to prevent 403 on POST/PUT
-            .cors(Customizer.withDefaults())
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
-            .authenticationProvider(authenticationProvider)
-            .authorizeHttpRequests(auth -> auth
-                // 1. Unified Authentication Permits
-                .requestMatchers("/api/auth/**").permitAll() 
-                .requestMatchers("/actuator/health").permitAll()
 
-                // 2. Notifications & Alerts Module (Explicitly permit all HTTP methods)
-                .requestMatchers(HttpMethod.GET, "/foodchainx/notifications/**").permitAll() // US 1
-                .requestMatchers(HttpMethod.POST, "/foodchainx/notifications/**").permitAll() // US 3
-                .requestMatchers(HttpMethod.PUT, "/foodchainx/notifications/**").permitAll() // US 2
-                .requestMatchers(HttpMethod.DELETE, "/foodchainx/notifications/**").permitAll() // US 4
-                
-                // Also permit the shorthand path used in some controller mappings
-                .requestMatchers("/notifications/**").permitAll()
 
-                // 3. Traceability & Reporting Modules
-                .requestMatchers("/api/trace/**").permitAll()
-                .requestMatchers("/api/reports/**").permitAll()
+@Bean
+public SecurityFilterChain filterChain(
+        HttpSecurity http,
+        DaoAuthenticationProvider authenticationProvider
+) throws Exception {
+    http
+        .csrf(csrf -> csrf.disable()) // Mandatory to prevent 403 on POST/PUT
+        .cors(Customizer.withDefaults())
+        // Added from teammate: Ensures no session is stored on server (JWT standard)
+        .sessionManagement(session -> session
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        )
+        .authenticationProvider(authenticationProvider)
+        .authorizeHttpRequests(auth -> auth
+            // 1. Unified Public Auth & Health Endpoints
+            .requestMatchers("/api/auth/**").permitAll() 
+            .requestMatchers("/actuator/health").permitAll()
 
-                // 4. Secure all other endpoints
-                .anyRequest().authenticated()
-            )
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            // 2. Notifications Module (Merged from teammate)
+            // Permitting these allows the notification system to trigger alerts freely
+            .requestMatchers("/foodchainx/notifications/**").permitAll()
+            .requestMatchers("/notifications/**").permitAll()
 
-        return http.build();
-    }
+            // 3. Traceability & Consumer Portal (Merged & Secured)
+            // Note: Use permitAll() for public trace or hasAnyRole for secured portal
+            .requestMatchers("/api/trace/**").permitAll()
+            .requestMatchers("/api/consumer/**").hasAnyRole("CONSUMER", "ADMIN")
+
+            // 4. Reporting Module
+            .requestMatchers("/api/reports/**").permitAll()
+
+            // 5. Secure all other endpoints
+            .anyRequest().authenticated()
+        )
+        // JWT filter must process the request before Spring's internal auth filter
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+    return http.build();
+}
 }
