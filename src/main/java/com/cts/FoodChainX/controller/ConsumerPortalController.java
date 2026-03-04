@@ -1,6 +1,6 @@
 package com.cts.FoodChainX.controller;
 
-import com.cts.FoodChainX.dto.tracerecord.TraceRecordResponse;
+import com.cts.FoodChainX.dto.tracerecord.TraceRecordResponseDto;
 import com.cts.FoodChainX.service.TraceabilityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +14,7 @@ public class ConsumerPortalController {
     private final TraceabilityService traceabilityService;
 
     @GetMapping("/trace/{batchId}")
-    public ResponseEntity<TraceRecordResponse> getTraceRecord(@PathVariable Long batchId) {
+    public ResponseEntity<TraceRecordResponseDto> getTraceRecord(@PathVariable Long batchId) {
         return ResponseEntity.ok(traceabilityService.getTraceabilityData(batchId));
     }
 
