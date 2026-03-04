@@ -14,12 +14,12 @@ public class ConsumerPortalController {
     private final TraceabilityService traceabilityService;
 
     @GetMapping("/trace/{batchId}")
-    public ResponseEntity<TraceRecordResponse> getTraceRecord(@PathVariable Integer batchId) {
+    public ResponseEntity<TraceRecordResponse> getTraceRecord(@PathVariable Long batchId) {
         return ResponseEntity.ok(traceabilityService.getTraceabilityData(batchId));
     }
 
     @GetMapping("/qr/{batchId}")
-    public ResponseEntity<String> getQrCodePayload(@PathVariable Integer batchId) {
+    public ResponseEntity<String> getQrCodePayload(@PathVariable Long batchId) {
         return ResponseEntity.ok(traceabilityService.generateQrPayload(batchId));
     }
 }

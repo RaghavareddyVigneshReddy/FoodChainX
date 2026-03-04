@@ -14,7 +14,7 @@ public class Farm {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "FarmID")
-    private Integer farmId;
+    private Long farmId;
 
     @Column(name = "Name", length = 255)
     private String name;
@@ -22,9 +22,9 @@ public class Farm {
     @Column(name = "Location", length = 255)
     private String location;
 
-    // Keeping FK as scalar (no cardinality)
-    @Column(name = "FarmerID")
-    private Integer farmerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "farmerid", referencedColumnName = "user_id", nullable = false)
+    private User farmer;
 
     @Column(name = "CertificationStatus", length = 100)
     private String certificationStatus;

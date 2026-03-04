@@ -1,11 +1,8 @@
 package com.cts.FoodChainX.config;
 
-import com.cts.FoodChainX.model.User;
-import com.cts.FoodChainX.model.UserStatus;
-import com.cts.FoodChainX.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
@@ -17,6 +14,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import com.cts.FoodChainX.model.User;
+import com.cts.FoodChainX.model.UserStatus;
+import com.cts.FoodChainX.repository.UserRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @RequiredArgsConstructor
@@ -34,8 +37,9 @@ public class SecurityConfig {
         return username -> {
             User u = userRepository.findByEmailIgnoreCase(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
+           // System.out.println("Login attempt: " + u.getEmail() + " | Role: " + u.getRole() + " | Status: " + u.getStatus());
             
-            boolean enabled = u.getStatus() == UserStatus.ACTIVE;
+           boolean enabled = u.getStatus() == UserStatus.ACTIVE;
             boolean accountNonLocked = u.getStatus() != UserStatus.SUSPENDED;
 
             return org.springframework.security.core.userdetails.User
@@ -63,7 +67,6 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration cfg) throws Exception {
         return cfg.getAuthenticationManager();
     }
-
 
 
 @Bean
@@ -96,6 +99,14 @@ public SecurityFilterChain filterChain(
 
             // 4. Reporting Module
             .requestMatchers("/api/reports/**").permitAll()
+
+                            // Restrict based on the roles defined in your User model
+                .requestMatchers("/api/farms/register/**").hasRole("FARMER")
+                .requestMatchers("/api/farms/farmer/**").hasRole("FARMER")
+                .requestMatchers(HttpMethod.DELETE, "/api/farms/**").hasRole("FARMER")
+                
+                // Allow Regulators or Admins to update the certification status
+                .requestMatchers(HttpMethod.PATCH, "/api/farms/*/status").hasAnyRole("REGULATOR", "ADMIN")
 
             // 5. Secure all other endpoints
             .anyRequest().authenticated()
