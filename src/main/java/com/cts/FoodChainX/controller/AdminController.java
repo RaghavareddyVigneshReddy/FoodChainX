@@ -4,7 +4,7 @@ import com.cts.FoodChainX.dto.audit.AuditLogResponse;
 import com.cts.FoodChainX.dto.user.UserResponse;
 import com.cts.FoodChainX.dto.user.UserStatusUpdateRequest;
 import com.cts.FoodChainX.model.User;
-import com.cts.FoodChainX.model.UserStatus;
+//import com.cts.FoodChainX.model.UserStatus;
 import com.cts.FoodChainX.repository.UserRepository;
 import com.cts.FoodChainX.service.AuditLogService;
 import com.cts.FoodChainX.service.AuthService;
