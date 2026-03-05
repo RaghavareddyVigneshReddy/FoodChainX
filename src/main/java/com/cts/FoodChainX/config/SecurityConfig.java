@@ -104,6 +104,13 @@ public SecurityFilterChain filterChain(
                 .requestMatchers("/api/farms/register/**").hasRole("FARMER")
                 .requestMatchers("/api/farms/farmer/**").hasRole("FARMER")
                 .requestMatchers(HttpMethod.DELETE, "/api/farms/**").hasRole("FARMER")
+                .requestMatchers("/api/logistics/shipments/**").hasAnyRole("DISTRIBUTOR", "ADMIN")
+
+                 // Secures warehouse capacity monitoring
+                 .requestMatchers("/api/logistics/warehouses/**").hasAnyRole("DISTRIBUTOR", "ADMIN")
+
+                  // Secures delivery logging
+                .requestMatchers("/api/logistics/deliveries/**").hasAnyRole("DISTRIBUTOR", "ADMIN")
                 
                 // Allow Regulators or Admins to update the certification status
                 .requestMatchers(HttpMethod.PATCH, "/api/farms/*/status").hasAnyRole("REGULATOR", "ADMIN")
