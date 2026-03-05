@@ -63,13 +63,25 @@ public class FarmService {
     }
 
     /**
-     * 4. PATCH: Update certification status
+  /**
+     * 4. READ: Get all farms filtered by certification status (e.g., PENDING)
+     * Used by Regulators to FIND which farms need auditing.
+     */
+    public List<FarmResponseDto> getFarmsByCertificationStatus(String status) {
+        return farmRepository.findByCertificationStatusIgnoreCase(status).stream()
+                .map(this::mapToResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 5. PATCH: Update certification status
+     * Used by Regulators to APPROVE or REJECT a farm after an audit.
      */
     public FarmResponseDto updateStatus(Long farmId, String newStatus) {
         Farm farm = farmRepository.findById(farmId)
-                .orElseThrow(() -> new RuntimeException("Farm not found"));
+                .orElseThrow(() -> new RuntimeException("Farm not found with ID: " + farmId));
         
-        farm.setCertificationStatus(newStatus);
+        farm.setCertificationStatus(newStatus); // Standardizes the certification status
         Farm updatedFarm = farmRepository.save(farm);
         return mapToResponseDto(updatedFarm);
     }

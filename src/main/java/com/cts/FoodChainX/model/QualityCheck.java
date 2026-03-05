@@ -10,26 +10,29 @@ import lombok.*;
 @Entity
 @Table(name = "QUALITY_CHECK")
 public class QualityCheck {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "QualityID")
+    @Column(name = "quality_id")
     private Long qualityId;
 
-    // Keeping FK as scalar (no relation mapping)
-    @Column(name = "BatchID", nullable = false)
-    private Long batchId;
+    // Many quality checks can belong to one Production Batch
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "batch_id", nullable = false)
+    private ProductionBatch batch;
 
-    // Keeping FK as scalar (no relation mapping)
-    @Column(name = "InspectorID", nullable = false)
-    private Long inspectorId;
+    // Many inspections can be done by one User (The Regulator)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "inspector_id", nullable = false)
+    private User inspector; 
 
-    @Column(name = "Date", nullable = false)
+    @Column(name = "inspection_date", nullable = false)
     private LocalDate date;
 
     @Lob
-    @Column(name = "Findings")
+    @Column(name = "findings")
     private String findings;
 
-    @Column(name = "Status", length = 50)
+    @Column(name = "status", length = 50)
     private String status;
 }
