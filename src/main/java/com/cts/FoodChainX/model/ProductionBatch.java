@@ -3,7 +3,7 @@ package com.cts.FoodChainX.model;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
-
+import java.util.List;
 @Entity
 @Table(name = "PRODUCTION")
 @Data
@@ -32,4 +32,9 @@ public class ProductionBatch {
 
     @Column(name = "QualityStatus", length = 50, nullable = false)
     private String qualityStatus;
+    // Inside ProductionBatch.java
+
+@OneToMany(mappedBy = "batch", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+// This list is what provides the 'getQualityChecks()' method you need
+private List<QualityCheck> qualityChecks;
 }
