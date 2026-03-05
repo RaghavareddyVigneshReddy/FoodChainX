@@ -1,0 +1,17 @@
+package com.cts.FoodChainX.dto.logistics;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class WarehouseResponseDTO {
+    private Long warehouseId;
+    private String location;
+    private Integer capacity;
+    private String status;
+}
