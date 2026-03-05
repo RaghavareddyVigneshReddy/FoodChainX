@@ -104,11 +104,44 @@ public SecurityFilterChain filterChain(
                 .requestMatchers("/api/farms/register/**").hasRole("FARMER")
                 .requestMatchers("/api/farms/farmer/**").hasRole("FARMER")
                 .requestMatchers(HttpMethod.DELETE, "/api/farms/**").hasRole("FARMER")
+                .requestMatchers("/api/logistics/shipments/**").hasAnyRole("DISTRIBUTOR", "ADMIN")
+
+                 // Secures warehouse capacity monitoring
+                 .requestMatchers("/api/logistics/warehouses/**").hasAnyRole("DISTRIBUTOR", "ADMIN")
+
+                  // Secures delivery logging
+                .requestMatchers("/api/logistics/deliveries/**").hasAnyRole("DISTRIBUTOR", "ADMIN")
                 
                 // Allow Regulators or Admins to update the certification status
                 .requestMatchers(HttpMethod.PATCH, "/api/farms/*/status").hasAnyRole("REGULATOR", "ADMIN")
+                
 
+                // Insert these matchers into your authorizeHttpRequests(auth -> { ... }) block
+
+// 1. Only Farmers can create new batches
+                   .requestMatchers(HttpMethod.POST, "/api/production/add").hasRole("FARMER")
+
+// 2. Only Farmers can delete batches
+                 .requestMatchers(HttpMethod.DELETE, "/api/production/{id}").hasRole("FARMER")
+
+// 3. Farmers can view their own, Regulators/Admins can view for inspections
+                   .requestMatchers(HttpMethod.GET, "/api/production/**").hasAnyRole("FARMER", "REGULATOR", "ADMIN")
             // 5. Secure all other endpoints
+
+
+         // 1. Only Regulators or Admins can perform the actual inspection
+               .requestMatchers(HttpMethod.POST, "/api/quality-checks/inspect").hasAnyRole("REGULATOR", "ADMIN")
+
+// 2. Regulators, Admins, and Farmers can view inspection results (Farmers need to see if their batch passed)
+                  .requestMatchers(HttpMethod.GET, "/api/quality-checks/status/**").hasAnyRole("REGULATOR", "ADMIN", "FARMER")
+
+// 3. Only Admins should ideally delete quality logs to maintain audit integrity
+                    .requestMatchers(HttpMethod.DELETE, "/api/quality-checks/**").hasRole("ADMIN")
+
+
+
+
+
             .anyRequest().authenticated()
         )
         // JWT filter must process the request before Spring's internal auth filter

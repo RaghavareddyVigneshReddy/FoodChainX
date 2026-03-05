@@ -3,7 +3,7 @@ package com.cts.FoodChainX.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.cts.FoodChainX.dto.tracerecord.TraceRecordResponse;
+import com.cts.FoodChainX.dto.tracerecord.TraceRecordResponseDto;
 import com.cts.FoodChainX.model.TraceRecord;
 import com.cts.FoodChainX.repository.TraceRecordRepository;
 
@@ -16,15 +16,15 @@ public class TraceabilityService {
 
     private final TraceRecordRepository traceRecordRepository;
 @Transactional(readOnly = true)
-public TraceRecordResponse getTraceabilityData(Long batchId) {
+public TraceRecordResponseDto getTraceabilityData(Long batchId) {
     // Change _BatchId to _ProductionId to match your Repository
     return traceRecordRepository.findByProductionBatch_ProductionId(batchId)
             .map(this::mapToResponse)
             .orElseThrow(() -> new EntityNotFoundException("Trace history for Batch ID " + batchId + " not found."));
 }
 
-private TraceRecordResponse mapToResponse(TraceRecord record) {
-    return TraceRecordResponse.builder()
+private TraceRecordResponseDto mapToResponse(TraceRecord record) {
+    return TraceRecordResponseDto.builder()
             .traceId(record.getTraceId())
             .batchId(record.getProductionBatch().getProductionId())
             // ✅ Fetch Crop Type from the Production table

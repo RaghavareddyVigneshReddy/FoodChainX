@@ -13,68 +13,71 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
-    private final JwtService jwtService;
-    private final AuditLogService auditLogService;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
+    private final AuditLogService auditLogService;
 
-    public TokenResponse login(LoginRequest request) {
-        var authToken = new UsernamePasswordAuthenticationToken(request.email(), request.password());
-        authenticationManager.authenticate(authToken); // throws if invalid
-
-        User user = userRepository.findByEmailIgnoreCase(request.email()).orElseThrow();
-        String token = jwtService.generateToken(user);
-
-        auditLogService.log(user, "LOGIN", "auth/login");
-        return new TokenResponse(token, "Bearer", 60 * 60);
-    }
-
+    @Transactional
     public UserResponse register(RegisterRequest req) {
         if (userRepository.existsByEmailIgnoreCase(req.email())) {
-            throw new UserAlreadyExistsException("Email '" + req.email() + "' is already registered.");
+            throw new UserAlreadyExistsException("Email " + req.email() + " is already taken.");
         }
 
         User user = User.builder()
                 .name(req.name())
+                .email(req.email().toLowerCase())
+                .passwordHash(passwordEncoder.encode(req.password()))
                 .role(req.role())
-                .email(req.email())
                 .phone(req.phone())
                 .status(UserStatus.ACTIVE)
-                .passwordHash(passwordEncoder.encode(req.password()))
                 .build();
 
         user = userRepository.save(user);
-        auditLogService.log(user, "REGISTER", "auth/register");
+        
+        // System log for new registration
+        auditLogService.log(user, "USER_REGISTER", "users/" + user.getUserId());
 
-        return new UserResponse(
-                user.getUserId(),
-                user.getName(),
-                user.getRole(),
-                user.getEmail(),
-                user.getPhone(),
-                user.getStatus()
-        );
+        return mapToResponse(user);
     }
 
-    /** NEW: used by AdminController */
+    public TokenResponse login(LoginRequest req) {
+        // 1. Authenticate via Spring Security
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(req.email(), req.password())
+        );
+
+        // 2. Fetch user to generate token
+        User user = userRepository.findByEmailIgnoreCase(req.email())
+                .orElseThrow(() -> new RuntimeException("User not found after auth"));
+
+        String token = jwtService.generateToken(user);
+        
+        auditLogService.log(user, "USER_LOGIN", "auth/login");
+
+        return new TokenResponse(token, "Bearer", 86400); // 24h expiry
+    }
+
     public List<UserResponse> listUsers() {
         return userRepository.findAll().stream()
-                .map(u -> new UserResponse(
-                        u.getUserId(),
-                        u.getName(),
-                        u.getRole(),
-                        u.getEmail(),
-                        u.getPhone(),
-                        u.getStatus()
-                ))
-                .toList();
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    private UserResponse mapToResponse(User user) {
+        return new UserResponse(
+                user.getUserId(), user.getName(), user.getRole(),
+                user.getEmail(), user.getPhone(), user.getStatus()
+        );
     }
 }
