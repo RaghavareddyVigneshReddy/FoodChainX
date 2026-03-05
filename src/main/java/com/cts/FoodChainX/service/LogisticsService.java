@@ -26,8 +26,9 @@ public class LogisticsService {
 
     
     public ShipmentResponseDTO initiateShipment(ShipmentRequestDTO request) {
-        ProductionBatch batchObj = batchRepository.findById(request.getBatchId().intValue())
-                .orElseThrow(() -> new RuntimeException("Batch not found"));
+   
+    ProductionBatch batchObj = batchRepository.findById(request.getBatchId())
+            .orElseThrow(() -> new RuntimeException("Batch not found"));
 
         if (!"Compliant".equalsIgnoreCase(batchObj.getQualityStatus())) {
             throw new IllegalArgumentException("Batch is not Compliant.");
