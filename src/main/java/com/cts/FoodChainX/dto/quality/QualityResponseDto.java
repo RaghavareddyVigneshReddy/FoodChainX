@@ -12,4 +12,5 @@ public class QualityResponseDto {
  private Long qualityId;
  private LocalDate date;
  private String status;   
+ private String findings;
 }
