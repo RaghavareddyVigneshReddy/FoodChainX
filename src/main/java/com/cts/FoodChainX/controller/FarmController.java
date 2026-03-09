@@ -9,8 +9,11 @@ import com.cts.FoodChainX.dto.farm.FarmRequestDto;
 import com.cts.FoodChainX.dto.farm.FarmResponseDto;
 import com.cts.FoodChainX.service.FarmService;
 
+import lombok.extern.slf4j.Slf4j;
+
 @RestController
 @RequestMapping("/api/farms")
+@Slf4j
 public class FarmController {
 
     @Autowired
@@ -21,6 +24,7 @@ public class FarmController {
     public ResponseEntity<FarmResponseDto> registerFarm(
             @RequestBody FarmRequestDto request, 
             @PathVariable Long farmerId) {
+        log.info("REST request to register new Farm for Farmer ID: {}", farmerId);
         return ResponseEntity.ok(farmService.creatingfarm(request, farmerId));
     }
 
@@ -35,12 +39,14 @@ public class FarmController {
     public ResponseEntity<FarmResponseDto> updateStatus(
             @PathVariable Long farmId, 
             @RequestParam String status) {
+        log.warn("REST request to UPDATE Farm Status for Farm ID: {}", farmId);
         return ResponseEntity.ok(farmService.updateStatus(farmId, status));
     }
 
     // DELETE: http://localhost:8080/api/farms/1
     @DeleteMapping("/{farmId}")
     public ResponseEntity<String> removeFarm(@PathVariable Long farmId) {
+        log.warn("REST request to DELETE Farm ID: {}", farmId);
         return ResponseEntity.ok(farmService.deleteFarm(farmId));
     }
 }

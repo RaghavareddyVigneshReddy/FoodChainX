@@ -35,3 +35,6 @@ build/
 # Security and Local Config
 .env
 .env.local
+
+# Logs
+/logs/

@@ -19,10 +19,12 @@ import com.cts.FoodChainX.dto.batch.BatchResponseDto;
 import com.cts.FoodChainX.service.ProductionBatchService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/production")
 @RequiredArgsConstructor
+@Slf4j
 public class ProductionBatchController {
 
     private final ProductionBatchService service;
@@ -31,12 +33,14 @@ public class ProductionBatchController {
     // Create a new batch
     @PostMapping("/add")
     public ResponseEntity<BatchResponseDto> createBatch(@RequestBody BatchRequestDto dto) {
+        log.info("REST request to create new Production Batch for Farm ID: {}", dto.getFarmId());
         return new ResponseEntity<>(service.createBatch(dto), HttpStatus.CREATED);
     }
 
     // Get a specific batch by ID
     @GetMapping("/{id}")
     public ResponseEntity<BatchResponseDto> getBatchById(@PathVariable Long id) {
+        
         return ResponseEntity.ok(service.getBatchById(id));
     }
 
@@ -49,6 +53,7 @@ public class ProductionBatchController {
     // Delete a batch
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteBatch(@PathVariable Long id) {
+        log.warn("REST request to DELETE Production Batch ID: {}", id);
         return ResponseEntity.ok(service.deleteBatch(id));
     }
     @GetMapping("/{batchId}/details")
