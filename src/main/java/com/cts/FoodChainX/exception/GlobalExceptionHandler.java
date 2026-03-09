@@ -132,7 +132,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BatchNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleBatchNotFound(BatchNotFoundException ex) {
-        // We use HttpStatus.NOT_FOUND (404) because the resource doesn't exist
+        // We use HttpStatus.NOT_FOUND (404) because the resource doesn't exist.
         return build(HttpStatus.NOT_FOUND, ex.getMessage(), ex, false);
     }
 }
