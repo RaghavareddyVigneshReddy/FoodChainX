@@ -89,7 +89,8 @@ public class LogisticsService {
     private ShipmentResponseDTO convertToShipmentResponseDTO(Shipment s) {
         return ShipmentResponseDTO.builder()
                 .shipmentId(s.getShipmentId().longValue())
-                .batchId(s.getBatch().longValue()) // Match your private Integer batch
+                .batchId(s.getBatch().longValue())
+                .distributorId(s.getDistributor() != null ? s.getDistributor().longValue() : null)
                 .status(s.getStatus())
                 .departureDate(s.getDepartureDate())
                 .arrivalDate(s.getArrivalDate())
