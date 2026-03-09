@@ -19,6 +19,7 @@ import com.cts.FoodChainX.model.User;
 import com.cts.FoodChainX.model.UserStatus;
 import com.cts.FoodChainX.repository.UserRepository;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -82,6 +83,20 @@ public SecurityFilterChain filterChain(
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         )
         .authenticationProvider(authenticationProvider)
+        .exceptionHandling(exception -> exception
+    // Handles 401 Unauthorized (No token/Invalid token)
+    .authenticationEntryPoint((request, response, authException) -> {
+        response.setContentType("application/json");
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.getWriter().write("{\"status\": 401, \"error\": \"Unauthorized\", \"message\": \"Authentication required\"}");
+    })
+    // Handles 403 Forbidden (Wrong Role)
+    .accessDeniedHandler((request, response, accessDeniedException) -> {
+        response.setContentType("application/json");
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        response.getWriter().write("{\"status\": 403, \"error\": \"Forbidden\", \"message\": \"You do not have the required permissions\"}");
+    })
+)
         .authorizeHttpRequests(auth -> auth
             // 1. Unified Public Auth & Health Endpoints
             .requestMatchers("/api/auth/**").permitAll() 
@@ -95,7 +110,7 @@ public SecurityFilterChain filterChain(
             // 3. Traceability & Consumer Portal (Merged & Secured)
             // Note: Use permitAll() for public trace or hasAnyRole for secured portal
             .requestMatchers("/api/trace/**").permitAll()
-            .requestMatchers("/api/consumer/**").hasAnyRole("CONSUMER", "ADMIN")
+            .requestMatchers("/api/consumer/**").permitAll()
 
             // 4. Reporting Module
             .requestMatchers("/api/reports/**").permitAll()
@@ -118,13 +133,13 @@ public SecurityFilterChain filterChain(
 
                 // Insert these matchers into your authorizeHttpRequests(auth -> { ... }) block
 
-// 1. Only Farmers can create new batches
+                    // 1. Only Farmers can create new batches
                    .requestMatchers(HttpMethod.POST, "/api/production/add").hasRole("FARMER")
 
-// 2. Only Farmers can delete batches
-                 .requestMatchers(HttpMethod.DELETE, "/api/production/{id}").hasRole("FARMER")
+                // 2. Only Farmers can delete batches
+                    .requestMatchers(HttpMethod.DELETE, "/api/production/{id}").hasRole("FARMER")
 
-// 3. Farmers can view their own, Regulators/Admins can view for inspections
+                // 3. Farmers can view their own, Regulators/Admins can view for inspections
                    .requestMatchers(HttpMethod.GET, "/api/production/**").hasAnyRole("FARMER", "REGULATOR", "ADMIN")
             // 5. Secure all other endpoints
 
@@ -137,10 +152,6 @@ public SecurityFilterChain filterChain(
 
 // 3. Only Admins should ideally delete quality logs to maintain audit integrity
                     .requestMatchers(HttpMethod.DELETE, "/api/quality-checks/**").hasRole("ADMIN")
-
-
-
-
 
             .anyRequest().authenticated()
         )

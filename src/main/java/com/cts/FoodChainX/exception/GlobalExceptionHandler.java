@@ -1,6 +1,8 @@
 package com.cts.FoodChainX.exception;
 
 import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,8 +11,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -19,9 +19,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
-
-    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     private Map<String, Object> body(HttpStatus status, String message, String correlationId) {
         Map<String, Object> map = new LinkedHashMap<>();
@@ -39,6 +38,10 @@ public class GlobalExceptionHandler {
             log.error("[{}] {}", cid, message, ex);
         } else {
             log.warn("[{}] {} - {}", cid, message, ex.getMessage());
+        }
+        
+        if (status == HttpStatus.FORBIDDEN) {
+            log.warn("[{}] Security Block: {}", cid, message);
         }
         return new ResponseEntity<>(body(status, message, cid), status);
     }
@@ -134,5 +137,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleBatchNotFound(BatchNotFoundException ex) {
         // We use HttpStatus.NOT_FOUND (404) because the resource doesn't exist.
         return build(HttpStatus.NOT_FOUND, ex.getMessage(), ex, false);
+    }
+
+    /** 403 – Forbidden (Security Authorization failure) */
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleAccessDenied(org.springframework.security.access.AccessDeniedException ex) {
+        String msg = "Access Denied: You do not have permission to access this resource.";
+        return build(HttpStatus.FORBIDDEN, msg, ex, false);
     }
 }
