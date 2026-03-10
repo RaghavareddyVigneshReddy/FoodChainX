@@ -7,5 +7,6 @@ import java.time.LocalDate;
 public class DeliveryRequestDTO {
     private Long shipmentId;
     private Long warehouseId;
+    private Long retailerId;
     private LocalDate deliveryDate;
 }
