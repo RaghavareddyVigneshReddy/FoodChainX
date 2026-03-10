@@ -25,10 +25,10 @@ public class FarmService {
     /**
      * 1. CREATE: Register a new farm plot linked to a User object
      */
-    public FarmResponseDto creatingfarm(FarmRequestDto request, Long farmerId) {
+    public FarmResponseDto creatingfarm(FarmRequestDto request, String email) {
         // Find the farmer in the database first
-        User farmer = userRepository.findById(farmerId)
-                .orElseThrow(() -> new RuntimeException("Farmer not found with ID: " + farmerId));
+        User farmer = userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new RuntimeException("Farmer not found with email: " + email));
 
         Farm farmEntity = new Farm();
         farmEntity.setName(request.getName());
@@ -45,9 +45,11 @@ public class FarmService {
     /**
      * 2. READ: Get all farms for a specific farmer
      */
-    public List<FarmResponseDto> getAllFarmsByFarmer(Long farmerId) {
+    public List<FarmResponseDto> getAllFarmsByFarmerEmail(String email) {
         // Matches the method name in your FarmRepository
-        List<Farm> farms = farmRepository.findByFarmer_UserId(farmerId);
+        User farmer = userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new RuntimeException("Farmer not found with email: " + email));
+        List<Farm> farms = farmRepository.findByFarmer_UserId(farmer.getUserId());
         return farms.stream()
                     .map(this::mapToResponseDto)
                     .collect(Collectors.toList());
@@ -89,12 +91,17 @@ public class FarmService {
     /**
      * 5. DELETE: Remove a farm record
      */
-    public String deleteFarm(Long farmId) {
-        if (!farmRepository.existsById(farmId)) {
-            throw new RuntimeException("Cannot delete. Farm ID " + farmId + " not found.");
+    public String deleteFarm(Long farmId, String email) {
+        Farm farm = farmRepository.findById(farmId)
+                .orElseThrow(() -> new RuntimeException("Farm not found"));
+        
+        // Check if the logged-in user's email matches the farm owner's email
+        if (!farm.getFarmer().getEmail().equalsIgnoreCase(email)) {
+            throw new RuntimeException("Unauthorized: You do not own this farm.");
         }
-        farmRepository.deleteById(farmId);
-        return "Farm successfully removed from the system.";
+        
+        farmRepository.delete(farm);
+        return "Farm removed.";
     }
 
     private FarmResponseDto mapToResponseDto(Farm farm) {
