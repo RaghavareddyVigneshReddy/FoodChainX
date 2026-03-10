@@ -10,8 +10,10 @@ public record TraceRecordResponseDto(
     String cropType,
     String farmName,
     String distributorName,
-    Integer retailerId,
+    String retailerName,
     String consumerName,
     LocalDate date,
-    String status
+    String status,
+    boolean isQualityCertified,
+    String qualityGrade
 ) {}
