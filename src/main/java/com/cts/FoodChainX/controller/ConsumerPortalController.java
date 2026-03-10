@@ -5,6 +5,8 @@ import com.cts.FoodChainX.service.TraceabilityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,4 +29,10 @@ public class ConsumerPortalController {
         log.info("REST request to generate QR payload for Batch ID: {}", batchId);
         return ResponseEntity.ok(traceabilityService.generateQrPayload(batchId));
     }
+
+    @GetMapping("/history/{batchId}")
+    public ResponseEntity<List<TraceRecordResponseDto>> getBatchHistory(@PathVariable Long batchId) {
+        log.info("REST request to get full history for Batch ID: {}", batchId);
+        return ResponseEntity.ok(traceabilityService.getBatchHistory(batchId));
+}
 }
