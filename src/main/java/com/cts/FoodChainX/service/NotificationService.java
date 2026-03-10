@@ -23,9 +23,9 @@ public class NotificationService {
     public List<Notification> getNotificationsForUser(Long userId) {
         log.info("User {} is retrieving their alerts.", userId); //
         List<Notification> list = repository.findByUserUserIdOrderByCreatedDateDesc(userId);
-        if (list.isEmpty()) {
-            throw new NotificationNotFoundException("No notifications found for user " + userId);
-        }
+        // if (list.isEmpty()) {
+        //     throw new NotificationNotFoundException("No notifications found for user " + userId);
+        // }
         return list;
     }
 

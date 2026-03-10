@@ -14,9 +14,11 @@ import com.cts.FoodChainX.dto.quality.QualityRequestDto; // Ensure this package 
 import com.cts.FoodChainX.model.Farm;
 import com.cts.FoodChainX.model.ProductionBatch;
 import com.cts.FoodChainX.model.QualityCheck;
+import com.cts.FoodChainX.model.TraceRecord;
 import com.cts.FoodChainX.repository.FarmRepository;
 import com.cts.FoodChainX.repository.ProductionBatchRepository;
 import com.cts.FoodChainX.repository.QualityLoggingRepository;
+import com.cts.FoodChainX.repository.TraceRecordRepository;
 import com.cts.FoodChainX.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ public class ProductionBatchService{
     private final FarmRepository farmRepository;
     private final QualityLoggingRepository qualityRepo;
     private final UserRepository userRepository;
+    private final TraceRecordRepository traceRecordRepository;
 
     // --- PRODUCTION BATCH METHODS ---
 
@@ -44,32 +47,51 @@ public class ProductionBatchService{
                 .build();
 
         ProductionBatch saved = batchRepository.save(batch);
+        // --- AUTOMATION: Create Initial Trace Record ---
+        TraceRecord initialTrace = new TraceRecord();
+        initialTrace.setProductionBatch(saved);
+        initialTrace.setFarm(farm);
+        initialTrace.setStatus("HARVESTED_AT_FARM");
+        initialTrace.setDate(LocalDate.now());
+        traceRecordRepository.save(initialTrace);
+
         return new BatchResponseDto(saved.getProductionId(), saved.getQualityStatus());
     }
 
     // --- QUALITY CHECK METHODS ---
 
-  @Transactional
-    public String performQualityCheck(QualityRequestDto dto) {
-        ProductionBatch batch = batchRepository.findById(dto.getBatchId())
-                .orElseThrow(() -> new RuntimeException("Batch not found"));
+        @Transactional
+        public String performQualityCheck(QualityRequestDto dto) {
+                ProductionBatch batch = batchRepository.findById(dto.getBatchId())
+                        .orElseThrow(() -> new RuntimeException("Batch not found"));
                 // 2. Find the User (Inspector) -> THIS IS THE MISSING STEP
-    var inspectorUser = userRepository.findById(dto.getInspectorId())
-            .orElseThrow(() -> new RuntimeException("Inspector/User not found"));
+                var inspectorUser = userRepository.findById(dto.getInspectorId())
+                .orElseThrow(() -> new RuntimeException("Inspector/User not found"));
 
-        // Fix: Use scalar IDs to match your QualityCheck model
-        QualityCheck check = QualityCheck.builder()
-                .batch(batch) // scalar ID instead of setBatch(batch)
-                .inspector(inspectorUser)
-                .findings(dto.getFindings())
-                .status(dto.getStatus())
-                .date(LocalDate.now())
-                .build();
-        qualityRepo.save(check);
+                QualityCheck check = QualityCheck.builder()
+                        .batch(batch) 
+                        .inspector(inspectorUser)
+                        .findings(dto.getFindings())
+                        .status(dto.getStatus())
+                        .date(LocalDate.now())
+                        .build();
+                qualityRepo.save(check);
 
         // Update the batch status
         batch.setQualityStatus(dto.getStatus());
         batchRepository.save(batch); 
+
+        // --- AUTOMATION: Update Traceability Status ---
+        traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDesc(batch.getProductionId())
+            .stream()
+            .findFirst()
+            .ifPresent(record -> {
+                // If quality passed, update status to reflect it's ready
+                String traceStatus = "PASSED".equalsIgnoreCase(dto.getStatus()) ? "QUALITY_CERTIFIED" : "QUALITY_REJECTED";
+                record.setStatus(traceStatus);
+                record.setDate(LocalDate.now());
+                traceRecordRepository.save(record);
+            });
 
         return "Batch status updated to: " + dto.getStatus();
     }
