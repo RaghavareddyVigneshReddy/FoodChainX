@@ -38,9 +38,8 @@ public class SecurityConfig {
         return username -> {
             User u = userRepository.findByEmailIgnoreCase(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
-           // System.out.println("Login attempt: " + u.getEmail() + " | Role: " + u.getRole() + " | Status: " + u.getStatus());
             
-           boolean enabled = u.getStatus() == UserStatus.ACTIVE;
+            boolean enabled = u.getStatus() == UserStatus.ACTIVE;
             boolean accountNonLocked = u.getStatus() != UserStatus.SUSPENDED;
 
             return org.springframework.security.core.userdetails.User
@@ -69,95 +68,71 @@ public class SecurityConfig {
         return cfg.getAuthenticationManager();
     }
 
+    @Bean
+    public SecurityFilterChain filterChain(
+            HttpSecurity http,
+            DaoAuthenticationProvider authenticationProvider
+    ) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable()) 
+            .cors(Customizer.withDefaults())
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            .authenticationProvider(authenticationProvider)
+            .exceptionHandling(exception -> exception
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setContentType("application/json");
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.getWriter().write("{\"status\": 401, \"error\": \"Unauthorized\", \"message\": \"Authentication required\"}");
+                })
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    response.setContentType("application/json");
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.getWriter().write("{\"status\": 403, \"error\": \"Forbidden\", \"message\": \"You do not have the required permissions\"}");
+                })
+            )
+            .authorizeHttpRequests(auth -> auth
+                // 1. Unified Public Auth & Health Endpoints
+                // Added /foodchainx/auth/** to match your actual controller path
+                .requestMatchers("/api/auth/**").permitAll() 
+                .requestMatchers("/foodchainx/auth/**").permitAll() 
+                .requestMatchers("/actuator/health").permitAll()
 
-@Bean
-public SecurityFilterChain filterChain(
-        HttpSecurity http,
-        DaoAuthenticationProvider authenticationProvider
-) throws Exception {
-    http
-        .csrf(csrf -> csrf.disable()) // Mandatory to prevent 403 on POST/PUT
-        .cors(Customizer.withDefaults())
-        // Added from teammate: Ensures no session is stored on server (JWT standard)
-        .sessionManagement(session -> session
-            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-        )
-        .authenticationProvider(authenticationProvider)
-        .exceptionHandling(exception -> exception
-    // Handles 401 Unauthorized (No token/Invalid token)
-    .authenticationEntryPoint((request, response, authException) -> {
-        response.setContentType("application/json");
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.getWriter().write("{\"status\": 401, \"error\": \"Unauthorized\", \"message\": \"Authentication required\"}");
-    })
-    // Handles 403 Forbidden (Wrong Role)
-    .accessDeniedHandler((request, response, accessDeniedException) -> {
-        response.setContentType("application/json");
-        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-        response.getWriter().write("{\"status\": 403, \"error\": \"Forbidden\", \"message\": \"You do not have the required permissions\"}");
-    })
-)
-        .authorizeHttpRequests(auth -> auth
-            // 1. Unified Public Auth & Health Endpoints
-            .requestMatchers("/api/auth/**").permitAll() 
-            .requestMatchers("/actuator/health").permitAll()
+                // 2. Notifications Module
+                .requestMatchers("/foodchainx/notifications/**").permitAll()
+                .requestMatchers("/notifications/**").permitAll()
 
-            // 2. Notifications Module (Merged from teammate)
-            // Permitting these allows the notification system to trigger alerts freely
-            .requestMatchers("/foodchainx/notifications/**").permitAll()
-            .requestMatchers("/notifications/**").permitAll()
+                // 3. Traceability & Consumer Portal
+                .requestMatchers("/api/trace/**").permitAll()
+                .requestMatchers("/api/consumer/**").permitAll()
 
-            // 3. Traceability & Consumer Portal (Merged & Secured)
-            // Note: Use permitAll() for public trace or hasAnyRole for secured portal
-            .requestMatchers("/api/trace/**").permitAll()
-            .requestMatchers("/api/consumer/**").permitAll()
+                // 4. Reporting Module
+                .requestMatchers("/api/reports/**").permitAll()
 
-            // 4. Reporting Module
-            .requestMatchers("/api/reports/**").permitAll()
-
-                            // Restrict based on the roles defined in your User model
+                // --- Secured Module Endpoints (Role Based) ---
                 .requestMatchers("/api/farms/register/**").hasRole("FARMER")
                 .requestMatchers("/api/farms/farmer/**").hasRole("FARMER")
                 .requestMatchers(HttpMethod.DELETE, "/api/farms/**").hasRole("FARMER")
                 .requestMatchers("/api/logistics/shipments/**").hasAnyRole("DISTRIBUTOR", "ADMIN")
-
-                 // Secures warehouse capacity monitoring
-                 .requestMatchers("/api/logistics/warehouses/**").hasAnyRole("DISTRIBUTOR", "ADMIN")
-
-                  // Secures delivery logging
+                .requestMatchers("/api/logistics/warehouses/**").hasAnyRole("DISTRIBUTOR", "ADMIN")
                 .requestMatchers("/api/logistics/deliveries/**").hasAnyRole("DISTRIBUTOR", "ADMIN")
-                
-                // Allow Regulators or Admins to update the certification status
                 .requestMatchers(HttpMethod.PATCH, "/api/farms/*/status").hasAnyRole("REGULATOR", "ADMIN")
-                
 
-                // Insert these matchers into your authorizeHttpRequests(auth -> { ... }) block
+                // Production Module Matchers
+                .requestMatchers(HttpMethod.POST, "/api/production/add").hasRole("FARMER")
+                .requestMatchers(HttpMethod.DELETE, "/api/production/{id}").hasRole("FARMER")
+                .requestMatchers(HttpMethod.GET, "/api/production/**").hasAnyRole("FARMER", "REGULATOR", "ADMIN")
 
-                    // 1. Only Farmers can create new batches
-                   .requestMatchers(HttpMethod.POST, "/api/production/add").hasRole("FARMER")
+                // Quality Checks Matchers
+                .requestMatchers(HttpMethod.POST, "/api/quality-checks/inspect").hasAnyRole("REGULATOR", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/quality-checks/status/**").hasAnyRole("REGULATOR", "ADMIN", "FARMER")
+                .requestMatchers(HttpMethod.DELETE, "/api/quality-checks/**").hasRole("ADMIN")
 
-                // 2. Only Farmers can delete batches
-                    .requestMatchers(HttpMethod.DELETE, "/api/production/{id}").hasRole("FARMER")
+                .anyRequest().authenticated()
+            )
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-                // 3. Farmers can view their own, Regulators/Admins can view for inspections
-                   .requestMatchers(HttpMethod.GET, "/api/production/**").hasAnyRole("FARMER", "REGULATOR", "ADMIN")
-            // 5. Secure all other endpoints
-
-
-         // 1. Only Regulators or Admins can perform the actual inspection
-               .requestMatchers(HttpMethod.POST, "/api/quality-checks/inspect").hasAnyRole("REGULATOR", "ADMIN")
-
-// 2. Regulators, Admins, and Farmers can view inspection results (Farmers need to see if their batch passed)
-                  .requestMatchers(HttpMethod.GET, "/api/quality-checks/status/**").hasAnyRole("REGULATOR", "ADMIN", "FARMER")
-
-// 3. Only Admins should ideally delete quality logs to maintain audit integrity
-                    .requestMatchers(HttpMethod.DELETE, "/api/quality-checks/**").hasRole("ADMIN")
-
-            .anyRequest().authenticated()
-        )
-        // JWT filter must process the request before Spring's internal auth filter
-        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
-    return http.build();
-}
+        return http.build();
+    }
 }
