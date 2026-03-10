@@ -1,7 +1,10 @@
 package com.cts.FoodChainX.exception;
 
-import jakarta.validation.ConstraintViolationException;
-import lombok.extern.slf4j.Slf4j;
+import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -12,11 +15,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
 
 @RestControllerAdvice
 @Slf4j
@@ -46,7 +46,13 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body(status, message, cid), status);
     }
 
-    /** 404 – domain not-found (e.g., notifications) */
+
+   /** 404 – Farm or Batch specific not-found */
+@ExceptionHandler({FarmNotFoundException.class, BatchNotFoundException.class})
+public ResponseEntity<Map<String, Object>> handleEntityNotFound(RuntimeException ex) {
+    return build(HttpStatus.NOT_FOUND, ex.getMessage(), ex, false);
+}
+  /** 404 – domain not-found (e.g., notifications) */
     @ExceptionHandler(NotificationNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleNotFound(NotificationNotFoundException ex) {
         return build(HttpStatus.NOT_FOUND, ex.getMessage(), ex, false);

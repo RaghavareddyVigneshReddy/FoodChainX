@@ -11,6 +11,8 @@ import com.cts.FoodChainX.dto.batch.BatchDetailResponseDto;
 import com.cts.FoodChainX.dto.batch.BatchRequestDto;
 import com.cts.FoodChainX.dto.batch.BatchResponseDto;
 import com.cts.FoodChainX.dto.quality.QualityRequestDto; // Ensure this package exists
+import com.cts.FoodChainX.exception.BatchNotFoundException;
+import com.cts.FoodChainX.exception.FarmNotFoundException;
 import com.cts.FoodChainX.model.Farm;
 import com.cts.FoodChainX.model.ProductionBatch;
 import com.cts.FoodChainX.model.QualityCheck;
@@ -25,18 +27,15 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class ProductionBatchService{
-
     private final ProductionBatchRepository batchRepository;
     private final FarmRepository farmRepository;
     private final QualityLoggingRepository qualityRepo;
     private final UserRepository userRepository;
     private final TraceRecordRepository traceRecordRepository;
-
     // --- PRODUCTION BATCH METHODS ---
-
     public BatchResponseDto createBatch(BatchRequestDto dto) {
         Farm farm = farmRepository.findById(dto.getFarmId())
-                .orElseThrow(() -> new RuntimeException("Farm not found"));
+                .orElseThrow(() -> new FarmNotFoundException(dto.getFarmId()));
 
         ProductionBatch batch = ProductionBatch.builder()
                 .farm(farm)
@@ -62,11 +61,12 @@ public class ProductionBatchService{
 
         @Transactional
         public String performQualityCheck(QualityRequestDto dto) {
-                ProductionBatch batch = batchRepository.findById(dto.getBatchId())
-                        .orElseThrow(() -> new RuntimeException("Batch not found"));
-                // 2. Find the User (Inspector) -> THIS IS THE MISSING STEP
-                var inspectorUser = userRepository.findById(dto.getInspectorId())
-                .orElseThrow(() -> new RuntimeException("Inspector/User not found"));
+               ProductionBatch batch = batchRepository.findById(dto.getBatchId())
+            .orElseThrow(() -> new BatchNotFoundException(dto.getBatchId()));
+
+    // Use a generic message for the Inspector (or create UserNotFoundException)
+    var inspectorUser = userRepository.findById(dto.getInspectorId())
+            .orElseThrow(() -> new RuntimeException("Inspector not found with ID: " + dto.getInspectorId()));
 
                 QualityCheck check = QualityCheck.builder()
                         .batch(batch) 
@@ -102,7 +102,7 @@ public class ProductionBatchService{
 public BatchDetailResponseDto getBatchDetail(Long batchId) {
     // 1. Fetch the batch or throw an error if the ID is wrong
     ProductionBatch batch = batchRepository.findById(batchId)
-            .orElseThrow(() -> new RuntimeException("Batch not found with ID: " + batchId));
+            .orElseThrow(() -> new BatchNotFoundException(batchId));
 
     // 2. Map the findings from the related QualityCheck list
     // This works because of the @OneToMany relationship in your Model
@@ -127,7 +127,7 @@ public BatchDetailResponseDto getBatchDetail(Long batchId) {
     // 1. Get a single batch by ID (Useful for the Farmer or Regulator)
     public BatchResponseDto getBatchById(Long batchId) {
         ProductionBatch batch = batchRepository.findById(batchId)
-                .orElseThrow(() -> new RuntimeException("Batch not found with ID: " + batchId));
+                .orElseThrow(() -> new BatchNotFoundException(batchId));
 
         return new BatchResponseDto(
                 batch.getProductionId(),
@@ -144,13 +144,11 @@ public BatchDetailResponseDto getBatchDetail(Long batchId) {
                         batch.getQualityStatus()))
                 .collect(Collectors.toList());
     }
-
     // 3. Delete a Batch
     @Transactional
     public String deleteBatch(Long batchId) {
         ProductionBatch batch = batchRepository.findById(batchId)
-                .orElseThrow(() -> new RuntimeException("Batch not found"));
-
+                .orElseThrow(() -> new BatchNotFoundException(batchId));
         // Logic check: Usually, you shouldn't delete a batch if it's already "PASSED" 
         // because it might be linked to a shipment already.
         if ("PASSED".equals(batch.getQualityStatus())) {
