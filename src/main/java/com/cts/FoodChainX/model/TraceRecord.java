@@ -31,11 +31,12 @@ public class TraceRecord {
     private Farm farm;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "DistributorID")
-    private Warehouse distributor;
+    @JoinColumn(name = "DistributorID") 
+    private User distributor; 
 
-    @Column(name = "RetailerID")
-    private Integer retailerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "RetailerID")
+    private User retailer;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ConsumerID")

@@ -3,6 +3,7 @@ package com.cts.FoodChainX.controller;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication; // Added missing import
 import org.springframework.web.bind.annotation.*;
 
 import com.cts.FoodChainX.dto.farm.FarmRequestDto;
@@ -19,34 +20,53 @@ public class FarmController {
     @Autowired
     private FarmService farmService;
 
-    // POST: http://localhost:8080/api/farms/register/1
-    @PostMapping("/register/{farmerId}")
+    /**
+     * POST: http://localhost:8081/api/farms/register
+     * Securely registers a farm using the email from the JWT token.
+     */
+    @PostMapping("/register")
     public ResponseEntity<FarmResponseDto> registerFarm(
             @RequestBody FarmRequestDto request, 
-            @PathVariable Long farmerId) {
-        log.info("REST request to register new Farm for Farmer ID: {}", farmerId);
-        return ResponseEntity.ok(farmService.creatingfarm(request, farmerId));
+            Authentication authentication) {
+        
+        // authentication.getName() returns the email/username set during JWT validation
+        String email = authentication.getName(); 
+        log.info("REST request to register new Farm for user: {}", email);
+        
+        return ResponseEntity.ok(farmService.creatingfarm(request, email));
     }
 
-    // GET: http://localhost:8080/api/farms/farmer/1
-    @GetMapping("/farmer/{farmerId}")
-    public ResponseEntity<List<FarmResponseDto>> getMyFarms(@PathVariable Long farmerId) {
-        return ResponseEntity.ok(farmService.getAllFarmsByFarmer(farmerId));
+    /**
+     * GET: http://localhost:8081/api/farms/my-farms
+     * Returns all farms belonging to the currently logged-in user.
+     */
+    @GetMapping("/my-farms")
+    public ResponseEntity<List<FarmResponseDto>> getMyFarms(Authentication authentication) {
+        String email = authentication.getName();
+        log.info("Fetching farms for logged-in user: {}", email);
+        
+        return ResponseEntity.ok(farmService.getAllFarmsByFarmerEmail(email));
     }
 
-    // PATCH: http://localhost:8080/api/farms/1/status?status=CERTIFIED
+    /**
+     * PATCH: http://localhost:8081/api/farms/{farmId}/status?status=CERTIFIED
+     * Typically used by a REGULATOR to update certification.
+     */
     @PatchMapping("/{farmId}/status")
     public ResponseEntity<FarmResponseDto> updateStatus(
             @PathVariable Long farmId, 
             @RequestParam String status) {
-        log.warn("REST request to UPDATE Farm Status for Farm ID: {}", farmId);
+        log.warn("REST request to UPDATE Farm Status for Farm ID: {} to {}", farmId, status);
         return ResponseEntity.ok(farmService.updateStatus(farmId, status));
     }
 
-    // DELETE: http://localhost:8080/api/farms/1
+    /**
+     * DELETE: http://localhost:8081/api/farms/{farmId}
+     */
     @DeleteMapping("/{farmId}")
-    public ResponseEntity<String> removeFarm(@PathVariable Long farmId) {
+    public ResponseEntity<String> removeFarm(@PathVariable Long farmId, Authentication authentication) {
+        String email = authentication.getName();
         log.warn("REST request to DELETE Farm ID: {}", farmId);
-        return ResponseEntity.ok(farmService.deleteFarm(farmId));
+        return ResponseEntity.ok(farmService.deleteFarm(farmId, email));
     }
 }

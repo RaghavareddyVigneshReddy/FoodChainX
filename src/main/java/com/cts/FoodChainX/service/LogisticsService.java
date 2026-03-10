@@ -24,7 +24,7 @@ public class LogisticsService {
     @Autowired
     private DeliveryRepository deliveryRepository;
 
-    
+    @Transactional
     public ShipmentResponseDTO initiateShipment(ShipmentRequestDTO request) {
    
     ProductionBatch batchObj = batchRepository.findById(request.getBatchId())

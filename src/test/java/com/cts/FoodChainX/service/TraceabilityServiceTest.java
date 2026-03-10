@@ -56,7 +56,7 @@ class TraceabilityServiceTest {
         consumer.setName("Johnny");
         sampleRecord.setConsumer(consumer);
 
-        when(traceRecordRepository.findByProductionBatch_ProductionId(BATCH_ID))
+        when(traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDesc(BATCH_ID))
                 .thenReturn(Optional.of(sampleRecord));
 
         // 2. Act
