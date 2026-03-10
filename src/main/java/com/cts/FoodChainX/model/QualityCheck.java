@@ -13,17 +13,15 @@ public class QualityCheck {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "quality_id")
+    @Column(name = "qualityid") // MySQL is case-insensitive, but let's match the table
     private Long qualityId;
 
-    // Many quality checks can belong to one Production Batch
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "batch_id", nullable = false)
+    @JoinColumn(name = "batchid", nullable = false) // Fix: was batch_id
     private ProductionBatch batch;
 
-    // Many inspections can be done by one User (The Regulator)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "inspector_id", nullable = false)
+    @JoinColumn(name = "inspectorid", nullable = false) // Fix: was inspector_id
     private User inspector; 
 
     @Column(name = "inspection_date", nullable = false)
