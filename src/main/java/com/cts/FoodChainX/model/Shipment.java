@@ -16,13 +16,13 @@ public class Shipment {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     @Column(name="ShipmentID")
-    private Integer shipmentId;
+    private Long shipmentId;
 
     @Column(name="BatchID", nullable=false)
-    private Integer batch; // REMOVED @ManyToOne
+    private Long batchId; // REMOVED @ManyToOne
 
     @Column(name="DistributorID", nullable=false)
-    private Integer distributor; // REMOVED @ManyToOne
+    private Long distributorId; // REMOVED @ManyToOne
 
     @Column(name="Departuredate", nullable=false)
     private LocalDate departureDate;

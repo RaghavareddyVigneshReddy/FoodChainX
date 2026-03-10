@@ -11,8 +11,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class NotificationResponseDTO {
-    private Integer notificationId;
-    private Integer entityId;
+    private Long notificationId;
+    private Long entityId;
     private String message;
     private String category;
     private String status;
