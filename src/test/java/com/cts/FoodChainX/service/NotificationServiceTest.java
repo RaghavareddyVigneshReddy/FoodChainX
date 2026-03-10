@@ -14,7 +14,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,15 +44,17 @@ class NotificationServiceTest {
         mockUser.setName("Jagan");
 
         mockNotification = new Notification();
-        mockNotification.setNotificationId(101);
+        // FIXED: Using Long literal (L)
+        mockNotification.setNotificationId(101L); 
         mockNotification.setMessage("Test Alert");
         mockNotification.setStatus("Unread");
         mockNotification.setUser(mockUser);
+        // Ensure entityId is also Long if your model was updated
+        mockNotification.setEntityId(501L); 
 
-        // Define a DTO for input testing
         mockRequestDTO = NotificationRequestDTO.builder()
                 .userId(1L)
-                .entityId(501)
+                .entityId(501L) // FIXED: Long literal
                 .message("Test Alert")
                 .category("Compliance")
                 .build();
@@ -64,7 +65,6 @@ class NotificationServiceTest {
         when(notificationRepository.findByUserUserIdOrderByCreatedDateDesc(1L))
                 .thenReturn(List.of(mockNotification));
 
-        // Change return type to NotificationResponseDTO list
         List<NotificationResponseDTO> result = notificationService.getNotificationsForUser(1L);
 
         assertFalse(result.isEmpty());
@@ -74,11 +74,11 @@ class NotificationServiceTest {
 
     @Test
     void testMarkAsRead_Success() {
-        when(notificationRepository.findById(101)).thenReturn(Optional.of(mockNotification));
+        // FIXED: 101L
+        when(notificationRepository.findById(101L)).thenReturn(Optional.of(mockNotification));
         when(notificationRepository.save(any(Notification.class))).thenReturn(mockNotification);
 
-        // Change return type to NotificationResponseDTO
-        NotificationResponseDTO result = notificationService.markAsRead(101);
+        NotificationResponseDTO result = notificationService.markAsRead(101L);
 
         assertEquals("Read", result.getStatus());
     }
@@ -88,13 +88,21 @@ class NotificationServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(mockUser));
         when(notificationRepository.save(any(Notification.class))).thenReturn(mockNotification);
 
-        // Pass the DTO instead of the entity
         NotificationResponseDTO created = notificationService.createNotification(mockRequestDTO);
 
         assertNotNull(created);
-        assertEquals(101, created.getNotificationId());
+        // FIXED: Expecting Long
+        assertEquals(101L, created.getNotificationId());
         verify(notificationRepository, times(1)).save(any(Notification.class));
     }
-    
-    // Deletion tests remain largely the same as they don't involve DTO returns
+
+    @Test
+    void testDeleteNotification_Success() {
+        // FIXED: 101L and ensuring existence check is mocked
+        when(notificationRepository.existsById(101L)).thenReturn(true);
+        doNothing().when(notificationRepository).deleteById(101L);
+
+        assertDoesNotThrow(() -> notificationService.deleteNotification(101L));
+        verify(notificationRepository, times(1)).deleteById(101L);
+    }
 }

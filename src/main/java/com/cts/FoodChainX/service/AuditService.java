@@ -26,7 +26,7 @@ public class AuditService {
         return savedAudit;
     }
 
-    public Audit closeAudit(Integer auditId) {
+    public Audit closeAudit(Long auditId) {
 
         Audit audit = auditRepository.findById(auditId)
                 .orElseThrow(() -> new RuntimeException("Audit not found"));

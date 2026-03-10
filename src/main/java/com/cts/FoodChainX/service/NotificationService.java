@@ -42,7 +42,7 @@ public class NotificationService {
     /**
      * Updates notification status to 'Read' and returns the updated DTO.
      */
-    public NotificationResponseDTO markAsRead(int notificationId) {
+    public NotificationResponseDTO markAsRead(Long notificationId) {
         Notification n = repository.findById(notificationId)
                 .orElseThrow(() -> new NotificationNotFoundException("Notification ID " + notificationId + " not found"));
         
@@ -76,7 +76,7 @@ public class NotificationService {
     /**
      * Deletes a notification by ID.
      */
-    public void deleteNotification(int notificationId) {
+    public void deleteNotification(Long notificationId) {
         if (!repository.existsById(notificationId)) {
             throw new NotificationNotFoundException("Notification ID " + notificationId + " not found");
         }

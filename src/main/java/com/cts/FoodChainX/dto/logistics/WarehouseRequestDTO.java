@@ -16,7 +16,7 @@ public class WarehouseRequestDTO {
     
     private String location; 
     
-    private Integer capacity; 
+    private Long capacity; 
     private String status;
     
 }

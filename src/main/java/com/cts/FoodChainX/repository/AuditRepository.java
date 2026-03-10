@@ -8,9 +8,9 @@ import com.cts.FoodChainX.model.Audit;
 import java.util.List;
 
 @Repository
-public interface AuditRepository extends JpaRepository<Audit, Integer> {
+public interface AuditRepository extends JpaRepository<Audit, Long> {
 
-    List<Audit> findByRegulatorId(Integer regulatorId);
+    List<Audit> findByRegulatorId(Long regulatorId);
 
     List<Audit> findByStatus(String status);
 

@@ -8,9 +8,9 @@ import com.cts.FoodChainX.model.ComplianceRecord;
 import java.util.List;
 
 @Repository
-public interface ComplianceRecordRepository extends JpaRepository<ComplianceRecord, Integer> {
+public interface ComplianceRecordRepository extends JpaRepository<ComplianceRecord, Long> {
 
-    List<ComplianceRecord> findByEntityId(Integer entityId);
+    List<ComplianceRecord> findByEntityId(Long entityId);
 
     List<ComplianceRecord> findByType(String type);
 

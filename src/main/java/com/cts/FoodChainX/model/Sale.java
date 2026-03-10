@@ -17,21 +17,21 @@ public class Sale {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "SaleID")
-    private Integer saleId;
+    private Long saleId;
 
     // Consider @ManyToOne mapping if Inventory is an entity
     @Column(name = "InventoryID", nullable = false)
-    private Integer inventoryId;
+    private Long inventoryId;
 
     // Consumer reference (can also be @ManyToOne if you have Consumer entity)
     @Column(name = "ConsumerID", nullable = false)
-    private Integer consumerId;
+    private Long consumerId;
 
     @Column(name = "Date", nullable = false)
     private LocalDate date;
 
     @Column(name = "Quantity", nullable = false)
-    private Integer quantity;
+    private Long quantity;
 
     @Column(name = "Price", nullable = false)
     private Double price;
