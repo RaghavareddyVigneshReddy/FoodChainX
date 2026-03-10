@@ -4,18 +4,20 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import com.cts.FoodChainX.model.Shipment;
 
-public interface ShipmentRepository extends JpaRepository<Shipment, Integer> {
+public interface ShipmentRepository extends JpaRepository<Shipment, Long> {
 
-    // Matches 'private Integer distributor'
-    List<Shipment> findByDistributor(Integer distributor);
+    // Corrected: Matches 'private Long distributorId' in Shipment model
+    List<Shipment> findByDistributorId(Long distributorId);
 
-    // Matches 'private Integer batch'
-    List<Shipment> findByBatch(Integer batch);
+    // Corrected: Matches 'private Long batchId' in Shipment model
+    List<Shipment> findByBatchId(Long batchId);
 
+    // This was already correct as it matches 'private String status'
     List<Shipment> findByStatus(String status);
 
-    // Matches 'private Integer distributor' + 'private LocalDate departureDate'
-    List<Shipment> findByDistributorOrderByDepartureDateDesc(Integer distributor);
+    // Corrected: Matches 'distributorId' and 'departureDate'
+    List<Shipment> findByDistributorIdOrderByDepartureDateDesc(Long distributorId);
 
-    List<Shipment> findByDistributorAndStatus(Integer distributor, String status);
+    // This was already correct
+    List<Shipment> findByDistributorIdAndStatus(Long distributorId, String status);
 }
