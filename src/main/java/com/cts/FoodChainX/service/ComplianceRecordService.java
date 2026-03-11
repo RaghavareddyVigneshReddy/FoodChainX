@@ -1,5 +1,6 @@
 package com.cts.FoodChainX.service;
 
+import com.cts.FoodChainX.aspect.Auditable;
 import com.cts.FoodChainX.model.ComplianceRecord;
 import com.cts.FoodChainX.repository.ComplianceRecordRepository;
 
@@ -17,7 +18,8 @@ public class ComplianceRecordService {
 
     @Autowired
     private ComplianceRecordRepository complianceRecordRepository;
-
+    
+    @Auditable(action = "CREATE_COMPLIANCE_RECORD", resource = "COMPLIANCE") // ADD THIS
     public ComplianceRecord createComplianceRecord(ComplianceRecord record) {
 
         record.setDate(LocalDate.now());

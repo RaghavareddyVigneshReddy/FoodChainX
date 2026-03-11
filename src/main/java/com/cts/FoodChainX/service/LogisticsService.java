@@ -2,6 +2,7 @@ package com.cts.FoodChainX.service;
 
 import com.cts.FoodChainX.dto.logistics.*;
 import com.cts.FoodChainX.model.*;
+import com.cts.FoodChainX.aspect.Auditable;
 import com.cts.FoodChainX.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,7 @@ public class LogisticsService {
     private final TraceRecordRepository traceRecordRepository;
 
     @Transactional
+    @Auditable(action = "INITIATE_SHIPMENT", resource = "LOGISTICS") // ADD THIS
     public ShipmentResponseDTO initiateShipment(ShipmentRequestDTO request) {
         ProductionBatch batchObj = batchRepository.findById(request.getBatchId())
                 .orElseThrow(() -> new RuntimeException("Batch not found"));
@@ -51,6 +53,7 @@ public class LogisticsService {
     }
 
     @Transactional
+    @Auditable(action = "UPDATE_SHIPMENT_STATUS", resource = "LOGISTICS") // ADD THIS
     public ShipmentResponseDTO updateShipmentStatus(Long id, ShipmentStatusUpdateRequest request) {
         Shipment shipment = shipmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Shipment record not found"));
@@ -74,6 +77,7 @@ public class LogisticsService {
      * ADDED: This method resolves the error in your LogisticsController
      */
     @Transactional
+    @Auditable(action = "RECORD_DELIVERY", resource = "LOGISTICS") // ADD THIS
     public void recordDelivery(DeliveryRequestDTO request) {
         log.info("Recording delivery for shipment: {}", request.getShipmentId());
         

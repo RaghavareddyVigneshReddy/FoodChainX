@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cts.FoodChainX.aspect.Auditable;
 import com.cts.FoodChainX.dto.batch.BatchDetailResponseDto;
 import com.cts.FoodChainX.dto.batch.BatchRequestDto;
 import com.cts.FoodChainX.dto.batch.BatchResponseDto;
@@ -33,7 +34,7 @@ public class ProductionBatchService{
     private final TraceRecordRepository traceRecordRepository;
 
     // --- PRODUCTION BATCH METHODS ---
-
+    @Auditable(action = "HARVEST_BATCH", resource = "PRODUCTION_BATCH")
     public BatchResponseDto createBatch(BatchRequestDto dto) {
         Farm farm = farmRepository.findById(dto.getFarmId())
                 .orElseThrow(() -> new RuntimeException("Farm not found"));
@@ -61,6 +62,7 @@ public class ProductionBatchService{
     // --- QUALITY CHECK METHODS ---
 
         @Transactional
+        @Auditable(action = "PERFORM_QUALITY_CHECK", resource = "PRODUCTION_BATCH") // ADD THIS
         public String performQualityCheck(QualityRequestDto dto) {
                 ProductionBatch batch = batchRepository.findById(dto.getBatchId())
                         .orElseThrow(() -> new RuntimeException("Batch not found"));
@@ -147,6 +149,7 @@ public BatchDetailResponseDto getBatchDetail(Long batchId) {
 
     // 3. Delete a Batch
     @Transactional
+    @Auditable(action = "DELETE_BATCH", resource = "PRODUCTION_BATCH") // ADD THIS
     public String deleteBatch(Long batchId) {
         ProductionBatch batch = batchRepository.findById(batchId)
                 .orElseThrow(() -> new RuntimeException("Batch not found"));
