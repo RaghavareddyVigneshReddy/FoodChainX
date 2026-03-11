@@ -1,5 +1,6 @@
 package com.cts.FoodChainX.controller;
 
+import com.cts.FoodChainX.dto.inventory.InventoryRequestDTO;
 import com.cts.FoodChainX.model.Inventory;
 import com.cts.FoodChainX.service.InventoryService;
 
@@ -16,7 +17,14 @@ public class InventoryController {
     private InventoryService inventoryService;
 
     @PostMapping
-    public Inventory createInventory(@RequestBody Inventory inventory) {
+    public Inventory createInventory(@RequestBody InventoryRequestDTO dto) {
+        Inventory inventory=new Inventory();
+
+        inventory.setRetailerId(dto.getRetailerId());
+        inventory.setBatchId(dto.getBatchId());
+        inventory.setQuantity(dto.getQuantity());
+        inventory.setStatus(dto.getStatus());
+
         return inventoryService.createInventory(inventory);
     }
 
