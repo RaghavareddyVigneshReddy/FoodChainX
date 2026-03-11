@@ -96,7 +96,7 @@ class ProductionBatchServiceTest {
 
         when(batchRepository.findById(BATCH_ID)).thenReturn(Optional.of(sampleBatch));
         when(userRepository.findById(5L)).thenReturn(Optional.of(sampleInspector));
-        when(traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDesc(BATCH_ID))
+        when(traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(BATCH_ID))
                 .thenReturn(List.of(record));
 
         String result = batchService.performQualityCheck(qDto);
