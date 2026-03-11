@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.cts.FoodChainX.aspect.Auditable;
 import com.cts.FoodChainX.dto.farm.FarmRequestDto;
 import com.cts.FoodChainX.dto.farm.FarmResponseDto;
+import com.cts.FoodChainX.exception.FarmNotFoundException;
 import com.cts.FoodChainX.model.Farm;
 import com.cts.FoodChainX.model.User;
 import com.cts.FoodChainX.repository.FarmRepository;
@@ -30,7 +31,7 @@ public class FarmService {
     public FarmResponseDto creatingfarm(FarmRequestDto request, String email) {
         // Find the farmer in the database first
         User farmer = userRepository.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> new RuntimeException("Farmer not found with email: " + email));
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
 
         Farm farmEntity = new Farm();
         farmEntity.setName(request.getName());
@@ -62,7 +63,7 @@ public class FarmService {
      */
     public FarmResponseDto getFarmById(Long farmId) {
         Farm farm = farmRepository.findById(farmId)
-                .orElseThrow(() -> new RuntimeException("Farm not found with ID: " + farmId));
+                .orElseThrow(() -> new FarmNotFoundException(farmId));
         return mapToResponseDto(farm);
     }
 
@@ -84,7 +85,7 @@ public class FarmService {
     @Auditable(action = "UPDATE_FARM_STATUS", resource = "FARM") // ADD THIS
     public FarmResponseDto updateStatus(Long farmId, String newStatus) {
         Farm farm = farmRepository.findById(farmId)
-                .orElseThrow(() -> new RuntimeException("Farm not found with ID: " + farmId));
+                .orElseThrow(() -> new FarmNotFoundException(farmId));;
         
         farm.setCertificationStatus(newStatus); // Standardizes the certification status
         Farm updatedFarm = farmRepository.save(farm);
@@ -97,7 +98,7 @@ public class FarmService {
     @Auditable(action = "DELETE_FARM", resource = "FARM") // ADD THIS
     public String deleteFarm(Long farmId, String email) {
         Farm farm = farmRepository.findById(farmId)
-                .orElseThrow(() -> new RuntimeException("Farm not found"));
+                .orElseThrow(() -> new FarmNotFoundException(farmId));
         
         // Check if the logged-in user's email matches the farm owner's email
         if (!farm.getFarmer().getEmail().equalsIgnoreCase(email)) {
