@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.cts.FoodChainX.dto.farm.FarmRequestDto;
 import com.cts.FoodChainX.dto.farm.FarmResponseDto;
@@ -13,7 +14,6 @@ import com.cts.FoodChainX.model.Farm;
 import com.cts.FoodChainX.model.User;
 import com.cts.FoodChainX.repository.FarmRepository;
 import com.cts.FoodChainX.repository.UserRepository;
-
 @Service
 public class FarmService {
 
@@ -80,14 +80,20 @@ public class FarmService {
      * 5. PATCH: Update certification status
      * Used by Regulators to APPROVE or REJECT a farm after an audit.
      */
-    public FarmResponseDto updateStatus(Long farmId, String newStatus) {
-        Farm farm = farmRepository.findById(farmId)
-                .orElseThrow(() -> new FarmNotFoundException(farmId));;
-        
-        farm.setCertificationStatus(newStatus); // Standardizes the certification status
-        Farm updatedFarm = farmRepository.save(farm);
-        return mapToResponseDto(updatedFarm);
+  @Transactional // Ensures database integrity
+public FarmResponseDto updateStatus(Long farmId, String newStatus) {
+    Farm farm = farmRepository.findById(farmId)
+            .orElseThrow(() -> new FarmNotFoundException(farmId));
+
+    // Normalize and Validate
+    String status = newStatus.toUpperCase();
+    if (!status.equals("APPROVED") && !status.equals("REJECTED") && !status.equals("PENDING")) {
+        throw new RuntimeException("Invalid status. Use APPROVED, REJECTED, or PENDING.");
     }
+
+    farm.setCertificationStatus(status);
+    return mapToResponseDto(farmRepository.save(farm));
+}
 
     /**
      * 5. DELETE: Remove a farm record

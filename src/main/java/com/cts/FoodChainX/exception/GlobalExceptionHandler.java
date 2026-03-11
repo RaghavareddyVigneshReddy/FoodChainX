@@ -129,7 +129,7 @@ public ResponseEntity<Map<String, Object>> handleEntityNotFound(RuntimeException
 
 
         /** 404 – record not found (like the "Batch not found" from your service) */
-    @ExceptionHandler(RuntimeException.class)
+ /*   @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
         // If the message contains "not found", return 404, otherwise 400
         HttpStatus status = ex.getMessage().toLowerCase().contains("not found") 
@@ -137,13 +137,13 @@ public ResponseEntity<Map<String, Object>> handleEntityNotFound(RuntimeException
                             : HttpStatus.BAD_REQUEST;
         
         return build(status, ex.getMessage(), ex, false);
-    }
+    }*/
 
-    @ExceptionHandler(BatchNotFoundException.class)
+   /*  @ExceptionHandler(BatchNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleBatchNotFound(BatchNotFoundException ex) {
         // We use HttpStatus.NOT_FOUND (404) because the resource doesn't exist.
         return build(HttpStatus.NOT_FOUND, ex.getMessage(), ex, false);
-    }
+    }/* 
 
     /** 403 – Forbidden (Security Authorization failure) */
     @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)

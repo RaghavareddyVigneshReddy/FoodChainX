@@ -7,7 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
@@ -22,13 +24,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.cts.FoodChainX.dto.farm.FarmRequestDto;
 import com.cts.FoodChainX.dto.farm.FarmResponseDto;
 import com.cts.FoodChainX.model.Farm;
-import com.cts.FoodChainX.model.Role;
 import com.cts.FoodChainX.model.User;
 import com.cts.FoodChainX.repository.FarmRepository;
 import com.cts.FoodChainX.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
-@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 class FarmServiceTest {
 
     @Mock
@@ -42,102 +42,98 @@ class FarmServiceTest {
 
     private User sampleUser;
     private Farm sampleFarm;
-    private final String USER_EMAIL = "farmer@example.com";
-    private final Long FARM_ID = 500L;
+    private final String EMAIL = "farmer@example.com";
+    private final Long FARM_ID = 1L;
 
     @BeforeEach
     void setUp() {
-        // 1. Minimum User details needed for Security/Identity logic
         sampleUser = new User();
-        sampleUser.setUserId(1L); 
-        sampleUser.setEmail(USER_EMAIL); 
-        sampleUser.setRole(Role.FARMER);
+        sampleUser.setUserId(101L);
+        sampleUser.setEmail(EMAIL);
 
-        // 2. Minimum Farm details needed for Ownership logic
         sampleFarm = new Farm();
         sampleFarm.setFarmId(FARM_ID);
-        sampleFarm.setName("Organic Acres");
-        
-        // Linking the objects is the "Key" to the IDOR test
-        sampleFarm.setFarmer(sampleUser); 
+        sampleFarm.setName("Green Valley");
+        sampleFarm.setLocation("Texas");
         sampleFarm.setCertificationStatus("PENDING");
+        sampleFarm.setFarmer(sampleUser);
     }
 
-    // --- 1. CREATE TEST ---
+    // 1. Test Creating a Farm
     @Test
-    void testRegisterFarm_Success() {
-        FarmRequestDto request = new FarmRequestDto("Organic Acres", "Texas");
-        
-        when(userRepository.findByEmailIgnoreCase(USER_EMAIL)).thenReturn(Optional.of(sampleUser));
+    @DisplayName("Create Farm - Success")
+    void testCreatingFarm_Success() {
+        FarmRequestDto request = new FarmRequestDto("Green Valley", "Texas");
+        when(userRepository.findByEmailIgnoreCase(EMAIL)).thenReturn(Optional.of(sampleUser));
         when(farmRepository.save(any(Farm.class))).thenReturn(sampleFarm);
 
-        FarmResponseDto response = farmService.creatingfarm(request, USER_EMAIL);
+        FarmResponseDto response = farmService.creatingfarm(request, EMAIL);
 
         assertNotNull(response);
-        assertEquals("Organic Acres", response.getName());
-        verify(farmRepository).save(any(Farm.class));
+        assertEquals("Green Valley", response.getName());
+        verify(farmRepository, times(1)).save(any(Farm.class));
     }
 
-    // --- 2. GET (READ) TEST ---
+    // 2. Test Get All Farms by Farmer Email
     @Test
-    void testGetMyFarms_Success() {
-        when(userRepository.findByEmailIgnoreCase(USER_EMAIL)).thenReturn(Optional.of(sampleUser));
-        // Note: The service uses the user's ID (1L) to find their specific farms
-        when(farmRepository.findByFarmer_UserId(1L)).thenReturn(List.of(sampleFarm));
+    @DisplayName("Get All Farms by Email - Success")
+    void testGetAllFarmsByEmail() {
+        when(userRepository.findByEmailIgnoreCase(EMAIL)).thenReturn(Optional.of(sampleUser));
+        when(farmRepository.findByFarmer_UserId(101L)).thenReturn(List.of(sampleFarm));
 
-        List<FarmResponseDto> result = farmService.getAllFarmsByFarmerEmail(USER_EMAIL);
+        List<FarmResponseDto> result = farmService.getAllFarmsByFarmerEmail(EMAIL);
 
         assertFalse(result.isEmpty());
-        assertEquals(FARM_ID, result.get(0).getFarmId());
+        assertEquals(1, result.size());
     }
 
-    // --- 3. PATCH (UPDATE STATUS) TEST ---
- @Test
-void testUpdateStatus_Success() {
-    // 1. Arrange
-    // Note: We don't need regulatorEmail if the method doesn't accept it
-    when(farmRepository.findById(FARM_ID)).thenReturn(Optional.of(sampleFarm));
-    
-    sampleFarm.setCertificationStatus("CERTIFIED");
-    when(farmRepository.save(any(Farm.class))).thenReturn(sampleFarm);
-
-    // 2. Act - Only pass 2 arguments: ID and Status
-    FarmResponseDto response = farmService.updateStatus(FARM_ID, "CERTIFIED");
-
-    // 3. Assert
-    assertEquals("CERTIFIED", response.getCertificationStatus());
-    verify(farmRepository).save(sampleFarm);
-}
-
-// --- 4. DELETE (SECURITY) TEST - HAPPY PATH ---
+    // 3. Test Update Status - SUCCESS (Using APPROVED)
     @Test
-    void testDeleteFarm_Success_AsOwner() {
-        // Line 114 was likely one of these. 
-        // If your service doesn't call one of these, Mockito fails.
-        when(userRepository.findByEmailIgnoreCase(USER_EMAIL)).thenReturn(Optional.of(sampleUser));
+    @DisplayName("Update Status - Success with APPROVED")
+    void testUpdateStatus_Success() {
+        when(farmRepository.findById(FARM_ID)).thenReturn(Optional.of(sampleFarm));
+        when(farmRepository.save(any(Farm.class))).thenReturn(sampleFarm);
+
+        FarmResponseDto response = farmService.updateStatus(FARM_ID, "APPROVED");
+
+        assertEquals("APPROVED", response.getCertificationStatus());
+    }
+
+    // 4. Test Update Status - FAILURE (Validation Logic)
+    @Test
+    @DisplayName("Update Status - Error when using anything except APPROVED, PENDING, REJECTED")
+    void testUpdateStatus_InvalidStatus() {
         when(farmRepository.findById(FARM_ID)).thenReturn(Optional.of(sampleFarm));
 
-        String result = farmService.deleteFarm(FARM_ID, USER_EMAIL);
+        // This ensures your code throws an error if status is NOT one of the 3 allowed words
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            farmService.updateStatus(FARM_ID, "CERTIFIED"); // CERTIFIED is not allowed
+        });
+
+        assertTrue(exception.getMessage().contains("Invalid status"));
+        verify(farmRepository, never()).save(any());
+    }
+
+    // 5. Test Delete Farm - Success (Owner)
+    @Test
+    @DisplayName("Delete Farm - Success as Owner")
+    void testDeleteFarm_Success() {
+        when(farmRepository.findById(FARM_ID)).thenReturn(Optional.of(sampleFarm));
+
+        String result = farmService.deleteFarm(FARM_ID, EMAIL);
 
         assertEquals("Farm removed.", result);
         verify(farmRepository, times(1)).delete(sampleFarm);
     }
 
-    // --- 5. DELETE (SECURITY) TEST - IDOR PREVENTION ---
+    // 6. Test Delete Farm - Unauthorized (Not Owner)
     @Test
-    void testDeleteFarm_Forbidden_NotOwner() {
-        String hackerEmail = "hacker@evil.com";
-        User hackerUser = new User();
-        hackerUser.setUserId(99L); 
-
-        // We ONLY mock the user check because the service stops here!
-        when(userRepository.findByEmailIgnoreCase(hackerEmail)).thenReturn(Optional.of(hackerUser));
-        
-        // DO NOT put 'when(farmRepository.findById...)' here. 
-        // The service never reaches that line if the user is unauthorized.
+    @DisplayName("Delete Farm - Unauthorized if user is not the owner")
+    void testDeleteFarm_Unauthorized() {
+        when(farmRepository.findById(FARM_ID)).thenReturn(Optional.of(sampleFarm));
 
         assertThrows(RuntimeException.class, () -> {
-            farmService.deleteFarm(FARM_ID, hackerEmail);
+            farmService.deleteFarm(FARM_ID, "wrong@email.com");
         });
 
         verify(farmRepository, never()).delete(any());

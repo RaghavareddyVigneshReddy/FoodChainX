@@ -18,7 +18,6 @@ import com.cts.FoodChainX.dto.batch.BatchRequestDto;
 import com.cts.FoodChainX.dto.batch.BatchResponseDto;
 import com.cts.FoodChainX.service.ProductionBatchService;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,7 +32,7 @@ public class ProductionBatchController {
     private ProductionBatchService batchService;
     // Create a new batch
     @PostMapping("/add")
-    public ResponseEntity<BatchResponseDto> createBatch(@Valid @RequestBody BatchRequestDto dto) {
+    public ResponseEntity<BatchResponseDto> createBatch(@RequestBody BatchRequestDto dto) {
         log.info("REST request to create new Production Batch for Farm ID: {}", dto.getFarmId());
         return new ResponseEntity<>(service.createBatch(dto), HttpStatus.CREATED);
     }
