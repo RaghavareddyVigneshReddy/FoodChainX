@@ -3,55 +3,75 @@ package com.cts.FoodChainX.service;
 import com.cts.FoodChainX.model.Inventory;
 import com.cts.FoodChainX.repository.InventoryRepository;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
+import java.util.List;
+import java.util.Arrays;
 
-import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-public class InventoryServiceTest {
+@ExtendWith(MockitoExtension.class)
+class InventoryServiceTest {
 
     @Mock
     private InventoryRepository inventoryRepository;
 
     @InjectMocks
     private InventoryService inventoryService;
+    private Inventory inventory;
 
-    public InventoryServiceTest() {
-        MockitoAnnotations.openMocks(this);
+    @BeforeEach
+    void setUp() {
+
+        inventory = new Inventory();
+        inventory.setInventoryId(1L);
+        inventory.setRetailerId(2L);
+        inventory.setBatchId(100L);
+        inventory.setQuantity(50L);
+        inventory.setStatus("ACTIVE");
     }
 
     @Test
     void testCreateInventory() {
 
-        Inventory inventory = new Inventory();
-        inventory.setRetailerId(1);
-        inventory.setBatchId(100);
-        inventory.setQuantity(50);
+        when(inventoryRepository.save(any(Inventory.class))).thenReturn(inventory);
 
-        when(inventoryRepository.save(inventory)).thenReturn(inventory);
+        Inventory result = inventoryService.createInventory(inventory);
 
-        Inventory savedInventory = inventoryService.createInventory(inventory);
+        assertNotNull(result);
+        assertEquals(50, result.getQuantity());
 
-        assertNotNull(savedInventory);
-        assertEquals(50, savedInventory.getQuantity());
+        verify(inventoryRepository).save(inventory);
     }
 
     @Test
     void testGetInventoryById() {
 
-        Inventory inventory = new Inventory();
-        inventory.setInventoryId(1);
-        inventory.setQuantity(100);
+        when(inventoryRepository.findById(1L)).thenReturn(Optional.of(inventory));
 
-        when(inventoryRepository.findById(1)).thenReturn(Optional.of(inventory));
+        Inventory result = inventoryService.getInventoryById(1L);
 
-        Inventory result = inventoryService.getInventoryById(1);
+        assertNotNull(result);
+        assertEquals(1L, result.getInventoryId());
+    }
 
-        assertEquals(100, result.getQuantity());
+    @Test
+    void testGetAllInventory() {
+
+        List<Inventory> inventoryList = Arrays.asList(inventory);
+
+        when(inventoryRepository.findAll()).thenReturn(inventoryList);
+
+        List<Inventory> result = inventoryService.getAllInventory();
+
+        assertEquals(1, result.size());
     }
 }

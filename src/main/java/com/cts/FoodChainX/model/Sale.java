@@ -35,4 +35,7 @@ public class Sale {
 
     @Column(name = "Price", nullable = false)
     private Double price;
+
+    @Column(name = "BatchID", nullable = false)
+    private Long batchId;
 }
