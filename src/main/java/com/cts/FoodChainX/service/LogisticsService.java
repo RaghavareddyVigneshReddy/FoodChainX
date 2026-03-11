@@ -26,42 +26,37 @@ public class LogisticsService {
     private final InventoryRepository inventoryRepository;
 
     @Transactional
-    public ShipmentResponseDTO initiateShipment(ShipmentRequestDTO request) {
-        ProductionBatch batchObj = batchRepository.findById(request.getBatchId())
-                .orElseThrow(() -> new RuntimeException("Batch not found"));
-
-        if (!"PASSED".equalsIgnoreCase(batchObj.getQualityStatus()) && 
-    !"Compliant".equalsIgnoreCase(batchObj.getQualityStatus())) {
-            throw new IllegalArgumentException("Batch is not Compliant or has not passes inspection. Shipment cannot be initiated.");
-        }
-
-        Shipment shipment = new Shipment();
-        shipment.setBatchId(request.getBatchId()); 
-        shipment.setDistributorId(request.getDistributorId());
-        shipment.setDepartureDate(request.getDepartureDate());
-        shipment.setArrivalDate(request.getArrivalDate());
-        shipment.setStatus("IN_TRANSIT");
-
-        TraceRecord shipmentTrace = new TraceRecord();
-    shipmentTrace.setProductionBatch(batchObj);
-    shipmentTrace.setFarm(batchObj.getFarm());
-    shipmentTrace.setDistributor(userRepository.findById(request.getDistributorId()).get()); // distributorid
-    shipmentTrace.setStatus("IN_TRANSIT");
-    shipmentTrace.setDate(LocalDate.now());
-    traceRecordRepository.save(shipmentTrace);
-
-        return convertToShipmentResponseDTO(shipmentRepository.save(shipment));
-    }
+    public ShipmentResponseDTO initiateShipment(ShipmentRequestDTO request) { 
+        ProductionBatch batchObj = batchRepository.findById(request.getBatchId().longValue()) 
+                .orElseThrow(() -> new RuntimeException("Batch not found")); 
+ 
+        if (!"Compliant".equalsIgnoreCase(batchObj.getQualityStatus())) { 
+            throw new IllegalArgumentException("Batch is not Compliant."); 
+        } 
+ 
+        User distributorObj = userRepository.findById(request.getDistributorId().longValue()) 
+                .orElseThrow(() -> new RuntimeException("Distributor not found")); 
+ 
+        Shipment shipment = new Shipment(); 
+        shipment.setBatch(batchObj);  
+        shipment.setDistributor(distributorObj); 
+        shipment.setDepartureDate(request.getDepartureDate()); 
+        shipment.setArrivalDate(request.getArrivalDate()); 
+        shipment.setStatus("PENDING"); 
+ 
+        return convertToShipmentResponseDTO(shipmentRepository.save(shipment)); 
+    } 
 
     @Transactional
     public ShipmentResponseDTO updateShipmentStatus(Long id, ShipmentStatusUpdateRequest request) {
-        Shipment shipment = shipmentRepository.findById(id)
+        Shipment shipment = shipmentRepository.findById(id.longValue())
                 .orElseThrow(() -> new RuntimeException("Shipment record not found"));
 
         shipment.setStatus(request.getStatus());
 
         if ("DELIVERED".equalsIgnoreCase(request.getStatus())) {
-            traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(shipment.getBatchId())
+            // Ensure you use the ID from the fetched batch object
+            traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(shipment.getBatch().getProductionId())
                 .stream()
                 .findFirst()
                 .ifPresent(record -> {
@@ -69,14 +64,13 @@ public class LogisticsService {
                     traceRecordRepository.save(record);
                 });
         }
-
         return convertToShipmentResponseDTO(shipmentRepository.save(shipment));
     }
 
     public List<WarehouseResponseDTO> getAllWarehouses() {
         return warehouseRepository.findAll().stream()
                 .map(w -> WarehouseResponseDTO.builder()
-                        .warehouseId(w.getWarehouseId())
+                        .warehouseId(w.getWarehouseId().longValue())
                         .location(w.getLocation())
                         .capacity(w.getCapacity())
                         .status(w.getStatus())
@@ -84,73 +78,62 @@ public class LogisticsService {
                 .collect(Collectors.toList());
     }
 
- @Transactional
-public void recordDelivery(DeliveryRequestDTO request) {
-    // 1. Fetch Dependencies
-    Warehouse warehouse = warehouseRepository.findById(request.getWarehouseId())
-            .orElseThrow(() -> new RuntimeException("Warehouse not found"));
+    @Transactional
+    public void recordDelivery(DeliveryRequestDTO request) { 
+        // 1. Fetch all required objects
+        Warehouse warehouse = warehouseRepository.findById(request.getWarehouseId().longValue()) 
+                .orElseThrow(() -> new RuntimeException("Warehouse not found")); 
+ 
+        if ("Full".equalsIgnoreCase(warehouse.getStatus())) { 
+            throw new RuntimeException("409 Conflict: Warehouse is at maximum capacity"); 
+        } 
+ 
+        Shipment shipment = shipmentRepository.findById(request.getShipmentId().longValue()) 
+                .orElseThrow(() -> new RuntimeException("Shipment not found")); 
+                 
+        User retailer = userRepository.findById(request.getRetailerId().longValue()) 
+                .orElseThrow(() -> new RuntimeException("Retailer not found")); 
+        
+        ProductionBatch batch = shipment.getBatch();
 
-    if ("Full".equalsIgnoreCase(warehouse.getStatus())) {
-        throw new RuntimeException("409 Conflict: Warehouse is at maximum capacity");
+        // 2. Save Delivery
+        Delivery delivery = new Delivery(); 
+        delivery.setShipment(shipment); 
+        delivery.setRetailer(retailer); 
+        delivery.setDate(request.getDeliveryDate());  
+        delivery.setStatus("DELIVERED"); 
+        deliveryRepository.save(delivery);
+
+        // 3. Automation: Inventory
+        Inventory newInventory = new Inventory();
+        newInventory.setBatchId(batch.getProductionId());
+        newInventory.setRetailerId(retailer.getUserId());
+        newInventory.setQuantity(batch.getQuantity().longValue());
+        newInventory.setDateAdded(LocalDate.now());
+        newInventory.setStatus("ACTIVE");
+        inventoryRepository.save(newInventory);
+
+        // 4. Side Effect: Traceability
+        TraceRecord deliveryTrace = new TraceRecord();
+        deliveryTrace.setProductionBatch(batch);
+        deliveryTrace.setFarm(batch.getFarm());
+        deliveryTrace.setDistributor(shipment.getDistributor());
+        deliveryTrace.setRetailer(retailer);
+        deliveryTrace.setStatus("ON_SHELF_AT_STORE");
+        deliveryTrace.setDate(LocalDate.now());
+        traceRecordRepository.save(deliveryTrace);
+        
+        log.info("Logistics flow completed for Batch {}", batch.getProductionId());
     }
 
-    Shipment shipment = shipmentRepository.findById(request.getShipmentId())
-            .orElseThrow(() -> new RuntimeException("Shipment not found with ID: " + request.getShipmentId()));
-
-    ProductionBatch batch = batchRepository.findById(shipment.getBatchId())
-            .orElseThrow(() -> new RuntimeException("Batch not found for this shipment"));
-
-            // This updates the status from 'SHIPPED' to 'DELIVERED'
-    shipment.setStatus("DELIVERED");
-    shipmentRepository.save(shipment);
-    // 2. Save the Delivery Record
-    Delivery delivery = new Delivery();
-    delivery.setShipmentId(request.getShipmentId());
-    delivery.setRetailerId(request.getRetailerId()); 
-    delivery.setDate(request.getDeliveryDate()); 
-    delivery.setStatus("DELIVERED");
-    deliveryRepository.save(delivery);
-
-    // 3. AUTOMATION: Insert into INVENTORY
-    // This makes the product available for sale to consumers
-    Inventory newInventory = new Inventory();
-    newInventory.setBatchId(batch.getProductionId());
-    newInventory.setRetailerId(request.getRetailerId()); // Assuming RetailerID = WarehouseID
-    newInventory.setQuantity(batch.getQuantity().longValue()); // Transfer full batch quantity to stock
-    newInventory.setDateAdded(LocalDate.now());
-    newInventory.setStatus("ACTIVE");
-    inventoryRepository.save(newInventory);
-
-    // 4. SIDE EFFECT: Update Traceability
-    TraceRecord deliveryTrace = new TraceRecord();
-    deliveryTrace.setProductionBatch(batch);
-    deliveryTrace.setFarm(batch.getFarm());
-    
-    User distributor = userRepository.findById(shipment.getDistributorId().longValue())
-            .orElseThrow(() -> new RuntimeException("Distributor not found"));
-    deliveryTrace.setDistributor(distributor);
-
-    User retailer = userRepository.findById(request.getRetailerId().longValue())
-            .orElseThrow(() -> new RuntimeException("Retailer user not found"));
-    deliveryTrace.setRetailer(retailer);
-    
-    deliveryTrace.setStatus("ON_SHELF_AT_STORE");
-    deliveryTrace.setDate(LocalDate.now());
-    
-    traceRecordRepository.save(deliveryTrace);
-    
-    log.info("Shipment, Delivery, Inventory, and Traceability all updated for Batch {}", batch.getProductionId());
-}
-
-    // Helper Method to resolve convertToShipmentResponseDTO errors
-    private ShipmentResponseDTO convertToShipmentResponseDTO(Shipment s) {
-        return ShipmentResponseDTO.builder()
-                .shipmentId(s.getShipmentId())
-                .batchId(s.getBatchId())
-                .distributorId(s.getDistributorId())
-                .status(s.getStatus())
-                .departureDate(s.getDepartureDate())
-                .arrivalDate(s.getArrivalDate())
-                .build();
-    }
+    private ShipmentResponseDTO convertToShipmentResponseDTO(Shipment s) { 
+        return ShipmentResponseDTO.builder() 
+                .shipmentId(s.getShipmentId().longValue())  
+                .batchId(s.getBatch() != null ? s.getBatch().getProductionId() : null) 
+                .distributorId(s.getDistributor() != null ? s.getDistributor().getUserId().longValue() : null) 
+                .status(s.getStatus()) 
+                .departureDate(s.getDepartureDate()) 
+                .arrivalDate(s.getArrivalDate()) 
+                .build(); 
+    } 
 }
