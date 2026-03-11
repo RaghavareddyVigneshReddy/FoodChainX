@@ -19,7 +19,7 @@ public class AuditController {
     }
 
     @PutMapping("/{id}/close")
-    public Audit closeAudit(@PathVariable Integer id) {
+    public Audit closeAudit(@PathVariable Long id) {
         return auditService.closeAudit(id);
     }
 }

@@ -26,7 +26,7 @@ public class ComplianceRecordService {
         return savedRecord;
     }
 
-    public List<ComplianceRecord> getComplianceByEntity(Integer entityId) {
+    public List<ComplianceRecord> getComplianceByEntity(Long entityId) {
 
         return complianceRecordRepository.findByEntityId(entityId);
     }

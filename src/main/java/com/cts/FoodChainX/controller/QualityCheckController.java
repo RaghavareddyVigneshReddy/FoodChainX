@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.cts.FoodChainX.dto.quality.QualityRequestDto;
 import com.cts.FoodChainX.dto.quality.QualityResponseDto;
+import com.cts.FoodChainX.service.ProductionBatchService;
 import com.cts.FoodChainX.service.QualityCheckService;
 
 import lombok.RequiredArgsConstructor;
@@ -24,13 +25,15 @@ public class QualityCheckController {
 
     private final QualityCheckService qualityCheckService;
 
+    private final ProductionBatchService productionBatchService;
+
     /**
      * PERFORM INSPECTION & UPDATE PRODUCTION STATUS
      * POST http://localhost:8080/api/quality-checks/inspect
      */
     @PostMapping("/inspect")
     public ResponseEntity<String> performInspection(@RequestBody QualityRequestDto dto) {
-        String result = qualityCheckService.inspectBatch(dto);
+        String result = productionBatchService.performQualityCheck(dto);
         return ResponseEntity.ok(result);
     }
 

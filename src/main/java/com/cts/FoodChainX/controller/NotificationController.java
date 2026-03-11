@@ -32,7 +32,7 @@ public class NotificationController {
      * US 2: Update status to 'Read'.
      */
    @PutMapping("/{notificationId}/read")
-public ResponseEntity<Map<String, Object>> markAsRead(@PathVariable int notificationId) {
+public ResponseEntity<Map<String, Object>> markAsRead(@PathVariable Long notificationId) {
     NotificationResponseDTO updated = notificationService.markAsRead(notificationId);
     return ResponseEntity.ok(Map.of(
         "message", "Notification updated to read successfully",
@@ -56,7 +56,7 @@ public ResponseEntity<Map<String, Object>> markAsRead(@PathVariable int notifica
      * US 4: Deletion.
      */
     @DeleteMapping("/{notificationId}")
-    public ResponseEntity<Map<String, String>> deleteNotification(@PathVariable int notificationId) {
+    public ResponseEntity<Map<String, String>> deleteNotification(@PathVariable Long notificationId) {
         notificationService.deleteNotification(notificationId);
         return ResponseEntity.ok(Map.of("message", "Notification deleted successfully"));
     }
