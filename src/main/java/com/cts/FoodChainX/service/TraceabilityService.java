@@ -27,7 +27,7 @@ public class TraceabilityService {
     @Transactional(readOnly = true)
     public TraceRecordResponseDto getTraceabilityData(Long batchId) {
         log.debug("Fetching latest traceability record for Batch ID: {}", batchId);
-        return traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDesc(batchId)
+        return traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(batchId)
                 .stream()
                 .findFirst()
                 .map(this::mapToResponse)
@@ -60,7 +60,7 @@ public class TraceabilityService {
 
     @Transactional(readOnly = true)
     public String generateQrPayload(Long batchId) {
-        return traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDesc(batchId)
+        return traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(batchId)
                 .stream()
                 .findFirst() // Get the most recent state
                 .map(record -> {
@@ -98,7 +98,7 @@ public class TraceabilityService {
     public List<TraceRecordResponseDto> getBatchHistory(Long batchId) {
         log.debug("Fetching full traceability history for Batch ID: {}", batchId);
         
-        List<TraceRecord> history = traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDesc(batchId);
+        List<TraceRecord> history = traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(batchId);
         
         if (history.isEmpty()) {
             throw new BatchNotFoundException(batchId);

@@ -76,7 +76,7 @@ public class SaleService {
                 .orElseThrow(() -> new RuntimeException("Consumer not found"));
 
         // 2. Fetch the latest record to copy the Batch and Farm details
-        traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDesc(batchId.longValue())
+        traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(batchId.longValue())
             .stream()
             .findFirst() 
             .ifPresent(latestRecord -> {

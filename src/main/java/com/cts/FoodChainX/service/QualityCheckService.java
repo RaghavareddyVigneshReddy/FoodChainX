@@ -12,9 +12,11 @@ import com.cts.FoodChainX.dto.quality.QualityRequestDto;
 import com.cts.FoodChainX.dto.quality.QualityResponseDto;
 import com.cts.FoodChainX.model.ProductionBatch;
 import com.cts.FoodChainX.model.QualityCheck;
+import com.cts.FoodChainX.model.TraceRecord;
 import com.cts.FoodChainX.model.User;
 import com.cts.FoodChainX.repository.ProductionBatchRepository;
 import com.cts.FoodChainX.repository.QualityLoggingRepository;
+import com.cts.FoodChainX.repository.TraceRecordRepository;
 import com.cts.FoodChainX.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,7 @@ public class QualityCheckService {
     private final QualityLoggingRepository qualityRepo;
     private final ProductionBatchRepository batchRepo;
     private final UserRepository userRepo;
+    private final TraceRecordRepository traceRecordRepository;
 
     // 1. PERFORM INSPECTION & UPDATE PRODUCTION STATUS
     @Transactional
@@ -53,6 +56,13 @@ public class QualityCheckService {
         // Reflect the result in the Production Table
         batch.setQualityStatus(dto.getStatus()); 
         batchRepo.save(batch); 
+
+        TraceRecord qualityTrace = new TraceRecord();
+    qualityTrace.setProductionBatch(batch);
+    qualityTrace.setFarm(batch.getFarm());
+    qualityTrace.setStatus("PASSED".equalsIgnoreCase(dto.getStatus()) ? "QUALITY_CERTIFIED" : "QUALITY_REJECTED");
+    qualityTrace.setDate(LocalDate.now());
+    traceRecordRepository.save(qualityTrace);
 
         return "Inspection completed. Batch " + dto.getBatchId() + " updated to: " + dto.getStatus();
     }
