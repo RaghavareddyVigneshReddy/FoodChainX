@@ -28,12 +28,14 @@ public class Delivery {
     private Long deliveryId;
 
     
-    @Column(name = "ShipmentID")
-    private Long shipmentId;
-
-   
-    @Column(name = "RetailerID")
-    private Long retailerId;
+    @ManyToOne(fetch = FetchType.LAZY) 
+    @JoinColumn(name = "ShipmentID", nullable = false) 
+    private Shipment shipment; 
+ 
+     
+    @ManyToOne(fetch = FetchType.LAZY) 
+    @JoinColumn(name = "RetailerID", nullable = false) 
+    private User retailer; 
 
     @Column(name = "Date")
     private LocalDate date;

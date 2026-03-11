@@ -26,8 +26,9 @@ public class Warehouse {
     @Column(name = "WarehouseName") // Added for traceability display
     private String name;
 
-    @Column(name = "DistributorID", nullable = false)
-    private Long distributorId;
+    @ManyToOne(fetch = FetchType.LAZY) 
+    @JoinColumn(name = "DistributorID", nullable = false) 
+    private User distributor; 
 
     @Column(name = "Location", length = 255, nullable = false)
     private String location;
