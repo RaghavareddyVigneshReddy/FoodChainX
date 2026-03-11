@@ -1,16 +1,13 @@
 package com.cts.FoodChainX.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import lombok.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-@Getter
-@Setter
+
 @Entity
 @Table(name = "INVENTORY")
 @Data
@@ -23,7 +20,6 @@ public class Inventory {
     @Column(name = "InventoryID")
     private Long inventoryId;
 
-    // Consider mapping as @ManyToOne if you have Retailer and Batch entities
     @Column(name = "RetailerID", nullable = false)
     private Long retailerId;
 
@@ -36,6 +32,18 @@ public class Inventory {
     @Column(name = "DateAdded", nullable = false)
     private LocalDate dateAdded;
 
-    @Column(name = "Status", length = 50, nullable = false)
+    @Column(name = "Status", nullable = false)
     private String status;
+
+
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "RetailerID", insertable = false, updatable = false)
+    @JsonIgnore
+    private User retailer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "BatchID", insertable = false, updatable = false)
+    @JsonIgnore
+    private ProductionBatch productionBatch;
 }

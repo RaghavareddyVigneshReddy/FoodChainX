@@ -1,5 +1,6 @@
 package com.cts.FoodChainX.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,13 +20,14 @@ public class Sale {
     @Column(name = "SaleID")
     private Long saleId;
 
-    // Consider @ManyToOne mapping if Inventory is an entity
     @Column(name = "InventoryID", nullable = false)
     private Long inventoryId;
 
-    // Consumer reference (can also be @ManyToOne if you have Consumer entity)
     @Column(name = "ConsumerID", nullable = false)
     private Long consumerId;
+
+    @Column(name = "BatchID", nullable = false)
+    private Long batchId;
 
     @Column(name = "Date", nullable = false)
     private LocalDate date;
@@ -36,6 +38,19 @@ public class Sale {
     @Column(name = "Price", nullable = false)
     private Double price;
 
-    @Column(name = "BatchID", nullable = false)
-    private Long batchId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "InventoryID", insertable = false, updatable = false)
+    @JsonIgnore
+    private Inventory inventory;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ConsumerID", insertable = false, updatable = false)
+    @JsonIgnore
+    private User consumer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "BatchID", insertable = false, updatable = false)
+    @JsonIgnore
+    private ProductionBatch productionBatch;
 }

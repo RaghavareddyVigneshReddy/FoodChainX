@@ -20,7 +20,6 @@ public class SaleController {
 
         sale.setInventoryId(dto.getInventoryId());
         sale.setConsumerId(dto.getConsumerId());
-        sale.setBatchId(dto.getBatchId());
         sale.setQuantity(dto.getQuantity());
         sale.setPrice(dto.getPrice());
         return saleService.createSale(sale);

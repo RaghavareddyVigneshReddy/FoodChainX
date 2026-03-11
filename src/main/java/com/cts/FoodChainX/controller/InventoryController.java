@@ -23,7 +23,6 @@ public class InventoryController {
         inventory.setRetailerId(dto.getRetailerId());
         inventory.setBatchId(dto.getBatchId());
         inventory.setQuantity(dto.getQuantity());
-        inventory.setStatus(dto.getStatus());
 
         return inventoryService.createInventory(inventory);
     }

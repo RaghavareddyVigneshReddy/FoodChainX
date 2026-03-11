@@ -8,5 +8,4 @@ public class InventoryRequestDTO {
     private Long retailerId;
     private Long batchId;
     private Long quantity;
-    private String status;
 }

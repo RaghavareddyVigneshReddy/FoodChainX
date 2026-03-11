@@ -9,8 +9,6 @@ public class SaleRequestDTO {
 
     private Long consumerId;
 
-    private Long batchId;
-
     private Long quantity;
 
     private Double price;
