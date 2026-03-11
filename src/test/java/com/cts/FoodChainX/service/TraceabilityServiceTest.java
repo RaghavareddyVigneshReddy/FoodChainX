@@ -62,7 +62,7 @@ class TraceabilityServiceTest {
     @Test
     void testGetTraceabilityData_Success() {
         // Arrange: Mock the list-based repo call and the quality check
-        when(traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDesc(BATCH_ID))
+        when(traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(BATCH_ID))
                 .thenReturn(List.of(sampleRecord));
         when(qualityLoggingRepository.findFirstByBatch_ProductionIdOrderByDateDesc(BATCH_ID))
                 .thenReturn(Optional.of(sampleQuality));
@@ -82,7 +82,7 @@ class TraceabilityServiceTest {
     @Test
     void testGenerateQrPayload_Success() {
         // Arrange
-        when(traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDesc(BATCH_ID))
+        when(traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(BATCH_ID))
                 .thenReturn(List.of(sampleRecord));
         when(qualityLoggingRepository.findFirstByBatch_ProductionIdOrderByDateDesc(BATCH_ID))
                 .thenReturn(Optional.of(sampleQuality));
@@ -105,7 +105,7 @@ class TraceabilityServiceTest {
         secondRecord.setProductionBatch(sampleBatch);
         secondRecord.setStatus("IN_TRANSIT");
 
-        when(traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDesc(BATCH_ID))
+        when(traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(BATCH_ID))
                 .thenReturn(List.of(sampleRecord, secondRecord));
         
         // Act
@@ -114,13 +114,13 @@ class TraceabilityServiceTest {
         // Assert
         assertEquals(2, history.size());
         assertEquals("HARVESTED_AT_FARM", history.get(0).status());
-        verify(traceRecordRepository, times(1)).findByProductionBatch_ProductionIdOrderByDateDesc(BATCH_ID);
+        verify(traceRecordRepository, times(1)).findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(BATCH_ID);
     }
 
     @Test
     void testGetBatchHistory_Empty_ThrowsException() {
         // Arrange
-        when(traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDesc(BATCH_ID))
+        when(traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(BATCH_ID))
                 .thenReturn(Collections.emptyList());
 
         // Act & Assert
@@ -132,7 +132,7 @@ class TraceabilityServiceTest {
     @Test
     void testGenerateQrPayload_NotFound_ThrowsException() {
         // Arrange
-        when(traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDesc(BATCH_ID))
+        when(traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(BATCH_ID))
                 .thenReturn(Collections.emptyList());
 
         // Act & Assert
