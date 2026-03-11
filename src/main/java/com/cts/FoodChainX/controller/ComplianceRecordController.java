@@ -21,7 +21,7 @@ public class ComplianceRecordController {
     }
 
     @GetMapping("/status/{entityId}")
-    public List<ComplianceRecord> getComplianceStatus(@PathVariable Integer entityId) {
+    public List<ComplianceRecord> getComplianceStatus(@PathVariable Long entityId) {
         return complianceRecordService.getComplianceByEntity(entityId);
     }
 }

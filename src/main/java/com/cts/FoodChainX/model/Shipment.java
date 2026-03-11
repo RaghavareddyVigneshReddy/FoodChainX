@@ -16,16 +16,13 @@ public class Shipment {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     @Column(name="ShipmentID")
-    private Integer shipmentId;
+    private Long shipmentId;
 
-     
-     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="BatchID", nullable=false)
-    private ProductionBatch batch;
-   
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="DistributorID", nullable=false)
-    private User distributor;
+    @Column(name="BatchID", nullable=false)
+    private Long batchId; // REMOVED @ManyToOne
+
+    @Column(name="DistributorID", nullable=false)
+    private Long distributorId; // REMOVED @ManyToOne
 
     @Column(name="Departuredate", nullable=false)
     private LocalDate departureDate;

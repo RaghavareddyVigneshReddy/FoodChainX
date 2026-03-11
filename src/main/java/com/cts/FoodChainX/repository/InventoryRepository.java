@@ -8,11 +8,11 @@ import com.cts.FoodChainX.model.Inventory;
 import java.util.List;
 
 @Repository
-public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
+public interface InventoryRepository extends JpaRepository<Inventory, Long> {
 
-    List<Inventory> findByRetailerId(Integer retailerId);
+    List<Inventory> findByRetailerId(Long retailerId);
 
-    List<Inventory> findByBatchId(Integer batchId);
+    List<Inventory> findByBatchId(Long batchId);
 
     List<Inventory> findByStatus(String status);
 }

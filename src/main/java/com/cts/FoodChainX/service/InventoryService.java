@@ -30,7 +30,7 @@ public class InventoryService {
         return inventoryRepository.findAll();
     }
 
-    public Inventory getInventoryById(Integer inventoryId) {
+    public Inventory getInventoryById(Long inventoryId) {
 
         Optional<Inventory> inventory = inventoryRepository.findById(inventoryId);
 
@@ -41,7 +41,7 @@ public class InventoryService {
         }
     }
 
-    public List<Inventory> getInventoryByRetailer(Integer retailerId) {
+    public List<Inventory> getInventoryByRetailer(Long retailerId) {
         return inventoryRepository.findByRetailerId(retailerId);
     }
 }

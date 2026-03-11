@@ -8,9 +8,9 @@ import com.cts.FoodChainX.model.Sale;
 import java.util.List;
 
 @Repository
-public interface SaleRepository extends JpaRepository<Sale, Integer> {
+public interface SaleRepository extends JpaRepository<Sale, Long> {
 
-    List<Sale> findByInventoryId(Integer inventoryId);
+    List<Sale> findByInventoryId(Long inventoryId);
 
-    List<Sale> findByConsumerId(Integer consumerId);
+    List<Sale> findByConsumerId(Long consumerId);
 }

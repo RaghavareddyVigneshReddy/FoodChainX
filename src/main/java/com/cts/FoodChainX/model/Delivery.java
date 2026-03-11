@@ -25,17 +25,15 @@ public class Delivery {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "DeliveryID")
-    private Integer deliveryId;
+    private Long deliveryId;
 
     
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ShipmentID", nullable = false)
-    private Shipment shipment;
+    @Column(name = "ShipmentID")
+    private Long shipmentId;
 
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "RetailerID", nullable = false)
-    private User retailer;
+   
+    @Column(name = "RetailerID")
+    private Long retailerId;
 
     @Column(name = "Date")
     private LocalDate date;

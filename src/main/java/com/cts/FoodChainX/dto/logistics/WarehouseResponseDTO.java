@@ -12,6 +12,6 @@ import lombok.NoArgsConstructor;
 public class WarehouseResponseDTO {
     private Long warehouseId;
     private String location;
-    private Integer capacity;
+    private Long capacity;
     private String status;
 }

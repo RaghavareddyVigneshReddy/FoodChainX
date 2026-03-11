@@ -12,14 +12,14 @@ public class Notification {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "NotificationID")
-    private int notificationId;
+    private long notificationId;
 
     @ManyToOne(fetch = FetchType.EAGER) // Change from LAZY to EAGER to ensure user is loaded
     @JoinColumn(name = "UserID", nullable = false)
     private User user;
 
     @Column(name = "EntityID")
-    private int entityId;
+    private long entityId;
 
     @Column(name = "Message", nullable = false)
     private String message;

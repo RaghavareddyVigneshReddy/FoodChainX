@@ -1,14 +1,12 @@
 package com.cts.FoodChainX.repository;
 
-import java.util.Optional;
-
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
 import com.cts.FoodChainX.model.TraceRecord;
 
 @Repository
 public interface TraceRecordRepository extends JpaRepository<TraceRecord, Long> {
-    // Corrected to match ProductionBatch.productionId
-    Optional<TraceRecord> findByProductionBatch_ProductionId(Long productionId);
+    // To retrieve all trace records for a given production batch, ordered by date descending
+    List<TraceRecord> findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(Long productionId);
 }

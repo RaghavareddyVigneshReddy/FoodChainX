@@ -14,9 +14,12 @@ import com.cts.FoodChainX.dto.quality.QualityRequestDto; // Ensure this package 
 import com.cts.FoodChainX.model.Farm;
 import com.cts.FoodChainX.model.ProductionBatch;
 import com.cts.FoodChainX.model.QualityCheck;
+import com.cts.FoodChainX.model.TraceRecord;
+import com.cts.FoodChainX.model.User;
 import com.cts.FoodChainX.repository.FarmRepository;
 import com.cts.FoodChainX.repository.ProductionBatchRepository;
 import com.cts.FoodChainX.repository.QualityLoggingRepository;
+import com.cts.FoodChainX.repository.TraceRecordRepository;
 import com.cts.FoodChainX.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -28,6 +31,7 @@ public class ProductionBatchService{
     private final FarmRepository farmRepository;
     private final QualityLoggingRepository qualityRepo;
     private final UserRepository userRepository;
+    private final TraceRecordRepository traceRecordRepository;
 
     // --- PRODUCTION BATCH METHODS ---
 
@@ -44,35 +48,57 @@ public class ProductionBatchService{
                 .build();
 
         ProductionBatch saved = batchRepository.save(batch);
+        // --- AUTOMATION: Create Initial Trace Record ---
+        TraceRecord initialTrace = new TraceRecord();
+        initialTrace.setProductionBatch(saved);
+        initialTrace.setFarm(farm);
+        initialTrace.setStatus("HARVESTED_AT_FARM");
+        initialTrace.setDate(LocalDate.now());
+        traceRecordRepository.save(initialTrace);
+
         return new BatchResponseDto(saved.getProductionId(), saved.getQualityStatus());
     }
 
-    // --- QUALITY CHECK METHODS ---
+@Transactional
+public String performQualityCheck(QualityRequestDto dto) {
+    // 1. Fetch dependencies
+    ProductionBatch batch = batchRepository.findById(dto.getBatchId())
+            .orElseThrow(() -> new RuntimeException("Batch not found"));
+    
+    User inspectorUser = userRepository.findById(dto.getInspectorId())
+            .orElseThrow(() -> new RuntimeException("Inspector not found"));
 
-  @Transactional
-    public String performQualityCheck(QualityRequestDto dto) {
-        ProductionBatch batch = batchRepository.findById(dto.getBatchId())
-                .orElseThrow(() -> new RuntimeException("Batch not found"));
-                // 2. Find the User (Inspector) -> THIS IS THE MISSING STEP
-    var inspectorUser = userRepository.findById(dto.getInspectorId())
-            .orElseThrow(() -> new RuntimeException("Inspector/User not found"));
+    // 2. Save the Report (This part is working for you)
+    QualityCheck check = QualityCheck.builder()
+            .batch(batch) 
+            .inspector(inspectorUser)
+            .findings(dto.getFindings())
+            .status(dto.getStatus())
+            .date(LocalDate.now())
+            .build();
+    qualityRepo.save(check);
 
-        // Fix: Use scalar IDs to match your QualityCheck model
-        QualityCheck check = QualityCheck.builder()
-                .batch(batch) // scalar ID instead of setBatch(batch)
-                .inspector(inspectorUser)
-                .findings(dto.getFindings())
-                .status(dto.getStatus())
-                .date(LocalDate.now())
-                .build();
-        qualityRepo.save(check);
+    // 3. Update Batch Status
+    batch.setQualityStatus(dto.getStatus());
+    batchRepository.save(batch); 
 
-        // Update the batch status
-        batch.setQualityStatus(dto.getStatus());
-        batchRepository.save(batch); 
+// 4. THE AUTOMATED SIDE EFFECT: Insert NEW row into Trace Record
+    TraceRecord qualityTrace = new TraceRecord();
+    qualityTrace.setProductionBatch(batch); // Sets batchid
+    qualityTrace.setFarm(batch.getFarm()); // Sets farmid
+    
+    // Determine status string
+    String traceStatus = "PASSED".equalsIgnoreCase(dto.getStatus()) 
+                        ? "QUALITY_CERTIFIED" : "QUALITY_REJECTED";
+    
+    qualityTrace.setStatus(traceStatus);
+    qualityTrace.setDate(LocalDate.now());
+    
+    // Save as a new row (This will show up in your Workbench)
+    traceRecordRepository.save(qualityTrace);
 
-        return "Batch status updated to: " + dto.getStatus();
-    }
+    return "Inspection completed. Trace updated to " + traceStatus;
+}
     // --- ADDITIONAL METHODS ---
 
 
