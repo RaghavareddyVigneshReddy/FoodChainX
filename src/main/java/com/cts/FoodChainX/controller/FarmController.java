@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication; // Added missing import
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -62,13 +63,14 @@ public class FarmController {
      * PATCH: http://localhost:8081/api/farms/{farmId}/status?status=CERTIFIED
      * Typically used by a REGULATOR to update certification.
      */
-    @PatchMapping("/{farmId}/status")
-    public ResponseEntity<FarmResponseDto> updateStatus(
-            @PathVariable Long farmId, 
-            @RequestParam String status) {
-        log.warn("REST request to UPDATE Farm Status for Farm ID: {} to {}", farmId, status);
-        return ResponseEntity.ok(farmService.updateStatus(farmId, status));
-    }
+     @PatchMapping("/{farmId}/status")
+@PreAuthorize("hasRole('REGULATOR')") // ONLY Regulators can call this!
+public ResponseEntity<FarmResponseDto> updateStatus(
+        @PathVariable Long farmId, 
+        @RequestParam String status) {
+    log.info("Regulator updating Farm ID: {} to status: {}", farmId, status);
+    return ResponseEntity.ok(farmService.updateStatus(farmId, status));
+}
 
     /**
      * DELETE: http://localhost:8081/api/farms/{farmId}
