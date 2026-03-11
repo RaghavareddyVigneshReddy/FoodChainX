@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cts.FoodChainX.aspect.Auditable;
 import com.cts.FoodChainX.dto.quality.QualityRequestDto;
 import com.cts.FoodChainX.dto.quality.QualityResponseDto;
 import com.cts.FoodChainX.model.ProductionBatch;
@@ -31,6 +32,7 @@ public class QualityCheckService {
 
     // 1. PERFORM INSPECTION & UPDATE PRODUCTION STATUS
     @Transactional
+    @Auditable(action = "PERFORM_INSPECTION", resource = "QUALITY_CHECK") // ADD THIS
     public String inspectBatch(QualityRequestDto dto) {
         // Find the Batch
         ProductionBatch batch = batchRepo.findById(dto.getBatchId())
@@ -80,6 +82,7 @@ public class QualityCheckService {
 
     // 3. DELETE LOG & RESET BATCH TO PENDING
     @Transactional
+    @Auditable(action = "DELETE_QUALITY_LOG", resource = "QUALITY_CHECK") // ADD THIS
     public String removeQualityLog(Long qualityId) {
         QualityCheck check = qualityRepo.findById(qualityId)
                 .orElseThrow(() -> new RuntimeException("Log not found"));

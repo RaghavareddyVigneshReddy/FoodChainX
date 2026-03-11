@@ -1,5 +1,6 @@
 package com.cts.FoodChainX.service;
 
+import com.cts.FoodChainX.aspect.Auditable;
 import com.cts.FoodChainX.model.Audit;
 import com.cts.FoodChainX.repository.AuditRepository;
 
@@ -16,7 +17,7 @@ public class AuditService {
 
     @Autowired
     private AuditRepository auditRepository;
-
+    @Auditable(action = "INITIATE_AUDIT_RECORD", resource = "AUDIT_PROCESS")
     public Audit createAudit(Audit audit) {
         log.info("Creating new Audit record for Entity: {}", audit.getAuditId());
         audit.setDate(LocalDate.now());
@@ -26,6 +27,7 @@ public class AuditService {
         return savedAudit;
     }
 
+    @Auditable(action = "CLOSE_AUDIT_RECORD", resource = "AUDIT_PROCESS")
     public Audit closeAudit(Long auditId) {
 
         Audit audit = auditRepository.findById(auditId)
