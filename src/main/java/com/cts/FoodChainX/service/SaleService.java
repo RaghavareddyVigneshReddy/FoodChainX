@@ -48,19 +48,19 @@ public class SaleService {
         return savedSale;
     }
 
-    private Inventory getInventory(@Nonnull Integer inventoryId) {
+    private Inventory getInventory(@Nonnull Long inventoryId) {
         return inventoryRepository.findById(inventoryId)
                 .orElseThrow(() -> new RuntimeException("Inventory not found"));
     }
 
-    private void validateStock(Inventory inventory, Integer quantity) {
+    private void validateStock(Inventory inventory, Long quantity) {
         if (inventory.getQuantity() < quantity) {
             throw new RuntimeException("Insufficient stock available");
         }
     }
 
-    private void updateInventory(Inventory inventory, Integer quantity) {
-        Integer remainingStock = inventory.getQuantity() - quantity;
+    private void updateInventory(Inventory inventory, Long quantity) {
+        Long remainingStock = inventory.getQuantity() - quantity;
         inventory.setQuantity(remainingStock);
         if (remainingStock == 0) {
             inventory.setStatus("OUT_OF_STOCK");
@@ -68,13 +68,13 @@ public class SaleService {
         inventoryRepository.save(inventory);
     }
 
-    private void updateTraceRecord(Integer batchId, Integer consumerId) {
+    private void updateTraceRecord(Long batchId, Long consumerId) {
         // 1. Fetch the Consumer
         User consumer = userRepository.findById(consumerId.longValue())
                 .orElseThrow(() -> new RuntimeException("Consumer not found"));
 
         // 2. Fetch the latest record to copy the Batch and Farm details
-        traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDesc(batchId.longValue())
+        traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(batchId.longValue())
             .stream()
             .findFirst() 
             .ifPresent(latestRecord -> {

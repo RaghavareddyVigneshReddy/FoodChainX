@@ -26,12 +26,12 @@ public class InventoryController {
     }
 
     @GetMapping("/{id}")
-    public Inventory getInventoryById(@PathVariable Integer id) {
+    public Inventory getInventoryById(@PathVariable Long id) {
         return inventoryService.getInventoryById(id);
     }
 
     @GetMapping("/retailer/{retailerId}")
-    public List<Inventory> getInventoryByRetailer(@PathVariable Integer retailerId) {
+    public List<Inventory> getInventoryByRetailer(@PathVariable Long retailerId) {
         return inventoryService.getInventoryByRetailer(retailerId);
     }
 }

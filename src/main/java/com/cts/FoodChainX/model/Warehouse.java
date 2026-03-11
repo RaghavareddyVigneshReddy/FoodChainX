@@ -18,19 +18,19 @@ public class Warehouse {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "WarehouseID")
-    private Integer warehouseId;
+    private Long warehouseId;
 
     @Column(name = "WarehouseName") // Added for traceability display
     private String name;
 
     @Column(name = "DistributorID", nullable = false)
-    private Integer distributorId;
+    private Long distributorId;
 
     @Column(name = "Location", length = 255, nullable = false)
     private String location;
 
     @Column(name = "Capacity", nullable = false)
-    private Integer capacity;
+    private Long capacity;
 
     @Column(name = "Status", length = 50, nullable = false)
     private String status;
