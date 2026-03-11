@@ -4,6 +4,7 @@ import com.cts.FoodChainX.dto.notification.NotificationRequestDTO;
 import com.cts.FoodChainX.dto.notification.NotificationResponseDTO;
 import com.cts.FoodChainX.exception.NotificationNotFoundException;
 import com.cts.FoodChainX.model.Notification;
+import com.cts.FoodChainX.aspect.Auditable;
 import com.cts.FoodChainX.model.User;
 import com.cts.FoodChainX.repository.NotificationRepository;
 import com.cts.FoodChainX.repository.UserRepository;
@@ -76,6 +77,7 @@ public class NotificationService {
     /**
      * Deletes a notification by ID.
      */
+    @Auditable(action = "DELETE_NOTIFICATION", resource = "NOTIFICATION") // ADD THIS
     public void deleteNotification(Long notificationId) {
         if (!repository.existsById(notificationId)) {
             throw new NotificationNotFoundException("Notification ID " + notificationId + " not found");

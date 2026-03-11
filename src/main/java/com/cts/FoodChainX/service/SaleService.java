@@ -1,5 +1,6 @@
 package com.cts.FoodChainX.service;
 
+import com.cts.FoodChainX.aspect.Auditable;
 import com.cts.FoodChainX.model.Inventory;
 import com.cts.FoodChainX.model.Sale;
 import com.cts.FoodChainX.model.TraceRecord;
@@ -35,6 +36,7 @@ public class SaleService {
     private TraceRecordRepository traceRecordRepository;
 
     @Transactional
+    @Auditable(action = "CREATE_SALE", resource = "INVENTORY_SALE") // ADD THIS
     public Sale createSale(Sale sale) {
         Inventory inventory = getInventory(sale.getInventoryId());
         validateStock(inventory, sale.getQuantity());

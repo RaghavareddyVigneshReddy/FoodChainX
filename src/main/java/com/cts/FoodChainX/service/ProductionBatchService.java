@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cts.FoodChainX.aspect.Auditable;
 import com.cts.FoodChainX.dto.batch.BatchDetailResponseDto;
 import com.cts.FoodChainX.dto.batch.BatchRequestDto;
 import com.cts.FoodChainX.dto.batch.BatchResponseDto;
@@ -34,7 +35,7 @@ public class ProductionBatchService{
     private final TraceRecordRepository traceRecordRepository;
 
     // --- PRODUCTION BATCH METHODS ---
-
+    @Auditable(action = "HARVEST_BATCH", resource = "PRODUCTION_BATCH")
     public BatchResponseDto createBatch(BatchRequestDto dto) {
         Farm farm = farmRepository.findById(dto.getFarmId())
                 .orElseThrow(() -> new RuntimeException("Farm not found"));
@@ -68,6 +69,7 @@ public String performQualityCheck(QualityRequestDto dto) {
     User inspectorUser = userRepository.findById(dto.getInspectorId())
             .orElseThrow(() -> new RuntimeException("Inspector not found"));
 
+<<<<<<< HEAD
     // 2. Save the Report (This part is working for you)
     QualityCheck check = QualityCheck.builder()
             .batch(batch) 
@@ -77,6 +79,16 @@ public String performQualityCheck(QualityRequestDto dto) {
             .date(LocalDate.now())
             .build();
     qualityRepo.save(check);
+=======
+        @Transactional
+        @Auditable(action = "PERFORM_QUALITY_CHECK", resource = "PRODUCTION_BATCH") // ADD THIS
+        public String performQualityCheck(QualityRequestDto dto) {
+                ProductionBatch batch = batchRepository.findById(dto.getBatchId())
+                        .orElseThrow(() -> new RuntimeException("Batch not found"));
+                // 2. Find the User (Inspector) -> THIS IS THE MISSING STEP
+                var inspectorUser = userRepository.findById(dto.getInspectorId())
+                .orElseThrow(() -> new RuntimeException("Inspector/User not found"));
+>>>>>>> feature/IAM
 
     // 3. Update Batch Status
     batch.setQualityStatus(dto.getStatus());
@@ -151,6 +163,7 @@ public BatchDetailResponseDto getBatchDetail(Long batchId) {
 
     // 3. Delete a Batch
     @Transactional
+    @Auditable(action = "DELETE_BATCH", resource = "PRODUCTION_BATCH") // ADD THIS
     public String deleteBatch(Long batchId) {
         ProductionBatch batch = batchRepository.findById(batchId)
                 .orElseThrow(() -> new RuntimeException("Batch not found"));
