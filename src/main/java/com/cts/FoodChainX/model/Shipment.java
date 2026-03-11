@@ -18,11 +18,14 @@ public class Shipment {
     @Column(name="ShipmentID")
     private Integer shipmentId;
 
-    @Column(name="BatchID", nullable=false)
-    private Integer batch; // REMOVED @ManyToOne
-
-    @Column(name="DistributorID", nullable=false)
-    private Integer distributor; // REMOVED @ManyToOne
+     
+     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="BatchID", nullable=false)
+    private ProductionBatch batch;
+   
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="DistributorID", nullable=false)
+    private User distributor;
 
     @Column(name="Departuredate", nullable=false)
     private LocalDate departureDate;
