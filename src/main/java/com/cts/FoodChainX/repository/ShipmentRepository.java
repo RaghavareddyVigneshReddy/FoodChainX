@@ -6,18 +6,18 @@ import com.cts.FoodChainX.model.Shipment;
 
 public interface ShipmentRepository extends JpaRepository<Shipment, Long> {
 
-    // Corrected: Matches 'private Long distributorId' in Shipment model
-    List<Shipment> findByDistributorId(Long distributorId);
+    // Reaches into the 'distributor' (User) object to find 'userId'
+    List<Shipment> findByDistributor_UserId(Long userId);
 
-    // Corrected: Matches 'private Long batchId' in Shipment model
-    List<Shipment> findByBatchId(Long batchId);
+    // Reaches into the 'batch' (ProductionBatch) object to find 'productionId'
+    List<Shipment> findByBatch_ProductionId(Long productionId);
 
-    // This was already correct as it matches 'private String status'
+    // This remains the same as 'status' is a direct field in Shipment
     List<Shipment> findByStatus(String status);
 
-    // Corrected: Matches 'distributorId' and 'departureDate'
-    List<Shipment> findByDistributorIdOrderByDepartureDateDesc(Long distributorId);
+    // Reaches into distributor and orders by date
+    List<Shipment> findByDistributor_UserIdOrderByDepartureDateDesc(Long userId);
 
-    // This was already correct
-    List<Shipment> findByDistributorIdAndStatus(Long distributorId, String status);
+    // Reaches into distributor and filters by status
+    List<Shipment> findByDistributor_UserIdAndStatus(Long userId, String status);
 }

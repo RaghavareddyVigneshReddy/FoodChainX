@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cts.FoodChainX.aspect.Auditable; // Keep this import
 import com.cts.FoodChainX.dto.farm.FarmRequestDto;
 import com.cts.FoodChainX.dto.farm.FarmResponseDto;
 import com.cts.FoodChainX.exception.FarmNotFoundException;
@@ -14,6 +15,7 @@ import com.cts.FoodChainX.model.Farm;
 import com.cts.FoodChainX.model.User;
 import com.cts.FoodChainX.repository.FarmRepository;
 import com.cts.FoodChainX.repository.UserRepository;
+
 @Service
 public class FarmService {
 
@@ -21,13 +23,13 @@ public class FarmService {
     private FarmRepository farmRepository;
 
     @Autowired
-    private UserRepository userRepository; // Needed to fetch the User object
+    private UserRepository userRepository;
 
     /**
      * 1. CREATE: Register a new farm plot linked to a User object
      */
+    @Auditable(action = "CREATE_FARM", resource = "FARM") // Added from main
     public FarmResponseDto creatingfarm(FarmRequestDto request, String email) {
-        // Find the farmer in the database first
         User farmer = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
 
@@ -35,8 +37,6 @@ public class FarmService {
         farmEntity.setName(request.getName());
         farmEntity.setLocation(request.getLocation());
         farmEntity.setCertificationStatus("PENDING");
-        
-        // Use setFarmer(User) instead of setFarmerId(Long)
         farmEntity.setFarmer(farmer); 
 
         Farm savedFarm = farmRepository.save(farmEntity);
@@ -47,7 +47,6 @@ public class FarmService {
      * 2. READ: Get all farms for a specific farmer
      */
     public List<FarmResponseDto> getAllFarmsByFarmerEmail(String email) {
-        // Matches the method name in your FarmRepository
         User farmer = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new RuntimeException("Farmer not found with email: " + email));
         List<Farm> farms = farmRepository.findByFarmer_UserId(farmer.getUserId());
@@ -66,9 +65,7 @@ public class FarmService {
     }
 
     /**
-  /**
-     * 4. READ: Get all farms filtered by certification status (e.g., PENDING)
-     * Used by Regulators to FIND which farms need auditing.
+     * 4. READ: Get all farms filtered by certification status
      */
     public List<FarmResponseDto> getFarmsByCertificationStatus(String status) {
         return farmRepository.findByCertificationStatusIgnoreCase(status).stream()
@@ -77,32 +74,32 @@ public class FarmService {
     }
 
     /**
-     * 5. PATCH: Update certification status
-     * Used by Regulators to APPROVE or REJECT a farm after an audit.
+     * 5. PATCH: Update certification status with STRICT validation
      */
-  @Transactional // Ensures database integrity
-public FarmResponseDto updateStatus(Long farmId, String newStatus) {
-    Farm farm = farmRepository.findById(farmId)
-            .orElseThrow(() -> new FarmNotFoundException(farmId));
+    @Transactional
+    @Auditable(action = "UPDATE_FARM_STATUS", resource = "FARM") // Logic 2 + Audit
+    public FarmResponseDto updateStatus(Long farmId, String newStatus) {
+        Farm farm = farmRepository.findById(farmId)
+                .orElseThrow(() -> new FarmNotFoundException(farmId));
 
-    // Normalize and Validate
-    String status = newStatus.toUpperCase();
-    if (!status.equals("APPROVED") && !status.equals("REJECTED") && !status.equals("PENDING")) {
-        throw new RuntimeException("Invalid status. Use APPROVED, REJECTED, or PENDING.");
+        // Keep logic 2: Strict Validation
+        String status = newStatus.toUpperCase();
+        if (!status.equals("APPROVED") && !status.equals("REJECTED") && !status.equals("PENDING")) {
+            throw new RuntimeException("Invalid status. Use APPROVED, REJECTED, or PENDING.");
+        }
+
+        farm.setCertificationStatus(status);
+        return mapToResponseDto(farmRepository.save(farm));
     }
 
-    farm.setCertificationStatus(status);
-    return mapToResponseDto(farmRepository.save(farm));
-}
-
     /**
-     * 5. DELETE: Remove a farm record
+     * 6. DELETE: Remove a farm record with Ownership check
      */
+    @Auditable(action = "DELETE_FARM", resource = "FARM") // Logic 2 + Audit
     public String deleteFarm(Long farmId, String email) {
         Farm farm = farmRepository.findById(farmId)
                 .orElseThrow(() -> new FarmNotFoundException(farmId));
         
-        // Check if the logged-in user's email matches the farm owner's email
         if (!farm.getFarmer().getEmail().equalsIgnoreCase(email)) {
             throw new RuntimeException("Unauthorized: You do not own this farm.");
         }
