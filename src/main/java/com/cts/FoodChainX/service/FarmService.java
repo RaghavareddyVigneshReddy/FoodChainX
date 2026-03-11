@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.cts.FoodChainX.aspect.Auditable;
 import com.cts.FoodChainX.dto.farm.FarmRequestDto;
 import com.cts.FoodChainX.dto.farm.FarmResponseDto;
 import com.cts.FoodChainX.exception.FarmNotFoundException;
@@ -26,6 +27,7 @@ public class FarmService {
     /**
      * 1. CREATE: Register a new farm plot linked to a User object
      */
+    @Auditable(action = "CREATE_FARM", resource = "FARM")
     public FarmResponseDto creatingfarm(FarmRequestDto request, String email) {
         // Find the farmer in the database first
         User farmer = userRepository.findByEmailIgnoreCase(email)
@@ -80,6 +82,7 @@ public class FarmService {
      * 5. PATCH: Update certification status
      * Used by Regulators to APPROVE or REJECT a farm after an audit.
      */
+    @Auditable(action = "UPDATE_FARM_STATUS", resource = "FARM") // ADD THIS
     public FarmResponseDto updateStatus(Long farmId, String newStatus) {
         Farm farm = farmRepository.findById(farmId)
                 .orElseThrow(() -> new FarmNotFoundException(farmId));;
@@ -92,6 +95,7 @@ public class FarmService {
     /**
      * 5. DELETE: Remove a farm record
      */
+    @Auditable(action = "DELETE_FARM", resource = "FARM") // ADD THIS
     public String deleteFarm(Long farmId, String email) {
         Farm farm = farmRepository.findById(farmId)
                 .orElseThrow(() -> new FarmNotFoundException(farmId));

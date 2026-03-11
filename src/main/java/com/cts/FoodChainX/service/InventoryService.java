@@ -1,5 +1,6 @@
 package com.cts.FoodChainX.service;
 
+import com.cts.FoodChainX.aspect.Auditable;
 import com.cts.FoodChainX.model.Inventory;
 import com.cts.FoodChainX.repository.InventoryRepository;
 
@@ -15,6 +16,7 @@ public class InventoryService {
     @Autowired
     private InventoryRepository inventoryRepository;
 
+    @Auditable(action = "ADD_RETAIL_INVENTORY", resource = "INVENTORY") // ADD THIS
     public Inventory createInventory(Inventory inventory) {
 
         if (inventory.getQuantity() <= 0) {
