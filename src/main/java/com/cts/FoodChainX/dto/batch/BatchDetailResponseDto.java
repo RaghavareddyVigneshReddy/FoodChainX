@@ -1,22 +1,31 @@
 package com.cts.FoodChainX.dto.batch;
-//import java.time.LocalDate;
-import lombok.AllArgsConstructor;
+
+import java.util.List;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.util.List;
+
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
+@NoArgsConstructor // Keep this for frameworks like Jackson
 public class BatchDetailResponseDto {
     private Long batchId;
     private String cropType;
     private Double quantity;
     private String qualityStatus;
-    
-    // This pulls from the QualityCheck table
     private List<String> inspectionFindings; 
-    
-    // You can even add Farm info here for the Consumer!
     private String farmName;
     private String farmLocation;
+
+    // Manually adding the All-Args Constructor to fix the compiler error
+    public BatchDetailResponseDto(Long batchId, String cropType, Double quantity, 
+                                 String qualityStatus, List<String> inspectionFindings, 
+                                 String farmName, String farmLocation) {
+        this.batchId = batchId;
+        this.cropType = cropType;
+        this.quantity = quantity;
+        this.qualityStatus = qualityStatus;
+        this.inspectionFindings = inspectionFindings;
+        this.farmName = farmName;
+        this.farmLocation = farmLocation;
+    }
 }
