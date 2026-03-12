@@ -1,11 +1,11 @@
-package com.cts.FoodChainX.repository;
+package com.cts.foodchainx.repository;
 
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.cts.FoodChainX.model.ProductionBatch;
+import com.cts.foodchainx.model.ProductionBatch;
 @Repository
 public interface ProductionBatchRepository extends JpaRepository<ProductionBatch, Long> {
 /**

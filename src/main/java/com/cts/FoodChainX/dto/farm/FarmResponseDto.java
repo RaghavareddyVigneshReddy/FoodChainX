@@ -1,4 +1,4 @@
-package com.cts.FoodChainX.dto.farm;
+package com.cts.foodchainx.dto.farm;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

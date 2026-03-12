@@ -1,8 +1,8 @@
-package com.cts.FoodChainX.repository;
+package com.cts.foodchainx.repository;
 
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
-import com.cts.FoodChainX.model.Shipment;
+import com.cts.foodchainx.model.Shipment;
 
 public interface ShipmentRepository extends JpaRepository<Shipment, Long> {
 

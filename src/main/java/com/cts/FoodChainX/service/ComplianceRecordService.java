@@ -1,8 +1,8 @@
-package com.cts.FoodChainX.service;
+package com.cts.foodchainx.service;
 
-import com.cts.FoodChainX.aspect.Auditable;
-import com.cts.FoodChainX.model.ComplianceRecord;
-import com.cts.FoodChainX.repository.ComplianceRecordRepository;
+import com.cts.foodchainx.aspect.Auditable;
+import com.cts.foodchainx.model.ComplianceRecord;
+import com.cts.foodchainx.repository.ComplianceRecordRepository;
 
 import lombok.extern.slf4j.Slf4j;
 

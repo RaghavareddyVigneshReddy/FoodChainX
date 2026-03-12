@@ -1,6 +1,6 @@
-package com.cts.FoodChainX.repository;
+package com.cts.foodchainx.repository;
 
-import com.cts.FoodChainX.model.Notification;
+import com.cts.foodchainx.model.Notification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 

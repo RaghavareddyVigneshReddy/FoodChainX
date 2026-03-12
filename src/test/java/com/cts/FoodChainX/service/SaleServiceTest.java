@@ -1,13 +1,13 @@
-package com.cts.FoodChainX.service;
+package com.cts.foodchainx.service;
 
-import com.cts.FoodChainX.model.Inventory;
-import com.cts.FoodChainX.model.Sale;
-import com.cts.FoodChainX.model.TraceRecord;
-import com.cts.FoodChainX.model.User;
-import com.cts.FoodChainX.repository.InventoryRepository;
-import com.cts.FoodChainX.repository.SaleRepository;
-import com.cts.FoodChainX.repository.TraceRecordRepository;
-import com.cts.FoodChainX.repository.UserRepository;
+import com.cts.foodchainx.model.Inventory;
+import com.cts.foodchainx.model.Sale;
+import com.cts.foodchainx.model.TraceRecord;
+import com.cts.foodchainx.model.User;
+import com.cts.foodchainx.repository.InventoryRepository;
+import com.cts.foodchainx.repository.SaleRepository;
+import com.cts.foodchainx.repository.TraceRecordRepository;
+import com.cts.foodchainx.repository.UserRepository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

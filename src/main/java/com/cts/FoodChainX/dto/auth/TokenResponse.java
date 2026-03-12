@@ -1,4 +1,4 @@
-package com.cts.FoodChainX.dto.auth;
+package com.cts.foodchainx.dto.auth;
 
 public record TokenResponse(
         String accessToken,

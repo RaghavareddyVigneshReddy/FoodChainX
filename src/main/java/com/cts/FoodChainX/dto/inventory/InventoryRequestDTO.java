@@ -1,4 +1,4 @@
-package com.cts.FoodChainX.dto.inventory;
+package com.cts.foodchainx.dto.inventory;
 
 import lombok.Data;
 

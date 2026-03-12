@@ -1,9 +1,9 @@
-package com.cts.FoodChainX.repository;
+package com.cts.foodchainx.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.cts.FoodChainX.model.Inventory;
+import com.cts.foodchainx.model.Inventory;
 
 import java.util.List;
 

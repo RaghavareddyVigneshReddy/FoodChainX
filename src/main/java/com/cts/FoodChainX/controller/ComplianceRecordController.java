@@ -1,7 +1,7 @@
-package com.cts.FoodChainX.controller;
+package com.cts.foodchainx.controller;
 
-import com.cts.FoodChainX.model.ComplianceRecord;
-import com.cts.FoodChainX.service.ComplianceRecordService;
+import com.cts.foodchainx.model.ComplianceRecord;
+import com.cts.foodchainx.service.ComplianceRecordService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

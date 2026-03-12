@@ -1,11 +1,13 @@
-package com.cts.FoodChainX.aspect;
+package com.cts.foodchainx.aspect;
 
 import java.lang.annotation.*;
+
+import org.springframework.lang.NonNull;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface Auditable {
-    String action();
-    String resource();
+    @NonNull String action();
+    @NonNull String resource();
 }

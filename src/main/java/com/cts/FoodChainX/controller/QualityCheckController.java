@@ -1,8 +1,9 @@
-package com.cts.FoodChainX.controller;
+package com.cts.foodchainx.controller;
 
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,10 +12,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.cts.FoodChainX.dto.quality.QualityRequestDto;
-import com.cts.FoodChainX.dto.quality.QualityResponseDto;
-import com.cts.FoodChainX.service.ProductionBatchService;
-import com.cts.FoodChainX.service.QualityCheckService;
+import com.cts.foodchainx.dto.quality.QualityRequestDto;
+import com.cts.foodchainx.dto.quality.QualityResponseDto;
+import com.cts.foodchainx.service.ProductionBatchService;
+import com.cts.foodchainx.service.QualityCheckService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -32,7 +33,7 @@ public class QualityCheckController {
      * POST http://localhost:8080/api/quality-checks/inspect
      */
     @PostMapping("/inspect")
-    public ResponseEntity<String> performInspection(@RequestBody QualityRequestDto dto) {
+    public ResponseEntity<String> performInspection(@RequestBody @NonNull QualityRequestDto dto) {
         String result = productionBatchService.performQualityCheck(dto);
         return ResponseEntity.ok(result);
     }
@@ -52,7 +53,7 @@ public class QualityCheckController {
      * DELETE http://localhost:8080/api/quality-checks/{id}
      */
     @DeleteMapping("/{qualityId}")
-    public ResponseEntity<String> deleteQualityLog(@PathVariable Long qualityId) {
+    public ResponseEntity<String> deleteQualityLog(@PathVariable @NonNull Long qualityId) {
         String message = qualityCheckService.removeQualityLog(qualityId);
         return ResponseEntity.ok(message);
     }

@@ -11,9 +11,9 @@
   </parent>
 
   <groupId>com.cts</groupId>
-  <artifactId>FoodChainX</artifactId>
+  <artifactId>foodchainx</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  <name>FoodChainX</name>
+  <name>foodchainx</name>
   <description>Capstone Project</description>
 
   <properties>

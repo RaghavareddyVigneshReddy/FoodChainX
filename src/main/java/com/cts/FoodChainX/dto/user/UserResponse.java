@@ -1,7 +1,7 @@
-package com.cts.FoodChainX.dto.user;
+package com.cts.foodchainx.dto.user;
 
-import com.cts.FoodChainX.model.Role;
-import com.cts.FoodChainX.model.UserStatus;
+import com.cts.foodchainx.model.Role;
+import com.cts.foodchainx.model.UserStatus;
 
 public record UserResponse(
         Long userId,

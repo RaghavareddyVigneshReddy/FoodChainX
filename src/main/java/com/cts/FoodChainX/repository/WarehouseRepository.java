@@ -1,8 +1,8 @@
-package com.cts.FoodChainX.repository;
+package com.cts.foodchainx.repository;
 
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
-import com.cts.FoodChainX.model.Warehouse;
+import com.cts.foodchainx.model.Warehouse;
 
 public interface WarehouseRepository extends JpaRepository<Warehouse, Long> {
 

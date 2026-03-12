@@ -1,4 +1,4 @@
-package com.cts.FoodChainX.dto.batch;
+package com.cts.foodchainx.dto.batch;
 
 import java.util.List;
 

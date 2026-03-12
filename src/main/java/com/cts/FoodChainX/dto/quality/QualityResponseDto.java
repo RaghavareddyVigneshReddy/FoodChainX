@@ -1,4 +1,4 @@
-package com.cts.FoodChainX.dto.quality;
+package com.cts.foodchainx.dto.quality;
 
 import java.time.LocalDate;
 

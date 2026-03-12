@@ -1,29 +1,31 @@
-package com.cts.FoodChainX.service;
+package com.cts.foodchainx.service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.cts.FoodChainX.aspect.Auditable; // Keep this import
-import com.cts.FoodChainX.dto.farm.FarmRequestDto;
-import com.cts.FoodChainX.dto.farm.FarmResponseDto;
-import com.cts.FoodChainX.exception.FarmNotFoundException;
-import com.cts.FoodChainX.model.Farm;
-import com.cts.FoodChainX.model.User;
-import com.cts.FoodChainX.repository.FarmRepository;
-import com.cts.FoodChainX.repository.UserRepository;
+import com.cts.foodchainx.aspect.Auditable;
+import com.cts.foodchainx.dto.farm.FarmRequestDto;
+import com.cts.foodchainx.dto.farm.FarmResponseDto;
+import com.cts.foodchainx.exception.FarmNotFoundException;
+import com.cts.foodchainx.model.Farm;
+import com.cts.foodchainx.model.User;
+import com.cts.foodchainx.repository.FarmRepository;
+import com.cts.foodchainx.repository.UserRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
+@RequiredArgsConstructor
 public class FarmService {
 
-    @Autowired
-    private FarmRepository farmRepository;
+    private final FarmRepository farmRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     /**
      * 1. CREATE: Register a new farm plot linked to a User object
@@ -52,13 +54,13 @@ public class FarmService {
         List<Farm> farms = farmRepository.findByFarmer_UserId(farmer.getUserId());
         return farms.stream()
                     .map(this::mapToResponseDto)
-                    .collect(Collectors.toList());
+                    .toList();
     }
 
     /**
      * 3. READ: Get details of a specific farm
      */
-    public FarmResponseDto getFarmById(Long farmId) {
+    public FarmResponseDto getFarmById(@NonNull Long farmId) {
         Farm farm = farmRepository.findById(farmId)
                 .orElseThrow(() -> new FarmNotFoundException(farmId));
         return mapToResponseDto(farm);
@@ -70,7 +72,7 @@ public class FarmService {
     public List<FarmResponseDto> getFarmsByCertificationStatus(String status) {
         return farmRepository.findByCertificationStatusIgnoreCase(status).stream()
                 .map(this::mapToResponseDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -78,14 +80,14 @@ public class FarmService {
      */
     @Transactional
     @Auditable(action = "UPDATE_FARM_STATUS", resource = "FARM") // Logic 2 + Audit
-    public FarmResponseDto updateStatus(Long farmId, String newStatus) {
+    public FarmResponseDto updateStatus(@NonNull Long farmId, String newStatus) {
         Farm farm = farmRepository.findById(farmId)
                 .orElseThrow(() -> new FarmNotFoundException(farmId));
 
         // Keep logic 2: Strict Validation
         String status = newStatus.toUpperCase();
         if (!status.equals("APPROVED") && !status.equals("REJECTED") && !status.equals("PENDING")) {
-            throw new RuntimeException("Invalid status. Use APPROVED, REJECTED, or PENDING.");
+            throw new IllegalArgumentException("Invalid status: " + status + ". Use APPROVED, REJECTED, or PENDING.");
         }
 
         farm.setCertificationStatus(status);
@@ -96,12 +98,12 @@ public class FarmService {
      * 6. DELETE: Remove a farm record with Ownership check
      */
     @Auditable(action = "DELETE_FARM", resource = "FARM") // Logic 2 + Audit
-    public String deleteFarm(Long farmId, String email) {
+    public String deleteFarm(@NonNull Long farmId, String email) {
         Farm farm = farmRepository.findById(farmId)
                 .orElseThrow(() -> new FarmNotFoundException(farmId));
         
         if (!farm.getFarmer().getEmail().equalsIgnoreCase(email)) {
-            throw new RuntimeException("Unauthorized: You do not own this farm.");
+            throw new IllegalArgumentException("Unauthorized: You do not own this farm.");
         }
         
         farmRepository.delete(farm);

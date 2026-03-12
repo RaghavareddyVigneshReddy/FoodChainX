@@ -1,7 +1,7 @@
-package com.cts.FoodChainX.service;
+package com.cts.foodchainx.service;
 
-import com.cts.FoodChainX.model.Inventory;
-import com.cts.FoodChainX.repository.InventoryRepository;
+import com.cts.foodchainx.model.Inventory;
+import com.cts.foodchainx.repository.InventoryRepository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

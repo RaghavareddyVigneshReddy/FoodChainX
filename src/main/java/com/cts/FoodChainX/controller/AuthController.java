@@ -1,10 +1,10 @@
-package com.cts.FoodChainX.controller;
+package com.cts.foodchainx.controller;
 
-import com.cts.FoodChainX.dto.auth.LoginRequest;
-import com.cts.FoodChainX.dto.auth.RegisterRequest;
-import com.cts.FoodChainX.dto.auth.TokenResponse;
-import com.cts.FoodChainX.dto.user.UserResponse;
-import com.cts.FoodChainX.service.AuthService;
+import com.cts.foodchainx.dto.auth.LoginRequest;
+import com.cts.foodchainx.dto.auth.RegisterRequest;
+import com.cts.foodchainx.dto.auth.TokenResponse;
+import com.cts.foodchainx.dto.user.UserResponse;
+import com.cts.foodchainx.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;

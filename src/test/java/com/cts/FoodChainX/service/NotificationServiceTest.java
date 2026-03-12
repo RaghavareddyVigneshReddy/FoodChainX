@@ -1,12 +1,11 @@
-package com.cts.FoodChainX.service;
+package com.cts.foodchainx.service;
 
-import com.cts.FoodChainX.dto.notification.NotificationRequestDTO;
-import com.cts.FoodChainX.dto.notification.NotificationResponseDTO;
-import com.cts.FoodChainX.exception.NotificationNotFoundException;
-import com.cts.FoodChainX.model.Notification;
-import com.cts.FoodChainX.model.User;
-import com.cts.FoodChainX.repository.NotificationRepository;
-import com.cts.FoodChainX.repository.UserRepository;
+import com.cts.foodchainx.dto.notification.NotificationRequestDTO;
+import com.cts.foodchainx.dto.notification.NotificationResponseDTO;
+import com.cts.foodchainx.model.Notification;
+import com.cts.foodchainx.model.User;
+import com.cts.foodchainx.repository.NotificationRepository;
+import com.cts.foodchainx.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,76 +1,80 @@
-package com.cts.FoodChainX.service;
+package com.cts.foodchainx.service;
 
-import com.cts.FoodChainX.aspect.Auditable;
-//import com.cts.FoodChainX.dto.sale.SaleRequestDTO;
-import com.cts.FoodChainX.model.Inventory;
-import com.cts.FoodChainX.model.Sale;
-import com.cts.FoodChainX.model.TraceRecord;
-import com.cts.FoodChainX.model.User;
-import com.cts.FoodChainX.repository.InventoryRepository;
-import com.cts.FoodChainX.repository.SaleRepository;
-import com.cts.FoodChainX.repository.TraceRecordRepository;
-import com.cts.FoodChainX.repository.UserRepository;
+import com.cts.foodchainx.aspect.Auditable;
+import com.cts.foodchainx.model.Inventory;
+import com.cts.foodchainx.model.Sale;
+import com.cts.foodchainx.model.TraceRecord;
+import com.cts.foodchainx.model.User;
+import com.cts.foodchainx.repository.InventoryRepository;
+import com.cts.foodchainx.repository.SaleRepository;
+import com.cts.foodchainx.repository.TraceRecordRepository;
+import com.cts.foodchainx.repository.UserRepository;
 
-import jakarta.annotation.Nonnull;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Objects;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class SaleService {
 
-    @Autowired
-    private SaleRepository saleRepository;
-
-    @Autowired
-    private InventoryRepository inventoryRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private TraceRecordRepository traceRecordRepository;
+    private final SaleRepository saleRepository;
+    private final InventoryRepository inventoryRepository;
+    private final UserRepository userRepository;
+    private final TraceRecordRepository traceRecordRepository;
 
     @Transactional
-    @Auditable(action = "CREATE_SALE", resource = "INVENTORY_SALE") // ADD THIS
-    public Sale createSale(Sale sale) {
+    @Auditable(action = "CREATE_SALE", resource = "INVENTORY_SALE")
+    public Sale createSale(@NonNull Sale sale) {
+        // Fix: Use Objects.requireNonNull directly on the result of getInventory
+        // This 'promises' the compiler that inventory is not null for the rest of the method
+        Inventory inventory = Objects.requireNonNull(
+            getInventory(Objects.requireNonNull(sale.getInventoryId(), "Inventory ID is required")),
+            "Inventory record could not be retrieved"
+        );
 
-        Inventory inventory = getInventory(sale.getInventoryId());
+        Long quantity = Objects.requireNonNull(sale.getQuantity(), "Quantity is required for sale");
 
-        validateStock(inventory, sale.getQuantity());
+        // These calls will now be 100% green
+        validateStock(inventory, quantity);
+        updateInventory(inventory, quantity);
 
-        updateInventory(inventory, sale.getQuantity());
         sale.setDate(LocalDate.now());
-
-
         sale.setBatchId(inventory.getBatchId());
 
         Sale savedSale = saleRepository.save(sale);
 
-        updateTraceRecord(inventory.getBatchId(), sale.getConsumerId());
+        // Clear Ln 49-ish warnings by ensuring batch and consumer IDs are non-null
+        updateTraceRecord(
+            Objects.requireNonNull(inventory.getBatchId(), "Batch ID must not be null"),
+            Objects.requireNonNull(sale.getConsumerId(), "Consumer ID must not be null")
+        );
 
         return savedSale;
     }
 
-
-    private Inventory getInventory(@Nonnull Long inventoryId) {
+    @NonNull // Adding this annotation helps the compiler trust the return value
+    private Inventory getInventory(@NonNull Long inventoryId) {
         return inventoryRepository.findById(inventoryId)
-                .orElseThrow(() -> new RuntimeException("Inventory not found"));
+            .orElseThrow(() -> new EntityNotFoundException("Inventory not found with ID: " + inventoryId));
     }
 
-    private void validateStock(Inventory inventory, Long quantity) {
+    private void validateStock(@NonNull Inventory inventory, @NonNull Long quantity) {
         if (inventory.getQuantity() < quantity) {
-            throw new RuntimeException("Insufficient stock available");
+            throw new IllegalStateException("Insufficient stock available");
         }
     }
 
-    private void updateInventory(Inventory inventory, Long quantity) {
-        Long remainingStock = inventory.getQuantity() - quantity;
+    private void updateInventory(@NonNull Inventory inventory, @NonNull Long quantity) {
+        long remainingStock = inventory.getQuantity() - quantity;
         inventory.setQuantity(remainingStock);
         if (remainingStock == 0) {
             inventory.setStatus("OUT_OF_STOCK");
@@ -78,30 +82,25 @@ public class SaleService {
         inventoryRepository.save(inventory);
     }
 
-    private void updateTraceRecord(Long batchId, Long consumerId) {
-        // 1. Fetch the Consumer
-        User consumer = userRepository.findById(consumerId.longValue())
-                .orElseThrow(() -> new RuntimeException("Consumer not found"));
+    private void updateTraceRecord(@NonNull Long batchId, @NonNull Long consumerId) {
+        User consumer = userRepository.findById(consumerId)
+                .orElseThrow(() -> new EntityNotFoundException("Consumer not found"));
 
-        // 2. Fetch the latest record to copy the Batch and Farm details
-        traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(batchId.longValue())
+        traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(batchId)
             .stream()
             .findFirst() 
             .ifPresent(latestRecord -> {
-                // 3. Create a NEW TraceRecord for the sale event
                 var saleRecord = new TraceRecord();
                 saleRecord.setProductionBatch(latestRecord.getProductionBatch());
                 saleRecord.setFarm(latestRecord.getFarm());
                 saleRecord.setDistributor(latestRecord.getDistributor());
-                saleRecord.setRetailer(latestRecord.getRetailer()); // Keep the retailer info
+                saleRecord.setRetailer(latestRecord.getRetailer());
                 
-                // 4. Set the Sale Specifics
                 saleRecord.setConsumer(consumer); 
                 saleRecord.setStatus("SOLD");
                 saleRecord.setDate(LocalDate.now());
                 
                 traceRecordRepository.save(saleRecord);
-                
                 log.info("New Trace Entry: Batch {} marked as SOLD to {}", batchId, consumer.getName());
             });
     }

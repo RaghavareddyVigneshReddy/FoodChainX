@@ -1,4 +1,4 @@
-package com.cts.FoodChainX.service;
+package com.cts.foodchainx.service;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -6,12 +6,12 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.cts.FoodChainX.dto.tracerecord.TraceRecordResponseDto;
-import com.cts.FoodChainX.exception.BatchNotFoundException;
-import com.cts.FoodChainX.model.TraceRecord;
-import com.cts.FoodChainX.model.QualityCheck;
-import com.cts.FoodChainX.repository.QualityLoggingRepository;
-import com.cts.FoodChainX.repository.TraceRecordRepository;
+import com.cts.foodchainx.dto.tracerecord.TraceRecordResponseDto;
+import com.cts.foodchainx.exception.BatchNotFoundException;
+import com.cts.foodchainx.model.TraceRecord;
+import com.cts.foodchainx.model.QualityCheck;
+import com.cts.foodchainx.repository.QualityLoggingRepository;
+import com.cts.foodchainx.repository.TraceRecordRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

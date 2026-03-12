@@ -1,33 +1,32 @@
-package com.cts.FoodChainX.service;
+package com.cts.foodchainx.service;
 
-import com.cts.FoodChainX.dto.notification.NotificationRequestDTO;
-import com.cts.FoodChainX.dto.notification.NotificationResponseDTO;
-import com.cts.FoodChainX.exception.NotificationNotFoundException;
-import com.cts.FoodChainX.model.Notification;
-import com.cts.FoodChainX.aspect.Auditable;
-import com.cts.FoodChainX.model.User;
-import com.cts.FoodChainX.repository.NotificationRepository;
-import com.cts.FoodChainX.repository.UserRepository;
+import com.cts.foodchainx.dto.notification.NotificationRequestDTO;
+import com.cts.foodchainx.dto.notification.NotificationResponseDTO;
+import com.cts.foodchainx.exception.NotificationNotFoundException;
+import com.cts.foodchainx.model.Notification;
+import com.cts.foodchainx.aspect.Auditable;
+import com.cts.foodchainx.model.User;
+import com.cts.foodchainx.repository.NotificationRepository;
+import com.cts.foodchainx.repository.UserRepository;
+import lombok.RequiredArgsConstructor; // Added for Constructor Injection
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull; // Added for Null Safety
 import org.springframework.stereotype.Service;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor // Fix S6813: Replaces @Autowired field injection
 public class NotificationService {
 
-    @Autowired
-    private NotificationRepository repository;
-
-    @Autowired
-    private UserRepository userRepository;
+    private final NotificationRepository repository;
+    private final UserRepository userRepository;
 
     /**
      * Retrieves notifications for a user and maps them to Response DTOs.
      */
-    public List<NotificationResponseDTO> getNotificationsForUser(Long userId) {
+    public List<NotificationResponseDTO> getNotificationsForUser(@NonNull Long userId) {
         log.info("User {} is retrieving their alerts.", userId);
         List<Notification> list = repository.findByUserUserIdOrderByCreatedDateDesc(userId);
         
@@ -37,13 +36,13 @@ public class NotificationService {
         
         return list.stream()
                    .map(this::mapToResponseDTO)
-                   .collect(Collectors.toList());
+                   .toList(); // Fix S6204: Modern Java 16+ Stream collection
     }
 
     /**
      * Updates notification status to 'Read' and returns the updated DTO.
      */
-    public NotificationResponseDTO markAsRead(Long notificationId) {
+    public NotificationResponseDTO markAsRead(@NonNull Long notificationId) {
         Notification n = repository.findById(notificationId)
                 .orElseThrow(() -> new NotificationNotFoundException("Notification ID " + notificationId + " not found"));
         
@@ -55,30 +54,30 @@ public class NotificationService {
     /**
      * Creates a notification using a Request DTO and establishes User relation.
      */
-    public NotificationResponseDTO createNotification(NotificationRequestDTO dto) {
-    // 1. Fetch User based on the ID inside the DTO
-    User user = userRepository.findById(dto.getUserId())
-            .orElseThrow(() -> new RuntimeException("User not found with ID: " + dto.getUserId()));
+    public NotificationResponseDTO createNotification(@NonNull NotificationRequestDTO dto) {
+        // 1. Fetch User based on the ID inside the DTO (with null check)
+        User user = userRepository.findById(Objects.requireNonNull(dto.getUserId()))
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + dto.getUserId()));
 
-    // 2. Build the Notification entity
-    Notification notification = new Notification();
-    notification.setUser(user);
-    notification.setEntityId(dto.getEntityId());
-    notification.setMessage(dto.getMessage());
-    notification.setCategory(dto.getCategory());
-    notification.setStatus("Unread");
-    notification.setCreatedDate(java.time.LocalDateTime.now());
+        // 2. Build the Notification entity
+        Notification notification = new Notification();
+        notification.setUser(user);
+        notification.setEntityId(dto.getEntityId());
+        notification.setMessage(dto.getMessage());
+        notification.setCategory(dto.getCategory());
+        notification.setStatus("Unread");
+        notification.setCreatedDate(java.time.LocalDateTime.now());
 
-    // 3. Save and map to Response DTO
-    Notification saved = repository.save(notification);
-    return mapToResponseDTO(saved);
-}
+        // 3. Save and map to Response DTO
+        Notification saved = repository.save(notification);
+        return mapToResponseDTO(saved);
+    }
 
     /**
      * Deletes a notification by ID.
      */
-    @Auditable(action = "DELETE_NOTIFICATION", resource = "NOTIFICATION") // ADD THIS
-    public void deleteNotification(Long notificationId) {
+    @Auditable(action = "DELETE_NOTIFICATION", resource = "NOTIFICATION")
+    public void deleteNotification(@NonNull Long notificationId) {
         if (!repository.existsById(notificationId)) {
             throw new NotificationNotFoundException("Notification ID " + notificationId + " not found");
         }

@@ -1,4 +1,4 @@
-package com.cts.FoodChainX.model;
+package com.cts.foodchainx.model;
 
 
 public enum Role {

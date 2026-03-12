@@ -1,8 +1,7 @@
-package com.cts.FoodChainX.service;
+package com.cts.foodchainx.service;
 
-import com.cts.FoodChainX.dto.report.ReportResponseDto;
-import com.cts.FoodChainX.repository.ProductionBatchRepository;
-import com.cts.FoodChainX.repository.QualityLoggingRepository;
+import com.cts.foodchainx.dto.report.ReportResponseDto;
+import com.cts.foodchainx.repository.ProductionBatchRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +17,6 @@ import java.util.Map;
 public class ReportService {
 
     private final ProductionBatchRepository batchRepository;
-    private final QualityLoggingRepository qualityLoggingRepository;
 
     public ReportResponseDto generateSupplyChainPerformance() {
         log.info("Generating system-wide performance report");

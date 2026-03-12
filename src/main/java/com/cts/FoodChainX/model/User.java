@@ -1,4 +1,4 @@
-package com.cts.FoodChainX.model;
+package com.cts.foodchainx.model;
  // Necessary import
 import jakarta.persistence.*;
 import lombok.*;
@@ -38,13 +38,15 @@ public class User implements UserDetails {
   @Column(nullable = false)
   private UserStatus status;
 
+  @Builder.Default
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = false)
   @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // Forces the API to never "read" this into JSON
-  private List<AuditLog> auditLogs = new ArrayList<>();
+  private transient List<AuditLog> auditLogs = new ArrayList<>();
 
+  @Builder.Default
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // Stops the Notification -> User -> Notification loop
-  private List<Notification> notifications = new ArrayList<>();
+  private transient List<Notification> notifications = new ArrayList<>();
 
   // UserDetails for Spring Security
   @Override

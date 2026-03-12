@@ -1,28 +1,31 @@
-package com.cts.FoodChainX.controller;
+package com.cts.foodchainx.controller;
 
-import com.cts.FoodChainX.dto.inventory.InventoryRequestDTO;
-import com.cts.FoodChainX.model.Inventory;
-import com.cts.FoodChainX.service.InventoryService;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import com.cts.foodchainx.dto.inventory.InventoryRequestDTO;
+import com.cts.foodchainx.model.Inventory;
+import com.cts.foodchainx.service.InventoryService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/retail/inventory")
+@RequiredArgsConstructor // Fix S6813: Enables Constructor Injection via Lombok
 public class InventoryController {
 
-    @Autowired
-    private InventoryService inventoryService;
+    // Final field ensures it's initialized via the constructor
+    private final InventoryService inventoryService;
 
     @PostMapping
-    public Inventory createInventory(@RequestBody InventoryRequestDTO dto) {
-        Inventory inventory=new Inventory();
+    public Inventory createInventory(@RequestBody @NonNull InventoryRequestDTO dto) {
+        Inventory inventory = new Inventory();
 
-        inventory.setRetailerId(dto.getRetailerId());
-        inventory.setBatchId(dto.getBatchId());
-        inventory.setQuantity(dto.getQuantity());
+        // Safe mapping with null checks to satisfy strict type safety
+        inventory.setRetailerId(Objects.requireNonNull(dto.getRetailerId()));
+        inventory.setBatchId(Objects.requireNonNull(dto.getBatchId()));
+        inventory.setQuantity(Objects.requireNonNull(dto.getQuantity()));
 
         return inventoryService.createInventory(inventory);
     }
@@ -33,12 +36,12 @@ public class InventoryController {
     }
 
     @GetMapping("/{id}")
-    public Inventory getInventoryById(@PathVariable Long id) {
+    public Inventory getInventoryById(@PathVariable @NonNull Long id) {
         return inventoryService.getInventoryById(id);
     }
 
     @GetMapping("/retailer/{retailerId}")
-    public List<Inventory> getInventoryByRetailer(@PathVariable Long retailerId) {
+    public List<Inventory> getInventoryByRetailer(@PathVariable @NonNull Long retailerId) {
         return inventoryService.getInventoryByRetailer(retailerId);
     }
 }

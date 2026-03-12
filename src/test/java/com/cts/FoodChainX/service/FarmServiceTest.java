@@ -1,4 +1,4 @@
-package com.cts.FoodChainX.service;
+package com.cts.foodchainx.service;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,12 +21,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.cts.FoodChainX.dto.farm.FarmRequestDto;
-import com.cts.FoodChainX.dto.farm.FarmResponseDto;
-import com.cts.FoodChainX.model.Farm;
-import com.cts.FoodChainX.model.User;
-import com.cts.FoodChainX.repository.FarmRepository;
-import com.cts.FoodChainX.repository.UserRepository;
+import com.cts.foodchainx.dto.farm.FarmRequestDto;
+import com.cts.foodchainx.dto.farm.FarmResponseDto;
+import com.cts.foodchainx.model.Farm;
+import com.cts.foodchainx.model.User;
+import com.cts.foodchainx.repository.FarmRepository;
+import com.cts.foodchainx.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class FarmServiceTest {

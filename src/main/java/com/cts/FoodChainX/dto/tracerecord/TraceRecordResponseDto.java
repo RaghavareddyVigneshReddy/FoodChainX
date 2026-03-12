@@ -1,4 +1,4 @@
-package com.cts.FoodChainX.dto.tracerecord;
+package com.cts.foodchainx.dto.tracerecord;
 
 import lombok.Builder;
 import java.time.LocalDate;

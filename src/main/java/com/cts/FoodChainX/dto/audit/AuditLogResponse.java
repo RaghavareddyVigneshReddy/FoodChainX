@@ -1,4 +1,4 @@
-package com.cts.FoodChainX.dto.audit;
+package com.cts.foodchainx.dto.audit;
 
 import java.time.Instant;
 
