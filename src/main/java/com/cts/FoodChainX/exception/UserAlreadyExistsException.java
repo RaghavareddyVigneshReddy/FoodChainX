@@ -1,4 +1,4 @@
-package com.cts.FoodChainX.exception;
+package com.cts.foodchainx.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;

@@ -1,4 +1,4 @@
-package com.cts.FoodChainX.model;
+package com.cts.foodchainx.model;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Column;

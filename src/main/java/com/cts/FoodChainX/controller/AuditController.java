@@ -1,17 +1,17 @@
-package com.cts.FoodChainX.controller;
+package com.cts.foodchainx.controller;
 
-import com.cts.FoodChainX.model.Audit;
-import com.cts.FoodChainX.service.AuditService;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import com.cts.foodchainx.model.Audit;
+import com.cts.foodchainx.service.AuditService;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/compliance/audits")
+@RequiredArgsConstructor
 public class AuditController {
 
-    @Autowired
-    private AuditService auditService;
+    private final AuditService auditService;
 
     @PostMapping
     public Audit createAudit(@RequestBody Audit audit) {
@@ -19,7 +19,7 @@ public class AuditController {
     }
 
     @PutMapping("/{id}/close")
-    public Audit closeAudit(@PathVariable Long id) {
+    public Audit closeAudit(@PathVariable @NonNull Long id) {
         return auditService.closeAudit(id);
     }
 }

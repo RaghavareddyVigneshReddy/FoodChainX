@@ -1,10 +1,12 @@
-package com.cts.FoodChainX.service;
+package com.cts.foodchainx.service;
 
-import com.cts.FoodChainX.dto.audit.AuditLogResponse;
-import com.cts.FoodChainX.model.AuditLog;
-import com.cts.FoodChainX.model.User;
-import com.cts.FoodChainX.repository.AuditLogRepository;
+import com.cts.foodchainx.dto.audit.AuditLogResponse;
+import com.cts.foodchainx.model.AuditLog;
+import com.cts.foodchainx.model.User;
+import com.cts.foodchainx.repository.AuditLogRepository;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -16,17 +18,18 @@ public class AuditLogService {
 
     private final AuditLogRepository auditLogRepository;
 
-    public void log(User user, String action, String resource) {
+    public void log(@NonNull User user,@NonNull String action, @NonNull String resource) {
         AuditLog entry = AuditLog.builder()
                 .user(user)
                 .action(action)
                 .resource(resource)
                 .timestamp(Instant.now())
                 .build();
-        auditLogRepository.save(entry);
+                
+        auditLogRepository.save(java.util.Objects.requireNonNull(entry));
     }
 
-    public List<AuditLogResponse> getLogsForUser(User user) {
+    public List<AuditLogResponse> getLogsForUser(@NonNull User user) {
         return auditLogRepository.findByUser(user).stream()
                 .map(this::mapToDto)
                 .toList();

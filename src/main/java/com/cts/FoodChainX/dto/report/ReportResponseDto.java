@@ -1,4 +1,4 @@
-package com.cts.FoodChainX.dto.report;
+package com.cts.foodchainx.dto.report;
 
 import lombok.*;
 import java.time.LocalDateTime;

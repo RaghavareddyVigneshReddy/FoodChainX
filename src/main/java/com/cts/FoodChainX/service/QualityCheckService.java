@@ -1,24 +1,26 @@
-package com.cts.FoodChainX.service;
+package com.cts.foodchainx.service;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.cts.FoodChainX.aspect.Auditable;
-import com.cts.FoodChainX.dto.quality.QualityRequestDto;
-import com.cts.FoodChainX.dto.quality.QualityResponseDto;
-import com.cts.FoodChainX.model.ProductionBatch;
-import com.cts.FoodChainX.model.QualityCheck;
-import com.cts.FoodChainX.model.TraceRecord;
-import com.cts.FoodChainX.model.User;
-import com.cts.FoodChainX.repository.ProductionBatchRepository;
-import com.cts.FoodChainX.repository.QualityLoggingRepository;
-import com.cts.FoodChainX.repository.TraceRecordRepository;
-import com.cts.FoodChainX.repository.UserRepository;
+import com.cts.foodchainx.aspect.Auditable;
+import com.cts.foodchainx.dto.quality.QualityRequestDto;
+import com.cts.foodchainx.dto.quality.QualityResponseDto;
+import com.cts.foodchainx.model.ProductionBatch;
+import com.cts.foodchainx.model.QualityCheck;
+import com.cts.foodchainx.model.TraceRecord;
+import com.cts.foodchainx.model.User;
+import com.cts.foodchainx.repository.ProductionBatchRepository;
+import com.cts.foodchainx.repository.QualityLoggingRepository;
+import com.cts.foodchainx.repository.TraceRecordRepository;
+import com.cts.foodchainx.repository.UserRepository;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -31,18 +33,17 @@ public class QualityCheckService {
     private final TraceRecordRepository traceRecordRepository;
 
     // 1. PERFORM INSPECTION & UPDATE PRODUCTION STATUS
-    @Transactional
-    @Auditable(action = "PERFORM_INSPECTION", resource = "QUALITY_CHECK") // ADD THIS
-    public String inspectBatch(QualityRequestDto dto) {
-        // Find the Batch
-        ProductionBatch batch = batchRepo.findById(dto.getBatchId())
-                .orElseThrow(() -> new RuntimeException("Batch not found"));
+    @SuppressWarnings("null")
+@Transactional
+    @Auditable(action = "PERFORM_INSPECTION", resource = "QUALITY_CHECK")
+    public String inspectBatch(@NonNull QualityRequestDto dto) {
+        // Fix: Objects.requireNonNull ensures we don't pass null IDs to the repository
+        ProductionBatch batch = batchRepo.findById(Objects.requireNonNull(dto.getBatchId()))
+                .orElseThrow(() -> new EntityNotFoundException("Batch not found with ID: " + dto.getBatchId()));
 
-        // Find the Inspector (Regulator)
-        User inspector = userRepo.findById(dto.getInspectorId())
-                .orElseThrow(() -> new RuntimeException("Inspector not found"));
+        User inspector = userRepo.findById(Objects.requireNonNull(dto.getInspectorId()))
+                .orElseThrow(() -> new EntityNotFoundException("Inspector not found with ID: " + dto.getInspectorId()));
 
-        // Create the Quality Log (The "Report")
         QualityCheck check = QualityCheck.builder()
                 .batch(batch)
                 .inspector(inspector)
@@ -53,46 +54,43 @@ public class QualityCheckService {
         
         qualityRepo.save(check);
 
-        // Reflect the result in the Production Table
         batch.setQualityStatus(dto.getStatus()); 
         batchRepo.save(batch); 
 
         TraceRecord qualityTrace = new TraceRecord();
-    qualityTrace.setProductionBatch(batch);
-    qualityTrace.setFarm(batch.getFarm());
-    qualityTrace.setStatus("PASSED".equalsIgnoreCase(dto.getStatus()) ? "QUALITY_CERTIFIED" : "QUALITY_REJECTED");
-    qualityTrace.setDate(LocalDate.now());
-    traceRecordRepository.save(qualityTrace);
+        qualityTrace.setProductionBatch(batch);
+        qualityTrace.setFarm(batch.getFarm());
+        qualityTrace.setStatus("PASSED".equalsIgnoreCase(dto.getStatus()) ? "QUALITY_CERTIFIED" : "QUALITY_REJECTED");
+        qualityTrace.setDate(LocalDate.now());
+        traceRecordRepository.save(qualityTrace);
 
         return "Inspection completed. Batch " + dto.getBatchId() + " updated to: " + dto.getStatus();
     }
 
     // 2. GET BATCHES BY STATUS (Filtered Views)
-    // You can call this for "PENDING", "APPROVED", or "REJECTED"
- public List<QualityResponseDto> getInspectionsByStatus(String status) {
-    // 1. The database now returns ONLY the rows that match the status
-    return qualityRepo.findByStatusIgnoreCase(status).stream()
-            .map(q -> new QualityResponseDto(
-                    q.getQualityId(), 
-                    q.getDate(), 
-                    q.getStatus(),
-                    q.getFindings()))
-            .collect(Collectors.toList());
-}
+    public List<QualityResponseDto> getInspectionsByStatus(String status) {
+        return qualityRepo.findByStatusIgnoreCase(status).stream()
+                .map(q -> new QualityResponseDto(
+                        q.getQualityId(), 
+                        q.getDate(), 
+                        q.getStatus(),
+                        q.getFindings()))
+                .toList(); // Fix S6204: Switched to modern .toList()
+    }
 
     // 3. DELETE LOG & RESET BATCH TO PENDING
     @Transactional
-    @Auditable(action = "DELETE_QUALITY_LOG", resource = "QUALITY_CHECK") // ADD THIS
-    public String removeQualityLog(Long qualityId) {
+    @Auditable(action = "DELETE_QUALITY_LOG", resource = "QUALITY_CHECK")
+    public String removeQualityLog(@NonNull Long qualityId) {
         QualityCheck check = qualityRepo.findById(qualityId)
-                .orElseThrow(() -> new RuntimeException("Log not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Log not found with ID: " + qualityId));
 
-        // Reset the Batch back to PENDING so it can be re-inspected
         ProductionBatch batch = check.getBatch();
         batch.setQualityStatus("PENDING");
         batchRepo.save(batch);
 
-        qualityRepo.delete(check);
+        // Fix: Use Objects.requireNonNull to satisfy @NonNull check in repository.delete()
+        qualityRepo.delete(Objects.requireNonNull(check));
         return "Log " + qualityId + " deleted. Batch status reset to PENDING.";
     }
 }

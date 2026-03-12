@@ -1,22 +1,24 @@
-package com.cts.FoodChainX.service;
+package com.cts.foodchainx.service;
 
-import com.cts.FoodChainX.aspect.Auditable;
-import com.cts.FoodChainX.model.Audit;
-import com.cts.FoodChainX.repository.AuditRepository;
+import com.cts.foodchainx.aspect.Auditable;
+import com.cts.foodchainx.model.Audit;
+import com.cts.foodchainx.repository.AuditRepository;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class AuditService {
 
-    @Autowired
-    private AuditRepository auditRepository;
+    
+    private final AuditRepository auditRepository;
     @Auditable(action = "INITIATE_AUDIT_RECORD", resource = "AUDIT_PROCESS")
     public Audit createAudit(Audit audit) {
         log.info("Creating new Audit record for Entity: {}", audit.getAuditId());
@@ -28,7 +30,7 @@ public class AuditService {
     }
 
     @Auditable(action = "CLOSE_AUDIT_RECORD", resource = "AUDIT_PROCESS")
-    public Audit closeAudit(Long auditId) {
+    public Audit closeAudit(@NonNull Long auditId) {
 
         Audit audit = auditRepository.findById(auditId)
                 .orElseThrow(() -> new RuntimeException("Audit not found"));

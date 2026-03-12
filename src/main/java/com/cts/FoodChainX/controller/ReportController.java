@@ -1,7 +1,7 @@
-package com.cts.FoodChainX.controller;
+package com.cts.foodchainx.controller;
 
-import com.cts.FoodChainX.dto.report.ReportResponseDto;
-import com.cts.FoodChainX.service.ReportService;
+import com.cts.foodchainx.dto.report.ReportResponseDto;
+import com.cts.foodchainx.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

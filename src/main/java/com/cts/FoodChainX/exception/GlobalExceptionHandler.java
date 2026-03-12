@@ -1,4 +1,4 @@
-package com.cts.FoodChainX.exception;
+package com.cts.foodchainx.exception;
 
 import java.time.LocalDateTime;
 
@@ -17,7 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.http.converter.HttpMessageNotReadableException;
-
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -54,7 +54,7 @@ public class GlobalExceptionHandler {
 
     }
 
-    private ResponseEntity<Map<String, Object>> build(HttpStatus status, String message, Throwable ex, boolean serverError) {
+    private ResponseEntity<Map<String, Object>> build(@NonNull HttpStatus status, String message, Throwable ex, boolean serverError) {
 
         String cid = UUID.randomUUID().toString();
 
@@ -115,8 +115,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleDataIntegrity(DataIntegrityViolationException ex) {
 
         String msg = "Unique constraint violated. A record with the same value already exists.";
-
-        String cause = ex.getRootCause() != null ? ex.getRootCause().getMessage() : "";
+        Throwable rootCause = ex.getRootCause();
+        String cause = (rootCause != null) ? rootCause.getMessage() : "";
 
         if (cause != null) {
 

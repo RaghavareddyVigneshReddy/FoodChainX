@@ -1,4 +1,4 @@
-package com.cts.FoodChainX.dto.notification;
+package com.cts.foodchainx.dto.notification;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

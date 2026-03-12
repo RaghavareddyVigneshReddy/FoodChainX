@@ -1,7 +1,7 @@
-package com.cts.FoodChainX.aspect;
+package com.cts.foodchainx.aspect;
 
-import com.cts.FoodChainX.model.User;
-import com.cts.FoodChainX.service.AuditLogService;
+import com.cts.foodchainx.model.User;
+import com.cts.foodchainx.service.AuditLogService;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;

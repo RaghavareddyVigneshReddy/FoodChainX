@@ -1,4 +1,4 @@
-package com.cts.FoodChainX.config;
+package com.cts.foodchainx.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;

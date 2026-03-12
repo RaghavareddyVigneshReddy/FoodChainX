@@ -1,13 +1,13 @@
-package com.cts.FoodChainX.service;
+package com.cts.foodchainx.service;
 
-import com.cts.FoodChainX.dto.auth.LoginRequest;
-import com.cts.FoodChainX.dto.auth.RegisterRequest;
-import com.cts.FoodChainX.dto.auth.TokenResponse;
-import com.cts.FoodChainX.dto.user.UserResponse;
-import com.cts.FoodChainX.exception.UserAlreadyExistsException;
-import com.cts.FoodChainX.model.User;
-import com.cts.FoodChainX.model.UserStatus;
-import com.cts.FoodChainX.repository.UserRepository;
+import com.cts.foodchainx.dto.auth.LoginRequest;
+import com.cts.foodchainx.dto.auth.RegisterRequest;
+import com.cts.foodchainx.dto.auth.TokenResponse;
+import com.cts.foodchainx.dto.user.UserResponse;
+import com.cts.foodchainx.exception.UserAlreadyExistsException;
+import com.cts.foodchainx.model.User;
+import com.cts.foodchainx.model.UserStatus;
+import com.cts.foodchainx.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import static java.util.Objects.requireNonNull;
 
 @Service
 @RequiredArgsConstructor
@@ -43,7 +43,7 @@ public class AuthService {
                 .status(UserStatus.ACTIVE)
                 .build();
 
-        user = userRepository.save(user);
+        user = userRepository.save(requireNonNull(user));
         
         // System log for new registration
         auditLogService.log(user, "USER_REGISTER", "users/" + user.getUserId());
@@ -63,7 +63,7 @@ public class AuthService {
 
         String token = jwtService.generateToken(user);
         
-        auditLogService.log(user, "USER_LOGIN", "auth/login");
+        auditLogService.log(requireNonNull(user), "USER_LOGIN", "auth/login");
 
         return new TokenResponse(token, "Bearer", 86400); // 24h expiry
     }
@@ -71,7 +71,7 @@ public class AuthService {
     public List<UserResponse> listUsers() {
         return userRepository.findAll().stream()
                 .map(this::mapToResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private UserResponse mapToResponse(User user) {

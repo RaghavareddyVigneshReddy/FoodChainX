@@ -1,4 +1,4 @@
-package com.cts.FoodChainX.config;
+package com.cts.foodchainx.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,9 +15,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.cts.FoodChainX.model.User;
-import com.cts.FoodChainX.model.UserStatus;
-import com.cts.FoodChainX.repository.UserRepository;
+import com.cts.foodchainx.model.User;
+import com.cts.foodchainx.model.UserStatus;
+import com.cts.foodchainx.repository.UserRepository;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

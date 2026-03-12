@@ -1,7 +1,7 @@
-package com.cts.FoodChainX.repository;
+package com.cts.foodchainx.repository;
 
-import com.cts.FoodChainX.model.AuditLog;
-import com.cts.FoodChainX.model.User;
+import com.cts.foodchainx.model.AuditLog;
+import com.cts.foodchainx.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

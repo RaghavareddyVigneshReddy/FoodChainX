@@ -1,13 +1,13 @@
-package com.cts.FoodChainX.service;
+package com.cts.foodchainx.service;
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.cts.FoodChainX.dto.tracerecord.TraceRecordResponseDto;
-import com.cts.FoodChainX.exception.BatchNotFoundException;
-import com.cts.FoodChainX.model.*;
-import com.cts.FoodChainX.repository.QualityLoggingRepository;
-import com.cts.FoodChainX.repository.TraceRecordRepository;
+import com.cts.foodchainx.dto.tracerecord.TraceRecordResponseDto;
+import com.cts.foodchainx.exception.BatchNotFoundException;
+import com.cts.foodchainx.model.*;
+import com.cts.foodchainx.repository.QualityLoggingRepository;
+import com.cts.foodchainx.repository.TraceRecordRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

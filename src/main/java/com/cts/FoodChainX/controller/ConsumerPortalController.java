@@ -1,7 +1,7 @@
-package com.cts.FoodChainX.controller;
+package com.cts.foodchainx.controller;
 
-import com.cts.FoodChainX.dto.tracerecord.TraceRecordResponseDto;
-import com.cts.FoodChainX.service.TraceabilityService;
+import com.cts.foodchainx.dto.tracerecord.TraceRecordResponseDto;
+import com.cts.foodchainx.service.TraceabilityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,7 +30,7 @@ public class ConsumerPortalController {
      *
      * @param batchId the unique identifier of the production batch
      * @return a {@link ResponseEntity} containing the {@link TraceRecordResponseDto}
-     * @throws com.cts.FoodChainX.exception.BatchNotFoundException if no record exists for the batchId
+     * @throws com.cts.foodchainx.exception.BatchNotFoundException if no record exists for the batchId
      */
     @GetMapping("/trace/{batchId}")
     public ResponseEntity<TraceRecordResponseDto> getTraceRecord(@PathVariable Long batchId) {

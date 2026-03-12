@@ -1,4 +1,4 @@
-package com.cts.FoodChainX.service;
+package com.cts.foodchainx.service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -22,20 +22,20 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.cts.FoodChainX.dto.batch.BatchDetailResponseDto;
-import com.cts.FoodChainX.dto.batch.BatchRequestDto;
-import com.cts.FoodChainX.dto.batch.BatchResponseDto;
-import com.cts.FoodChainX.dto.quality.QualityRequestDto;
-import com.cts.FoodChainX.model.Farm;
-import com.cts.FoodChainX.model.ProductionBatch;
-import com.cts.FoodChainX.model.QualityCheck;
-import com.cts.FoodChainX.model.TraceRecord;
-import com.cts.FoodChainX.model.User;
-import com.cts.FoodChainX.repository.FarmRepository;
-import com.cts.FoodChainX.repository.ProductionBatchRepository;
-import com.cts.FoodChainX.repository.QualityLoggingRepository;
-import com.cts.FoodChainX.repository.TraceRecordRepository;
-import com.cts.FoodChainX.repository.UserRepository;
+import com.cts.foodchainx.dto.batch.BatchDetailResponseDto;
+import com.cts.foodchainx.dto.batch.BatchRequestDto;
+import com.cts.foodchainx.dto.batch.BatchResponseDto;
+import com.cts.foodchainx.dto.quality.QualityRequestDto;
+import com.cts.foodchainx.model.Farm;
+import com.cts.foodchainx.model.ProductionBatch;
+import com.cts.foodchainx.model.QualityCheck;
+import com.cts.foodchainx.model.TraceRecord;
+import com.cts.foodchainx.model.User;
+import com.cts.foodchainx.repository.FarmRepository;
+import com.cts.foodchainx.repository.ProductionBatchRepository;
+import com.cts.foodchainx.repository.QualityLoggingRepository;
+import com.cts.foodchainx.repository.TraceRecordRepository;
+import com.cts.foodchainx.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class ProductionBatchServiceTest {

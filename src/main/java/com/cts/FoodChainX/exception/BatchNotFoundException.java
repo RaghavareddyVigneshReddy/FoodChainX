@@ -1,4 +1,4 @@
-package com.cts.FoodChainX.exception;
+package com.cts.foodchainx.exception;
 
 /**
  * Exception thrown when a specific production batch cannot be located in the traceability system.

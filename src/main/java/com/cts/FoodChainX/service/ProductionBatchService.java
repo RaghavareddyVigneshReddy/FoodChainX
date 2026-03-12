@@ -1,30 +1,32 @@
-package com.cts.FoodChainX.service;
+package com.cts.foodchainx.service;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.cts.FoodChainX.aspect.Auditable; // Added Import
-import com.cts.FoodChainX.dto.batch.BatchDetailResponseDto;
-import com.cts.FoodChainX.dto.batch.BatchRequestDto;
-import com.cts.FoodChainX.dto.batch.BatchResponseDto;
-import com.cts.FoodChainX.dto.quality.QualityRequestDto;
-import com.cts.FoodChainX.exception.BatchNotFoundException;
-import com.cts.FoodChainX.exception.FarmNotFoundException;
-import com.cts.FoodChainX.model.Farm;
-import com.cts.FoodChainX.model.ProductionBatch;
-import com.cts.FoodChainX.model.QualityCheck;
-import com.cts.FoodChainX.model.TraceRecord;
-import com.cts.FoodChainX.model.User;
-import com.cts.FoodChainX.repository.FarmRepository;
-import com.cts.FoodChainX.repository.ProductionBatchRepository;
-import com.cts.FoodChainX.repository.QualityLoggingRepository;
-import com.cts.FoodChainX.repository.TraceRecordRepository;
-import com.cts.FoodChainX.repository.UserRepository;
+import com.cts.foodchainx.aspect.Auditable;
+import com.cts.foodchainx.dto.batch.BatchDetailResponseDto;
+import com.cts.foodchainx.dto.batch.BatchRequestDto;
+import com.cts.foodchainx.dto.batch.BatchResponseDto;
+import com.cts.foodchainx.dto.quality.QualityRequestDto;
+import com.cts.foodchainx.exception.BatchNotFoundException;
+import com.cts.foodchainx.exception.FarmNotFoundException;
+import com.cts.foodchainx.model.Farm;
+import com.cts.foodchainx.model.ProductionBatch;
+import com.cts.foodchainx.model.QualityCheck;
+import com.cts.foodchainx.model.TraceRecord;
+import com.cts.foodchainx.model.User;
+import com.cts.foodchainx.repository.FarmRepository;
+import com.cts.foodchainx.repository.ProductionBatchRepository;
+import com.cts.foodchainx.repository.QualityLoggingRepository;
+import com.cts.foodchainx.repository.TraceRecordRepository;
+import com.cts.foodchainx.repository.UserRepository;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -36,12 +38,12 @@ public class ProductionBatchService {
     private final QualityLoggingRepository qualityRepo;
     private final UserRepository userRepository;
     private final TraceRecordRepository traceRecordRepository;
-    // --- PRODUCTION BATCH METHODS ---
 
-    @Transactional
-    @Auditable(action = "HARVEST_BATCH", resource = "PRODUCTION_BATCH") // Added Annotation
-    public BatchResponseDto createBatch(BatchRequestDto dto) {
-        Farm farm = farmRepository.findById(dto.getFarmId())
+    @SuppressWarnings("null")
+@Transactional
+    @Auditable(action = "HARVEST_BATCH", resource = "PRODUCTION_BATCH")
+    public BatchResponseDto createBatch(@NonNull BatchRequestDto dto) {
+        Farm farm = farmRepository.findById(Objects.requireNonNull(dto.getFarmId()))
                 .orElseThrow(() -> new FarmNotFoundException(dto.getFarmId()));
 
         ProductionBatch batch = ProductionBatch.builder()
@@ -52,7 +54,9 @@ public class ProductionBatchService {
                 .qualityStatus("PENDING")
                 .build();
 
-        ProductionBatch saved = batchRepository.save(batch);
+        // Wrapped save result to satisfy @NonNull requirement
+        ProductionBatch saved = Objects.requireNonNull(batchRepository.save(batch));
+        
         TraceRecord initialTrace = new TraceRecord();
         initialTrace.setProductionBatch(saved);
         initialTrace.setFarm(farm);
@@ -63,17 +67,16 @@ public class ProductionBatchService {
         return new BatchResponseDto(saved.getProductionId(), saved.getQualityStatus());
     }
 
-    @Transactional
-    @Auditable(action = "PERFORM_QUALITY_CHECK", resource = "PRODUCTION_BATCH") // Added Annotation
-    public String performQualityCheck(QualityRequestDto dto) {
-        // 1. Fetch dependencies
-        ProductionBatch batch = batchRepository.findById(dto.getBatchId())
-                .orElseThrow(() -> new RuntimeException("Batch not found"));
+    @SuppressWarnings("null")
+@Transactional
+    @Auditable(action = "PERFORM_QUALITY_CHECK", resource = "PRODUCTION_BATCH")
+    public String performQualityCheck(@NonNull QualityRequestDto dto) {
+        ProductionBatch batch = batchRepository.findById(Objects.requireNonNull(dto.getBatchId()))
+                .orElseThrow(() -> new EntityNotFoundException("Batch not found"));
 
-        User inspectorUser = userRepository.findById(dto.getInspectorId())
-                .orElseThrow(() -> new RuntimeException("Inspector not found"));
+        User inspectorUser = userRepository.findById(Objects.requireNonNull(dto.getInspectorId()))
+                .orElseThrow(() -> new EntityNotFoundException("Inspector not found"));
 
-        // 2. Save the Quality Report
         QualityCheck check = QualityCheck.builder()
                 .batch(batch)
                 .inspector(inspectorUser)
@@ -81,13 +84,13 @@ public class ProductionBatchService {
                 .status(dto.getStatus())
                 .date(LocalDate.now())
                 .build();
-        qualityRepo.save(check);
+        
+        // Fix: Ensure the saved object is treated as non-null
+        Objects.requireNonNull(qualityRepo.save(check));
 
-        // 3. Update Batch Status
         batch.setQualityStatus(dto.getStatus());
         batchRepository.save(batch);
 
-        // 4. AUTOMATED SIDE EFFECT: Insert row into Trace Record
         TraceRecord qualityTrace = new TraceRecord();
         qualityTrace.setProductionBatch(batch);
         qualityTrace.setFarm(batch.getFarm());
@@ -97,22 +100,19 @@ public class ProductionBatchService {
 
         qualityTrace.setStatus(traceStatus);
         qualityTrace.setDate(LocalDate.now());
-
         traceRecordRepository.save(qualityTrace);
 
         return "Inspection completed. Trace updated to " + traceStatus;
     }
 
-    // --- ADDITIONAL METHODS ---
-
     @Transactional(readOnly = true)
-    public BatchDetailResponseDto getBatchDetail(Long batchId) {
+    public BatchDetailResponseDto getBatchDetail(@NonNull Long batchId) {
         ProductionBatch batch = batchRepository.findById(batchId)
-                .orElseThrow(() -> new RuntimeException("Batch not found with ID: " + batchId));
+                .orElseThrow(() -> new EntityNotFoundException("Batch not found with ID: " + batchId));
 
         List<String> findingsList = batch.getQualityChecks().stream()
                 .map(QualityCheck::getFindings)
-                .collect(Collectors.toList());
+                .toList(); 
 
         return new BatchDetailResponseDto(
                 batch.getProductionId(),
@@ -126,29 +126,29 @@ public class ProductionBatchService {
     }
 
     @Transactional(readOnly = true)
-    public BatchResponseDto getBatchById(Long batchId) {
+    public BatchResponseDto getBatchById(@NonNull Long batchId) {
         ProductionBatch batch = batchRepository.findById(batchId)
                 .orElseThrow(() -> new BatchNotFoundException(batchId));
 
         return new BatchResponseDto(batch.getProductionId(), batch.getQualityStatus());
     }
 
-    public List<BatchResponseDto> getBatchesByFarm(Long farmId) {
+    public List<BatchResponseDto> getBatchesByFarm(@NonNull Long farmId) {
         return batchRepository.findByFarm_FarmId(farmId).stream()
                 .map(batch -> new BatchResponseDto(batch.getProductionId(), batch.getQualityStatus()))
-                .collect(Collectors.toList());
+                .toList();
     }
 
-        @Transactional
-        @Auditable(action = "DELETE_BATCH", resource = "PRODUCTION_BATCH") // Added Annotation
-        public String deleteBatch(Long batchId) {
-                ProductionBatch batch = batchRepository.findById(batchId)
+    @Transactional
+    @Auditable(action = "DELETE_BATCH", resource = "PRODUCTION_BATCH")
+    public String deleteBatch(@NonNull Long batchId) {
+        ProductionBatch batch = batchRepository.findById(batchId)
                 .orElseThrow(() -> new BatchNotFoundException(batchId));
- 
-                if ("PASSED".equalsIgnoreCase(batch.getQualityStatus())) {
-                        throw new RuntimeException("Cannot delete a batch that has already passed quality check.");
-                }
- 
+
+        if ("PASSED".equalsIgnoreCase(batch.getQualityStatus())) {
+            throw new IllegalStateException("Cannot delete a batch that has already passed quality check.");
+        }
+
         batchRepository.delete(batch);
         return "Batch " + batchId + " deleted successfully.";
     }

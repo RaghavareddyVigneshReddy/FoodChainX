@@ -1,7 +1,7 @@
 
-package com.cts.FoodChainX.dto.auth;
+package com.cts.foodchainx.dto.auth;
 
-import com.cts.FoodChainX.model.Role;
+import com.cts.foodchainx.model.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

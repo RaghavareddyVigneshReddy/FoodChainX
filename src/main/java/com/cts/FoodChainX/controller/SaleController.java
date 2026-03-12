@@ -1,8 +1,8 @@
-package com.cts.FoodChainX.controller;
+package com.cts.foodchainx.controller;
 
-import com.cts.FoodChainX.dto.sale.SaleRequestDTO;
-import com.cts.FoodChainX.model.Sale;
-import com.cts.FoodChainX.service.SaleService;
+import com.cts.foodchainx.dto.sale.SaleRequestDTO;
+import com.cts.foodchainx.model.Sale;
+import com.cts.foodchainx.service.SaleService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

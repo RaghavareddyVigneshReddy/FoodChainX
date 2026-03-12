@@ -1,10 +1,10 @@
-package com.cts.FoodChainX.controller;
+package com.cts.foodchainx.controller;
 
-import com.cts.FoodChainX.dto.user.UserResponse;
-import com.cts.FoodChainX.model.Role;
-import com.cts.FoodChainX.model.UserStatus;
-import com.cts.FoodChainX.service.AuthService;
-import com.cts.FoodChainX.service.AuditLogService;
+import com.cts.foodchainx.dto.user.UserResponse;
+import com.cts.foodchainx.model.Role;
+import com.cts.foodchainx.model.UserStatus;
+import com.cts.foodchainx.service.AuthService;
+import com.cts.foodchainx.service.AuditLogService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
