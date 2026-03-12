@@ -13,4 +13,6 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
     List<Sale> findByInventoryId(Long inventoryId);
 
     List<Sale> findByConsumerId(Long consumerId);
+
+    List<Sale> findByBatchId(Long batchId);
 }

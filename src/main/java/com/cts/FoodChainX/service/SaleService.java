@@ -1,6 +1,7 @@
 package com.cts.FoodChainX.service;
 
 import com.cts.FoodChainX.aspect.Auditable;
+//import com.cts.FoodChainX.dto.sale.SaleRequestDTO;
 import com.cts.FoodChainX.model.Inventory;
 import com.cts.FoodChainX.model.Sale;
 import com.cts.FoodChainX.model.TraceRecord;
@@ -38,17 +39,24 @@ public class SaleService {
     @Transactional
     @Auditable(action = "CREATE_SALE", resource = "INVENTORY_SALE") // ADD THIS
     public Sale createSale(Sale sale) {
+
         Inventory inventory = getInventory(sale.getInventoryId());
+
         validateStock(inventory, sale.getQuantity());
+
         updateInventory(inventory, sale.getQuantity());
-        // Set sale metadata
         sale.setDate(LocalDate.now());
+
+
+        sale.setBatchId(inventory.getBatchId());
+
         Sale savedSale = saleRepository.save(sale);
-        // Update Traceability Record for the Batch
+
         updateTraceRecord(inventory.getBatchId(), sale.getConsumerId());
 
         return savedSale;
     }
+
 
     private Inventory getInventory(@Nonnull Long inventoryId) {
         return inventoryRepository.findById(inventoryId)
