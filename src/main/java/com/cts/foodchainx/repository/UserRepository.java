@@ -8,6 +8,17 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+<<<<<<< HEAD
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+
+    // Used by SecurityConfig and JwtAuthenticationFilter
+    Optional<User> findByEmailIgnoreCase(String email);
+
+    boolean existsByEmailIgnoreCase(String email);
+
+    // Use Role enum for type safety
+=======
 /**
  * Repository interface for {@link User} entity operations.
  * <p>
@@ -49,5 +60,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * * @param role The {@link Role} enum (e.g., FARMER, ADMIN).
      * @return A list of users matching the role.
      */
+>>>>>>> d067e7d9657dbb3bba899c6df80c3f723990653e
     List<User> findByRole(Role role);
 }
