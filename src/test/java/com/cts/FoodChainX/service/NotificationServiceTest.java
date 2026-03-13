@@ -6,6 +6,8 @@ import com.cts.foodchainx.model.Notification;
 import com.cts.foodchainx.model.User;
 import com.cts.foodchainx.repository.NotificationRepository;
 import com.cts.foodchainx.repository.UserRepository;
+import com.cts.foodchainx.service.NotificationService;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

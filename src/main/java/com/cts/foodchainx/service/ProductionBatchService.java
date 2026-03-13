@@ -29,6 +29,11 @@ import com.cts.foodchainx.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Service responsible for managing the lifecycle of Production Batches.
+ * <p>This service coordinates between Farms, Quality Checks, and Traceability Records. 
+ * It ensures that every harvest is tracked from the moment it is created.</p>
+ */
 @Service
 @RequiredArgsConstructor
 public class ProductionBatchService {
@@ -39,8 +44,18 @@ public class ProductionBatchService {
     private final UserRepository userRepository;
     private final TraceRecordRepository traceRecordRepository;
 
+    /**
+     * Creates a new production batch and initializes its traceability history.
+     * <p><b>Flow:</b>
+     * 1. Validates the Farm existence.
+     * 2. Persists the new Batch with "PENDING" status.
+     * 3. Creates an initial TraceRecord marked as "HARVESTED_AT_FARM".</p>
+     * * @param dto Data transfer object containing batch details.
+     * @return BatchResponseDto containing the new ID and status.
+     * @throws FarmNotFoundException if the associated Farm ID is invalid.
+     */
     @SuppressWarnings("null")
-@Transactional
+    @Transactional
     @Auditable(action = "HARVEST_BATCH", resource = "PRODUCTION_BATCH")
     public BatchResponseDto createBatch(@NonNull BatchRequestDto dto) {
         Farm farm = farmRepository.findById(Objects.requireNonNull(dto.getFarmId()))
@@ -54,7 +69,6 @@ public class ProductionBatchService {
                 .qualityStatus("PENDING")
                 .build();
 
-        // Wrapped save result to satisfy @NonNull requirement
         ProductionBatch saved = Objects.requireNonNull(batchRepository.save(batch));
         
         TraceRecord initialTrace = new TraceRecord();
@@ -67,8 +81,16 @@ public class ProductionBatchService {
         return new BatchResponseDto(saved.getProductionId(), saved.getQualityStatus());
     }
 
+    /**
+     * Records a quality inspection and updates the batch status across the system.
+     * <p>This method updates both the ProductionBatch entity and adds a new entry 
+     * to the Traceability logs based on the inspection result.</p>
+     * * @param dto Contains inspection findings, inspector ID, and the result status.
+     * @return A status message indicating the completion of the check and trace update.
+     * @throws EntityNotFoundException if the Batch or Inspector does not exist.
+     */
     @SuppressWarnings("null")
-@Transactional
+    @Transactional
     @Auditable(action = "PERFORM_QUALITY_CHECK", resource = "PRODUCTION_BATCH")
     public String performQualityCheck(@NonNull QualityRequestDto dto) {
         ProductionBatch batch = batchRepository.findById(Objects.requireNonNull(dto.getBatchId()))
@@ -85,7 +107,6 @@ public class ProductionBatchService {
                 .date(LocalDate.now())
                 .build();
         
-        // Fix: Ensure the saved object is treated as non-null
         Objects.requireNonNull(qualityRepo.save(check));
 
         batch.setQualityStatus(dto.getStatus());
@@ -105,6 +126,12 @@ public class ProductionBatchService {
         return "Inspection completed. Trace updated to " + traceStatus;
     }
 
+    /**
+     * Retrieves full details of a batch, including farm information and a list of all quality findings.
+     * * @param batchId The ID of the batch to retrieve.
+     * @return BatchDetailResponseDto containing comprehensive batch data.
+     * @throws EntityNotFoundException if the batch ID does not exist.
+     */
     @Transactional(readOnly = true)
     public BatchDetailResponseDto getBatchDetail(@NonNull Long batchId) {
         ProductionBatch batch = batchRepository.findById(batchId)
@@ -125,6 +152,12 @@ public class ProductionBatchService {
         );
     }
 
+    /**
+     * Retrieves basic ID and Status for a specific batch.
+     * * @param batchId The ID of the batch.
+     * @return BatchResponseDto containing ID and status.
+     * @throws BatchNotFoundException if ID is missing in database.
+     */
     @Transactional(readOnly = true)
     public BatchResponseDto getBatchById(@NonNull Long batchId) {
         ProductionBatch batch = batchRepository.findById(batchId)
@@ -133,12 +166,26 @@ public class ProductionBatchService {
         return new BatchResponseDto(batch.getProductionId(), batch.getQualityStatus());
     }
 
+    /**
+     * Retrieves all batches associated with a specific farm.
+     * * @param farmId The ID of the farm.
+     * @return A list of BatchResponseDto objects.
+     */
     public List<BatchResponseDto> getBatchesByFarm(@NonNull Long farmId) {
         return batchRepository.findByFarm_FarmId(farmId).stream()
                 .map(batch -> new BatchResponseDto(batch.getProductionId(), batch.getQualityStatus()))
                 .toList();
     }
 
+    /**
+     * Deletes a production batch from the system.
+     * <p><b>Security Rule:</b> A batch cannot be deleted if it has already passed 
+     * quality check to prevent tampering with certified supply chain data.</p>
+     * * @param batchId The ID of the batch to delete.
+     * @return Success message string.
+     * @throws BatchNotFoundException if batch is not found.
+     * @throws IllegalStateException if the batch status is already 'PASSED'.
+     */
     @Transactional
     @Auditable(action = "DELETE_BATCH", resource = "PRODUCTION_BATCH")
     public String deleteBatch(@NonNull Long batchId) {
