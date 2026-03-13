@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.*;
 /**
  * Public Authentication Controller.
  * <p>
- * Handles user onboarding (registration) and identity verification (login). 
- * These endpoints are excluded from standard JWT filtering to allow 
+ * Handles user onboarding (registration) and identity verification (login).
+ * These endpoints are excluded from standard JWT filtering to allow
  * access to non-authenticated users.
  * </p>
  */
