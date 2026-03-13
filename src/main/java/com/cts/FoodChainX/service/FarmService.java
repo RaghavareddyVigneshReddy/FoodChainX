@@ -63,7 +63,6 @@ public class FarmService {
                 .orElseThrow(() -> new FarmNotFoundException(farmId));
         return mapToResponseDto(farm);
     }
-
     /**
      * 4. READ: Get all farms filtered by certification status
      */

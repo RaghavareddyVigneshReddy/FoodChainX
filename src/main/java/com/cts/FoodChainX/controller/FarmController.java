@@ -64,13 +64,13 @@ public class FarmController {
      * Typically used by a REGULATOR to update certification.
      */
      @PatchMapping("/{farmId}/status")
-@PreAuthorize("hasRole('REGULATOR')") // ONLY Regulators can call this!
-public ResponseEntity<FarmResponseDto> updateStatus(
-        @PathVariable Long farmId, 
-        @RequestParam String status) {
-    log.info("Regulator updating Farm ID: {} to status: {}", farmId, status);
-    return ResponseEntity.ok(farmService.updateStatus(farmId, status));
-}
+    @PreAuthorize("hasRole('REGULATOR')") // ONLY Regulators can call this!
+    public ResponseEntity<FarmResponseDto> updateStatus(
+            @PathVariable Long farmId, 
+            @RequestParam String status) {
+        log.info("Regulator updating Farm ID: {} to status: {}", farmId, status);
+        return ResponseEntity.ok(farmService.updateStatus(farmId, status));
+    }
 
     /**
      * DELETE: http://localhost:8081/api/farms/{farmId}

@@ -11,7 +11,7 @@ import com.cts.FoodChainX.aspect.Auditable; // Added Import
 import com.cts.FoodChainX.dto.batch.BatchDetailResponseDto;
 import com.cts.FoodChainX.dto.batch.BatchRequestDto;
 import com.cts.FoodChainX.dto.batch.BatchResponseDto;
-import com.cts.FoodChainX.dto.quality.QualityRequestDto;
+import com.cts.FoodChainX.dto.quality.QualityRequestDto; 
 import com.cts.FoodChainX.exception.BatchNotFoundException;
 import com.cts.FoodChainX.exception.FarmNotFoundException;
 import com.cts.FoodChainX.model.Farm;
