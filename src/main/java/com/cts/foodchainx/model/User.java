@@ -1,16 +1,21 @@
 package com.cts.foodchainx.model;
- // Necessary import
+
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.*;
 
+/**
+ * Core User entity representing any registered participant in the FoodChainX ecosystem.
+ */
 @Entity
-@Table(name = "users", uniqueConstraints = @UniqueConstraint(columnNames = "email"))
+@Table(name = "users", uniqueConstraints = {
+    @UniqueConstraint(name = "uc_user_email", columnNames = "email"),
+    @UniqueConstraint(name = "uc_user_phone", columnNames = "phone")
+})
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class User implements UserDetails {
 
@@ -29,9 +34,13 @@ public class User implements UserDetails {
   @Column(nullable = false, unique = true)
   private String email;
 
-  @Column(nullable = false)
+  @Column(name = "password_hash", nullable = false)
   private String passwordHash;
 
+  /**
+   * Unique phone number constraint added.
+   */
+  @Column(unique = true)
   private String phone;
 
   @Enumerated(EnumType.STRING)
@@ -40,15 +49,14 @@ public class User implements UserDetails {
 
   @Builder.Default
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = false)
-  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // Forces the API to never "read" this into JSON
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   private transient List<AuditLog> auditLogs = new ArrayList<>();
 
   @Builder.Default
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // Stops the Notification -> User -> Notification loop
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   private transient List<Notification> notifications = new ArrayList<>();
 
-  // UserDetails for Spring Security
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
     return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
