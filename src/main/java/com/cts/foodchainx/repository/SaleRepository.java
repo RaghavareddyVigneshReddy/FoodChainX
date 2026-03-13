@@ -2,7 +2,6 @@ package com.cts.foodchainx.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-<<<<<<< HEAD
 import com.cts.foodchainx.model.Sale;
 import java.util.List;
 
@@ -41,19 +40,3 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
      */
     List<Sale> findByBatchId(Long batchId);
 }
-=======
-
-import com.cts.foodchainx.model.Sale;
-
-import java.util.List;
-
-@Repository
-public interface SaleRepository extends JpaRepository<Sale, Long> {
-
-    List<Sale> findByInventoryId(Long inventoryId);
-
-    List<Sale> findByConsumerId(Long consumerId);
-
-    List<Sale> findByBatchId(Long batchId);
-}
->>>>>>> d067e7d9657dbb3bba899c6df80c3f723990653e
