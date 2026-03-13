@@ -2,6 +2,7 @@ package com.cts.foodchainx.dto.inventory;
 
 import lombok.Data;
 
+<<<<<<< HEAD
 /**
  * Data Transfer Object (DTO) for creating or updating inventory records.
  * <p>
@@ -28,3 +29,12 @@ public class InventoryRequestDTO {
      */
     private Long quantity;
 }
+=======
+@Data
+public class InventoryRequestDTO {
+
+    private Long retailerId;
+    private Long batchId;
+    private Long quantity;
+}
+>>>>>>> d067e7d9657dbb3bba899c6df80c3f723990653e

@@ -2,6 +2,7 @@ package com.cts.foodchainx.dto.sale;
 
 import lombok.Data;
 
+<<<<<<< HEAD
 /**
  * Data Transfer Object (DTO) for capturing sale transaction requests.
  * <p>
@@ -37,3 +38,17 @@ public class SaleRequestDTO {
     private Double price;
 
 }
+=======
+@Data
+public class SaleRequestDTO {
+
+    private Long inventoryId;
+
+    private Long consumerId;
+
+    private Long quantity;
+
+    private Double price;
+
+}
+>>>>>>> d067e7d9657dbb3bba899c6df80c3f723990653e
