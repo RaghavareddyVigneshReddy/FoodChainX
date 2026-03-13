@@ -1,0 +1,18 @@
+package com.cts.foodchainx.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import com.cts.foodchainx.model.Sale;
+
+import java.util.List;
+
+@Repository
+public interface SaleRepository extends JpaRepository<Sale, Long> {
+
+    List<Sale> findByInventoryId(Long inventoryId);
+
+    List<Sale> findByConsumerId(Long consumerId);
+
+    List<Sale> findByBatchId(Long batchId);
+}
