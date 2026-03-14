@@ -1,5 +1,10 @@
 package com.cts.foodchainx.config;
 
+import com.cts.foodchainx.model.User;
+import com.cts.foodchainx.model.UserStatus;
+import com.cts.foodchainx.repository.UserRepository;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -8,6 +13,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -15,29 +21,46 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.cts.foodchainx.model.User;
-import com.cts.foodchainx.model.UserStatus;
-import com.cts.foodchainx.repository.UserRepository;
-
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
-
+/**
+ * Main Security Configuration for FoodChainX.
+ * <p>
+ * This class defines the security filter chain, role-based access controls (RBAC),
+ * and authentication providers for the Farm-to-Table transparency system.
+ * </p>
+ *
+ * @author FoodChainX Development Team
+ * @version 1.1
+ */
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    // --- Role Constants to Reduce Code Smell ---
+    private static final String ROLE_FARMER = "FARMER";
+    private static final String ROLE_ADMIN = "ADMIN";
+    private static final String ROLE_REGULATOR = "REGULATOR";
+    private static final String ROLE_DISTRIBUTOR = "DISTRIBUTOR";
+    private static final String JSON_CONTENT_TYPE = "application/json";
+
+    /**
+     * Bean for password encryption using BCrypt.
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Custom UserDetailsService to load user data from the database.
+     * Checks account status (ACTIVE/SUSPENDED) during authentication.
+     */
     @Bean
     public UserDetailsService userDetailsService(UserRepository userRepository) {
         return username -> {
             User u = userRepository.findByEmailIgnoreCase(username)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+                    .orElseThrow(() -> new RuntimeException("User not found: " + username));
             
             boolean enabled = u.getStatus() == UserStatus.ACTIVE;
             boolean accountNonLocked = u.getStatus() != UserStatus.SUSPENDED;
@@ -52,6 +75,9 @@ public class SecurityConfig {
         };
     }
 
+    /**
+     * Configures the DAO Authentication Provider.
+     */
     @Bean
     public DaoAuthenticationProvider authenticationProvider(
             UserDetailsService uds,
@@ -63,18 +89,25 @@ public class SecurityConfig {
         return provider;
     }
 
+    /**
+     * Exposes the AuthenticationManager bean for use in login controllers.
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration cfg) throws Exception {
         return cfg.getAuthenticationManager();
     }
 
+    /**
+     * Configures the main Security Filter Chain.
+     * Defines stateless session management and role-based URL protection.
+     */
     @Bean
     public SecurityFilterChain filterChain(
             HttpSecurity http,
             DaoAuthenticationProvider authenticationProvider
     ) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) 
+            .csrf(AbstractHttpConfigurer::disable) 
             .cors(Customizer.withDefaults())
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -82,52 +115,41 @@ public class SecurityConfig {
             .authenticationProvider(authenticationProvider)
             .exceptionHandling(exception -> exception
                 .authenticationEntryPoint((request, response, authException) -> {
-                    response.setContentType("application/json");
+                    response.setContentType(JSON_CONTENT_TYPE);
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     response.getWriter().write("{\"status\": 401, \"error\": \"Unauthorized\", \"message\": \"Authentication required\"}");
                 })
                 .accessDeniedHandler((request, response, accessDeniedException) -> {
-                    response.setContentType("application/json");
+                    response.setContentType(JSON_CONTENT_TYPE);
                     response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                    response.getWriter().write("{\"status\": 403, \"error\": \"Forbidden\", \"message\": \"You do not have the required permissions\"}");
+                    response.getWriter().write("{\"status\": 403, \"error\": \"Forbidden\", \"message\": \"Access denied: insufficient permissions\"}");
                 })
             )
             .authorizeHttpRequests(auth -> auth
-                // 1. Unified Public Auth & Health Endpoints
-                // Added /foodchainx/auth/** to match your actual controller path
-                .requestMatchers("/api/auth/**").permitAll() 
-                .requestMatchers("/foodchainx/auth/**").permitAll() 
-                .requestMatchers("/actuator/health").permitAll()
+                // Publicly accessible paths (Auth, Health, Consumer Portal)
+                .requestMatchers("/api/auth/**", "/foodchainx/auth/**", "/actuator/health").permitAll()
+                .requestMatchers("/foodchainx/notifications/**", "/notifications/**").permitAll()
+                .requestMatchers("/api/trace/**", "/api/consumer/**").permitAll()
 
-                // 2. Notifications Module
-                .requestMatchers("/foodchainx/notifications/**").permitAll()
-                .requestMatchers("/notifications/**").permitAll()
+                // SECURED: Reporting Module
+                .requestMatchers("/api/reports/**").authenticated()
 
-                // 3. Traceability & Consumer Portal
-                .requestMatchers("/api/trace/**").permitAll()
-                .requestMatchers("/api/consumer/**").permitAll()
+                // SECURED: Farmer Module
+                .requestMatchers("/api/farms/register/**", "/api/farms/farmer/**").hasRole(ROLE_FARMER)
+                .requestMatchers(HttpMethod.POST, "/api/production/add").hasRole(ROLE_FARMER)
+                .requestMatchers(HttpMethod.DELETE, "/api/farms/**", "/api/production/**").hasRole(ROLE_FARMER)
 
-                // 4. Reporting Module
-                .requestMatchers("/api/reports/**").permitAll()
+                // SECURED: Logistics & Distribution
+                .requestMatchers("/api/logistics/**").hasAnyRole(ROLE_DISTRIBUTOR, ROLE_ADMIN)
 
-                // --- Secured Module Endpoints (Role Based) ---
-                .requestMatchers("/api/farms/register/**").hasRole("FARMER")
-                .requestMatchers("/api/farms/farmer/**").hasRole("FARMER")
-                .requestMatchers(HttpMethod.DELETE, "/api/farms/**").hasRole("FARMER")
-                .requestMatchers("/api/logistics/shipments/**").hasAnyRole("DISTRIBUTOR", "ADMIN")
-                .requestMatchers("/api/logistics/warehouses/**").hasAnyRole("DISTRIBUTOR", "ADMIN")
-                .requestMatchers("/api/logistics/deliveries/**").hasAnyRole("DISTRIBUTOR", "ADMIN")
-                .requestMatchers(HttpMethod.PATCH, "/api/farms/*/status").hasAnyRole("REGULATOR", "ADMIN")
+                // SECURED: Regulatory & Admin Oversights
+                .requestMatchers(HttpMethod.PATCH, "/api/farms/*/status").hasAnyRole(ROLE_REGULATOR, ROLE_ADMIN)
+                .requestMatchers(HttpMethod.POST, "/api/quality-checks/inspect").hasAnyRole(ROLE_REGULATOR, ROLE_ADMIN)
+                .requestMatchers(HttpMethod.GET, "/api/production/**", "/api/quality-checks/status/**")
+                    .hasAnyRole(ROLE_FARMER, ROLE_REGULATOR, ROLE_ADMIN)
 
-                // Production Module Matchers
-                .requestMatchers(HttpMethod.POST, "/api/production/add").hasRole("FARMER")
-                .requestMatchers(HttpMethod.DELETE, "/api/production/{id}").hasRole("FARMER")
-                .requestMatchers(HttpMethod.GET, "/api/production/**").hasAnyRole("FARMER", "REGULATOR", "ADMIN")
-
-                // Quality Checks Matchers
-                .requestMatchers(HttpMethod.POST, "/api/quality-checks/inspect").hasAnyRole("REGULATOR", "ADMIN")
-                .requestMatchers(HttpMethod.GET, "/api/quality-checks/status/**").hasAnyRole("REGULATOR", "ADMIN", "FARMER")
-                .requestMatchers(HttpMethod.DELETE, "/api/quality-checks/**").hasRole("ADMIN")
+                // SECURED: Admin-Only actions
+                .requestMatchers(HttpMethod.DELETE, "/api/quality-checks/**").hasRole(ROLE_ADMIN)
 
                 .anyRequest().authenticated()
             )
