@@ -18,6 +18,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import static java.util.Objects.requireNonNull;
 
+/**
+ * Service handling Authentication and Authorization logic.
+ * <p>
+ * This class manages the user lifecycle from registration to login,
+ * ensuring secure password handling and JWT generation.
+ * </p>
+ */
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -28,10 +35,29 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final AuditLogService auditLogService;
 
+    /**
+     * Registers a new user in the system.
+     * <p>
+     * Performs duplicate email and unique phone number checks, hashes the password, 
+     * and creates an audit log entry for the new registration.
+     * </p>
+     *
+     * @param req The registration details provided by the client.
+     * @return {@link UserResponse} representing the newly created user.
+     * @throws UserAlreadyExistsException if the email or phone number is already registered.
+     */
     @Transactional
     public UserResponse register(RegisterRequest req) {
+        // 1. Check for duplicate email
         if (userRepository.existsByEmailIgnoreCase(req.email())) {
             throw new UserAlreadyExistsException("Email " + req.email() + " is already taken.");
+        }
+
+        // 2. Check for unique phone number (New implementation)
+        if (req.phone() != null && !req.phone().isBlank()) {
+            if (userRepository.existsByPhone(req.phone())) {
+                throw new UserAlreadyExistsException("Phone number " + req.phone() + " is already in use.");
+            }
         }
 
         User user = User.builder()
@@ -45,12 +71,21 @@ public class AuthService {
 
         user = userRepository.save(requireNonNull(user));
         
-        // System log for new registration
         auditLogService.log(user, "USER_REGISTER", "users/" + user.getUserId());
 
         return mapToResponse(user);
     }
 
+    /**
+     * Authenticates a user based on email and password.
+     * <p>
+     * Utilizes Spring Security's {@link AuthenticationManager} to verify credentials.
+     * Upon success, generates a JWT for the user and logs the login event.
+     * </p>
+     *
+     * @param req The login credentials.
+     * @return {@link TokenResponse} containing the JWT and expiry details.
+     */
     public TokenResponse login(LoginRequest req) {
         // 1. Authenticate via Spring Security
         authenticationManager.authenticate(
@@ -68,12 +103,20 @@ public class AuthService {
         return new TokenResponse(token, "Bearer", 86400); // 24h expiry
     }
 
+    /**
+     * Lists all registered users in the platform.
+     *
+     * @return A list of all users as {@link UserResponse} DTOs.
+     */
     public List<UserResponse> listUsers() {
         return userRepository.findAll().stream()
                 .map(this::mapToResponse)
                 .toList();
     }
 
+    /**
+     * Maps a {@link User} entity to its corresponding {@link UserResponse} DTO.
+     */
     private UserResponse mapToResponse(User user) {
         return new UserResponse(
                 user.getUserId(), user.getName(), user.getRole(),

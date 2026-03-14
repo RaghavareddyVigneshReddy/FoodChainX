@@ -8,6 +8,8 @@ import com.cts.foodchainx.exception.BatchNotFoundException;
 import com.cts.foodchainx.model.*;
 import com.cts.foodchainx.repository.QualityLoggingRepository;
 import com.cts.foodchainx.repository.TraceRecordRepository;
+import com.cts.foodchainx.service.TraceabilityService;
+
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

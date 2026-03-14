@@ -18,6 +18,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Administrative controller for the IAM module.
+ * <p>
+ * Provides high-privileged endpoints for user management and system-wide 
+ * audit visibility. Access is restricted primarily to users with {@code ADMIN} 
+ * or {@code REGULATOR} roles.
+ * </p>
+ */
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
@@ -27,14 +35,28 @@ public class AdminController {
     private final UserRepository userRepository;
     private final AuditLogService auditLogService;
 
-    /** GET /api/admin/users — list all users (ADMIN or REGULATOR) */
+    /**
+     * Retrieves a list of all registered users in the system.
+     * * @return A list of {@link UserResponse} DTOs.
+     * @throws org.springframework.security.access.AccessDeniedException if user lacks ADMIN or REGULATOR roles.
+     */
     @GetMapping("/users")
     @PreAuthorize("hasRole('ADMIN') or hasRole('REGULATOR')")
     public List<UserResponse> listUsers() {
         return userService.listUsers();
     }
 
-    /** PATCH /api/admin/users/{userId}/status — update user status (ADMIN only) */
+    /**
+     * Updates the status (e.g., ACTIVE, SUSPENDED) of a specific user.
+     * <p>
+     * This operation is strictly limited to {@code ADMIN} users. Every status change 
+     * is manually logged to the audit service to track administrative actions.
+     * </p>
+     * * @param userId The ID of the user to update.
+     * @param req The request body containing the new status.
+     * @param actor The currently authenticated administrator performing the action.
+     * @return The updated {@link UserResponse}.
+     */
     @PatchMapping("/users/{userId}/status")
     @PreAuthorize("hasRole('ADMIN')")
     public UserResponse updateStatus(@PathVariable @NonNull Long userId,
@@ -57,14 +79,20 @@ public class AdminController {
         );
     }
 
-    /** GET /api/admin/audit-logs — view system-wide audit logs (ADMIN or REGULATOR) */
+    /**
+     * Fetches system-wide audit logs.
+     * <p>
+     * Aggregates logs across all users to provide a comprehensive view of system activity.
+     * This is used by regulators for compliance checks.
+     * </p>
+     * * @return A list of all {@link AuditLogResponse} entries.
+     */
     @SuppressWarnings("null")
     @GetMapping("/audit-logs")
     @PreAuthorize("hasRole('ADMIN') or hasRole('REGULATOR')")
     public List<AuditLogResponse> allAuditLogs() {
         return userRepository.findAll().stream()
                 .filter(Objects::nonNull)
-                // Fix: Cast 'u' to @NonNull to clear the remaining warning
                 .flatMap(u -> auditLogService.getLogsForUser(u).stream())
                 .toList();
     }

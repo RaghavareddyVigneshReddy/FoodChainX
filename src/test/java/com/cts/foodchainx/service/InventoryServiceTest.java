@@ -2,6 +2,7 @@ package com.cts.foodchainx.service;
 
 import com.cts.foodchainx.model.Inventory;
 import com.cts.foodchainx.repository.InventoryRepository;
+import com.cts.foodchainx.service.InventoryService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -27,6 +27,7 @@ import com.cts.foodchainx.model.User;
 import com.cts.foodchainx.repository.ProductionBatchRepository;
 import com.cts.foodchainx.repository.QualityLoggingRepository;
 import com.cts.foodchainx.repository.UserRepository;
+import com.cts.foodchainx.service.QualityCheckService;
 
 @ExtendWith(MockitoExtension.class)
 class QualityCheckServiceTest {

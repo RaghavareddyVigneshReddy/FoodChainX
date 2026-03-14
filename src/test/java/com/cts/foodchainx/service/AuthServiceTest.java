@@ -5,6 +5,9 @@ import com.cts.foodchainx.exception.UserAlreadyExistsException;
 import com.cts.foodchainx.model.Role;
 import com.cts.foodchainx.model.User;
 import com.cts.foodchainx.repository.UserRepository;
+import com.cts.foodchainx.service.AuditLogService;
+import com.cts.foodchainx.service.AuthService;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

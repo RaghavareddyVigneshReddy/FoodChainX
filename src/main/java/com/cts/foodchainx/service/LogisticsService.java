@@ -1,6 +1,7 @@
 package com.cts.foodchainx.service;
 
 import com.cts.foodchainx.dto.logistics.*;
+import com.cts.foodchainx.exception.WarehouseCapacityException;
 import com.cts.foodchainx.model.*;
 import com.cts.foodchainx.aspect.Auditable;
 import com.cts.foodchainx.repository.*;
@@ -14,12 +15,15 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Service class handling core logistics business logic.
+ * Responsible for shipment lifecycle, warehouse validation, and traceability updates.
+ */
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class LogisticsService {
 
-    // SonarQube S1192: Define a constant instead of duplicating this literal "DELIVERED"
     private static final String STATUS_DELIVERED = "DELIVERED";
 
     private final ShipmentRepository shipmentRepository;
@@ -30,10 +34,15 @@ public class LogisticsService {
     private final UserRepository userRepository;
     private final InventoryRepository inventoryRepository;
 
+    /**
+     * Initiates a shipment only if the production batch is quality-compliant.
+     * * @param request the shipment initiation details
+     * @return ShipmentResponseDTO containing the saved shipment details
+     
+     */
     @Transactional
     @Auditable(action = "INITIATE_SHIPMENT", resource = "LOGISTICS")
     public ShipmentResponseDTO initiateShipment(@NonNull ShipmentRequestDTO request) {
-        // Fix null safety: Ensure ID is not null before repository call
         ProductionBatch batchObj = batchRepository.findById(Objects.requireNonNull(request.getBatchId()))
                 .orElseThrow(() -> new EntityNotFoundException("Batch not found"));
         
@@ -42,7 +51,7 @@ public class LogisticsService {
 
         if (!"PASSED".equalsIgnoreCase(batchObj.getQualityStatus()) &&
             !"Compliant".equalsIgnoreCase(batchObj.getQualityStatus())) {
-            throw new IllegalStateException("Batch is not Compliant. Shipment cannot be initiated.");
+            throw new EntityNotFoundException("Batch is not Compliant. Shipment cannot be initiated.");
         }
 
         Shipment shipment = new Shipment();
@@ -63,6 +72,12 @@ public class LogisticsService {
         return convertToShipmentResponseDTO(shipmentRepository.save(shipment));
     }
 
+    /**
+     * Updates shipment status and triggers traceability updates if delivered.
+     * * @param id the shipment ID
+     * @param request the status update DTO
+     * @return the updated shipment details
+     */
     @Transactional
     @Auditable(action = "UPDATE_SHIPMENT_STATUS", resource = "LOGISTICS")
     public ShipmentResponseDTO updateShipmentStatus(@NonNull Long id, @NonNull ShipmentStatusUpdateRequest request) {
@@ -83,6 +98,12 @@ public class LogisticsService {
         return convertToShipmentResponseDTO(shipmentRepository.save(shipment));
     }
 
+    /**
+     * Records a delivery, checks warehouse capacity, and creates a new inventory record for the retailer.
+     * * @param request the delivery request data
+     * @throws WarehouseCapacityException if the target warehouse is marked as 'Full'
+ * @throws EntityNotFoundException if any provided IDs do not exist
+     */
     @Transactional
     @Auditable(action = "RECORD_DELIVERY", resource = "LOGISTICS")
     public void recordDelivery(@NonNull DeliveryRequestDTO request) {
@@ -90,7 +111,7 @@ public class LogisticsService {
                 .orElseThrow(() -> new EntityNotFoundException("Warehouse not found"));
 
         if ("Full".equalsIgnoreCase(warehouse.getStatus())) {
-            throw new IllegalStateException("Warehouse is at maximum capacity");
+           throw new WarehouseCapacityException("Warehouse " + warehouse.getWarehouseId() + " is at maximum capacity");
         }
 
         Shipment shipment = shipmentRepository.findById(Objects.requireNonNull(request.getShipmentId()))
@@ -100,14 +121,14 @@ public class LogisticsService {
                 .orElseThrow(() -> new EntityNotFoundException("Retailer user not found"));
 
         ProductionBatch batch = shipment.getBatch();
-        shipment.setStatus(STATUS_DELIVERED); // Used constant here
+        shipment.setStatus(STATUS_DELIVERED);
         shipmentRepository.save(shipment);
 
         Delivery delivery = new Delivery();
         delivery.setShipment(shipment);
         delivery.setRetailer(retailerObj);
         delivery.setDate(request.getDeliveryDate());
-        delivery.setStatus(STATUS_DELIVERED); // Used constant here
+        delivery.setStatus(STATUS_DELIVERED);
         deliveryRepository.save(delivery);
 
         Inventory newInventory = new Inventory();
@@ -128,6 +149,10 @@ public class LogisticsService {
         traceRecordRepository.save(deliveryTrace);
     }
 
+    /**
+     * Fetches all warehouses available in the system.
+     * * @return a list of all warehouse response DTOs
+     */
     public List<WarehouseResponseDTO> getAllWarehouses() {
         return warehouseRepository.findAll().stream()
                 .map(w -> WarehouseResponseDTO.builder()
@@ -136,7 +161,7 @@ public class LogisticsService {
                         .capacity(w.getCapacity())
                         .status(w.getStatus())
                         .build())
-                .toList(); // SonarQube S6204: Changed to .toList()
+                .toList();
     }
 
     private ShipmentResponseDTO convertToShipmentResponseDTO(Shipment s) {

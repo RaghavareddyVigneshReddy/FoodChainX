@@ -36,6 +36,7 @@ import com.cts.foodchainx.repository.ProductionBatchRepository;
 import com.cts.foodchainx.repository.QualityLoggingRepository;
 import com.cts.foodchainx.repository.TraceRecordRepository;
 import com.cts.foodchainx.repository.UserRepository;
+import com.cts.foodchainx.service.ProductionBatchService;
 
 @ExtendWith(MockitoExtension.class)
 class ProductionBatchServiceTest {

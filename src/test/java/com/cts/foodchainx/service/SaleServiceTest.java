@@ -8,6 +8,7 @@ import com.cts.foodchainx.repository.InventoryRepository;
 import com.cts.foodchainx.repository.SaleRepository;
 import com.cts.foodchainx.repository.TraceRecordRepository;
 import com.cts.foodchainx.repository.UserRepository;
+import com.cts.foodchainx.service.SaleService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
