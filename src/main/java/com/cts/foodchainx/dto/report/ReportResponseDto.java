@@ -11,6 +11,6 @@ import java.util.Map;
 public class ReportResponseDto {
     private Long reportId;
     private String scope; // e.g., "FARM", "DISTRIBUTOR", "RETAILER"
-    private Map<String, Object> metrics; // e.g., {"totalBatches": 50, "complianceRate": "95%"}
+    private Map<String, Object> metrics;
     private LocalDateTime generatedDate;
 }
