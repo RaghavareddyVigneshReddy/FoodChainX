@@ -1,7 +1,6 @@
 package com.cts.foodchainx.service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,24 +54,24 @@ public class TraceabilityService {
      * @param record the trace record entity to map
      * @return an enriched response DTO
      */
-    private TraceRecordResponseDto mapToResponse(TraceRecord record) {
+    private TraceRecordResponseDto mapToResponse(TraceRecord traceRecord) {
         // Query the latest quality check for this specific batch
         var qualityInfo = qualityLoggingRepository
-                .findFirstByBatch_ProductionIdOrderByDateDesc(record.getProductionBatch().getProductionId());
+                .findFirstByBatch_ProductionIdOrderByDateDesc(traceRecord.getProductionBatch().getProductionId());
 
         boolean isCertified = qualityInfo.map(q -> "PASSED".equalsIgnoreCase(q.getStatus())).orElse(false);
         String grade = qualityInfo.map(QualityCheck::getFindings).orElse("Pending Inspection");
 
         return TraceRecordResponseDto.builder()
-                .traceId(record.getTraceId())
-                .batchId(record.getProductionBatch().getProductionId())
-                .cropType(record.getProductionBatch().getCropType())
-                .farmName(record.getFarm() != null ? record.getFarm().getName() : "N/A")
-                .distributorName(record.getDistributor() != null ? record.getDistributor().getName() : "In Transit")
-                .retailerName(record.getRetailer() != null ? record.getRetailer().getName() : "Local Market")
-                .consumerName(record.getConsumer() != null ? record.getConsumer().getName() : "Available")
-                .status(record.getStatus())
-                .date(record.getDate())
+                .traceId(traceRecord.getTraceId())
+                .batchId(traceRecord.getProductionBatch().getProductionId())
+                .cropType(traceRecord.getProductionBatch().getCropType())
+                .farmName(traceRecord.getFarm() != null ? traceRecord.getFarm().getName() : "N/A")
+                .distributorName(traceRecord.getDistributor() != null ? traceRecord.getDistributor().getName() : "In Transit")
+                .retailerName(traceRecord.getRetailer() != null ? traceRecord.getRetailer().getName() : "Local Market")
+                .consumerName(traceRecord.getConsumer() != null ? traceRecord.getConsumer().getName() : "Available")
+                .status(traceRecord.getStatus())
+                .date(traceRecord.getDate())
                 .isQualityCertified(isCertified)
                 .qualityGrade(grade)
                 .build();
@@ -92,18 +91,18 @@ public class TraceabilityService {
         return traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(batchId)
                 .stream()
                 .findFirst()
-                .map(record -> {
+                .map(traceRecord -> {
                     boolean certified = qualityLoggingRepository
                         .findFirstByBatch_ProductionIdOrderByDateDesc(batchId)
                         .map(q -> "PASSED".equalsIgnoreCase(q.getStatus()))
                         .orElse(false);
 
-                    String farm = record.getFarm() != null ? record.getFarm().getName() : "N/A";
-                    String crop = record.getProductionBatch().getCropType();
-                    String harvestDate = record.getProductionBatch().getHarvestDate().toString();
-                    String distributor = record.getDistributor() != null ? record.getDistributor().getName() : "In Transit";
-                    String retailer = record.getRetailer() != null ? record.getRetailer().getName() : "Local Market";
-                    String currentStatus = record.getStatus();
+                    String farm = traceRecord.getFarm() != null ? traceRecord.getFarm().getName() : "N/A";
+                    String crop = traceRecord.getProductionBatch().getCropType();
+                    String harvestDate = traceRecord.getProductionBatch().getHarvestDate().toString();
+                    String distributor = traceRecord.getDistributor() != null ? traceRecord.getDistributor().getName() : "In Transit";
+                    String retailer = traceRecord.getRetailer() != null ? traceRecord.getRetailer().getName() : "Local Market";
+                    String currentStatus = traceRecord.getStatus();
 
                     return String.format(
                         "FCX|Batch:%d|Prod:%s|Harvest:%s|Farm:%s|Cert:%b|Status:%s|Dist:%s|Ret:%s",
@@ -132,6 +131,6 @@ public class TraceabilityService {
 
         return history.stream()
                 .map(this::mapToResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 }
