@@ -1,12 +1,15 @@
 package com.cts.foodchainx.model;
+
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-
-
 import java.time.LocalDate;
 
+/**
+ * Entity representing a Shipment within the supply chain.
+ * Maps to the SHIPMENT table and tracks the movement of a ProductionBatch.
+ */
 @Entity
 @Table(name="SHIPMENT")
 @Data

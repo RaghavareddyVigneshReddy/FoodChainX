@@ -4,20 +4,23 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import com.cts.foodchainx.model.Delivery;
 
+/**
+ * Data access layer for {@link Delivery} entities.
+ */
 public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
 
-    // Navigates: Delivery -> Shipment -> shipmentId
+    /** Finds deliveries associated with a specific shipment ID. */
     List<Delivery> findByShipment_ShipmentId(Long shipmentId);
 
-    // Navigates: Delivery -> User (retailer) -> userId
+    /** Finds all deliveries received by a specific retailer. */
     List<Delivery> findByRetailer_UserId(Long retailerId);
 
-    // Direct property on Delivery
+    /** Filters deliveries by their current status. */
     List<Delivery> findByStatus(String status);
 
-    // Navigates to retailer's userId and sorts by Delivery date
+    /** Retrieves delivery history for a retailer, sorted by most recent date. */
     List<Delivery> findByRetailer_UserIdOrderByDateDesc(Long retailerId);
 
-    // Navigates to retailer's userId and filters by Delivery status
+    /** Finds deliveries for a retailer filtered by status. */
     List<Delivery> findByRetailer_UserIdAndStatus(Long retailerId, String status);
 }
