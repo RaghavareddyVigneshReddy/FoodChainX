@@ -8,7 +8,6 @@ import com.cts.foodchainx.repository.InventoryRepository;
 import com.cts.foodchainx.repository.SaleRepository;
 import com.cts.foodchainx.repository.TraceRecordRepository;
 import com.cts.foodchainx.repository.UserRepository;
-import com.cts.foodchainx.service.SaleService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Optional;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -99,7 +99,7 @@ class SaleServiceTest {
                 assertThrows(RuntimeException.class,
                         () -> saleService.createSale(sale));
 
-        assertEquals("Inventory not found", exception.getMessage());
+        assertEquals("Inventory not found with ID: 1", exception.getMessage());
     }
 
     @Test

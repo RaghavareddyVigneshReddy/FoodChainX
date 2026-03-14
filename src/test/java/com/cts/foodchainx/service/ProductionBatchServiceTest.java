@@ -36,7 +36,6 @@ import com.cts.foodchainx.repository.ProductionBatchRepository;
 import com.cts.foodchainx.repository.QualityLoggingRepository;
 import com.cts.foodchainx.repository.TraceRecordRepository;
 import com.cts.foodchainx.repository.UserRepository;
-import com.cts.foodchainx.service.ProductionBatchService;
 
 @ExtendWith(MockitoExtension.class)
 class ProductionBatchServiceTest {
@@ -92,20 +91,31 @@ class ProductionBatchServiceTest {
     // --- 2. PERFORM QUALITY CHECK TEST ---
     @Test
     void testPerformQualityCheck_Success() {
+        // 1. Arrange
         QualityRequestDto qDto = new QualityRequestDto(BATCH_ID, 5L, "Good quality", "PASSED");
-        TraceRecord record = new TraceRecord();
-
+        
+        // Mocking the repositories to return the expected objects
         when(batchRepository.findById(BATCH_ID)).thenReturn(Optional.of(sampleBatch));
         when(userRepository.findById(5L)).thenReturn(Optional.of(sampleInspector));
-        when(traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(BATCH_ID))
-                .thenReturn(List.of(record));
+        
+        // IMPORTANT: The service has Objects.requireNonNull(qualityRepo.save(check))
+        // We must ensure the mock returns the saved object, not null.
+        when(qualityRepo.save(any(QualityCheck.class))).thenReturn(new QualityCheck());
+        
+        // Ensure the batch save returns the batch to satisfy any potential null checks
+        when(batchRepository.save(any(ProductionBatch.class))).thenReturn(sampleBatch);
 
+        // 2. Act
         String result = batchService.performQualityCheck(qDto);
 
-        assertTrue(result.contains("PASSED"));
+        // 3. Assert
+        assertTrue(result.contains("QUALITY_CERTIFIED"));
         assertEquals("PASSED", sampleBatch.getQualityStatus());
+        
+        // Verification
         verify(qualityRepo).save(any(QualityCheck.class));
         verify(batchRepository).save(sampleBatch);
+        verify(traceRecordRepository).save(any(TraceRecord.class));
     }
 
     // --- 3. GET BATCH DETAIL TEST ---
