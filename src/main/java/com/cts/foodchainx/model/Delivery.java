@@ -1,6 +1,9 @@
 package com.cts.foodchainx.model;
 
 import java.time.LocalDate;
+
+import com.cts.foodchainx.enums.ShipmentStatus;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -35,6 +38,7 @@ public class Delivery {
     @Column(name = "Date")
     private LocalDate date;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "Status", length = 50)
-    private String status;
+    private ShipmentStatus status;
 }

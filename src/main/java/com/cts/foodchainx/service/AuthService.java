@@ -6,10 +6,12 @@ import com.cts.foodchainx.dto.auth.TokenResponse;
 import com.cts.foodchainx.dto.user.UserResponse;
 import com.cts.foodchainx.exception.UserAlreadyExistsException;
 import com.cts.foodchainx.model.User;
-import com.cts.foodchainx.model.UserStatus;
+import com.cts.foodchainx.enums.UserStatus;
 import com.cts.foodchainx.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -52,12 +54,9 @@ public class AuthService {
         if (userRepository.existsByEmailIgnoreCase(req.email())) {
             throw new UserAlreadyExistsException("Email " + req.email() + " is already taken.");
         }
-
-        // 2. Check for unique phone number (New implementation)
-        if (req.phone() != null && !req.phone().isBlank()) {
-            if (userRepository.existsByPhone(req.phone())) {
-                throw new UserAlreadyExistsException("Phone number " + req.phone() + " is already in use.");
-            }
+        // 2. Check for duplicate phone number if provided
+        if (req.phone() != null && !req.phone().isBlank() && userRepository.existsByPhone(req.phone())) {
+            throw new UserAlreadyExistsException("Phone number " + req.phone() + " is already in use.");
         }
 
         User user = User.builder()
@@ -95,6 +94,19 @@ public class AuthService {
         // 2. Fetch user to generate token
         User user = userRepository.findByEmailIgnoreCase(req.email())
                 .orElseThrow(() -> new RuntimeException("User not found after auth"));
+
+        // 3. Status Check: Block restricted users before issuing a token
+        if (user.getStatus() == UserStatus.SUSPENDED) {
+            throw new LockedException(
+                "Your account has been suspended. Please contact support."
+            );
+        }
+
+        if (user.getStatus() == UserStatus.INACTIVE) {
+            throw new DisabledException(
+                "Your account is inactive."
+            );
+        }
 
         String token = jwtService.generateToken(user);
         

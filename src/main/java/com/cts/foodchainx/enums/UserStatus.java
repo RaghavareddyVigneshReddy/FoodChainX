@@ -1,5 +1,4 @@
-package com.cts.foodchainx.model;
-
+package com.cts.foodchainx.enums;
 
 public enum UserStatus {
   ACTIVE,

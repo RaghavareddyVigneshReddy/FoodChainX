@@ -6,6 +6,7 @@ import com.cts.foodchainx.model.User;
 import com.cts.foodchainx.repository.AuditLogRepository;
 import com.cts.foodchainx.service.AuditLogService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ import java.util.List;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuditLogServiceImpl implements AuditLogService {
 
     private final AuditLogRepository auditLogRepository;

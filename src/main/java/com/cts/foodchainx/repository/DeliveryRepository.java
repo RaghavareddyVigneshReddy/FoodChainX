@@ -2,6 +2,8 @@ package com.cts.foodchainx.repository;
 
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.cts.foodchainx.enums.ShipmentStatus;
 import com.cts.foodchainx.model.Delivery;
 
 /**
@@ -16,7 +18,7 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
     List<Delivery> findByRetailer_UserId(Long retailerId);
 
     /** Filters deliveries by their current status. */
-    List<Delivery> findByStatus(String status);
+    List<Delivery> findByStatus(ShipmentStatus status);
 
     /** Retrieves delivery history for a retailer, sorted by most recent date. */
     List<Delivery> findByRetailer_UserIdOrderByDateDesc(Long retailerId);

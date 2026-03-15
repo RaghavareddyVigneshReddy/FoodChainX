@@ -1,6 +1,9 @@
 package com.cts.foodchainx.model;
 
 import java.time.LocalDate;
+
+import com.cts.foodchainx.enums.QualityStatus;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -62,6 +65,7 @@ public class QualityCheck {
     /**
      * The outcome of the check (e.g., PASSED, REJECTED, NEEDS_RETEST).
      */
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 50)
-    private String status;
+    private QualityStatus status;
 }

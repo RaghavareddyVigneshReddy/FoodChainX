@@ -1,5 +1,6 @@
 package com.cts.foodchainx.model;
 
+import com.cts.foodchainx.enums.InventoryStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -56,8 +57,9 @@ public class Inventory {
     /**
      * Current status of the stock (e.g., AVAILABLE, LOW_STOCK, OUT_OF_STOCK).
      */
+    @Enumerated(EnumType.STRING)
     @Column(name = "Status", nullable = false)
-    private String status;
+    private InventoryStatus status;
 
     /**
      * The User entity acting as the retailer.

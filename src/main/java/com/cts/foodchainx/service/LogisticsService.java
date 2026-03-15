@@ -1,6 +1,11 @@
 package com.cts.foodchainx.service;
 
 import com.cts.foodchainx.dto.logistics.*;
+import com.cts.foodchainx.enums.InventoryStatus;
+import com.cts.foodchainx.enums.QualityStatus;
+import com.cts.foodchainx.enums.ShipmentStatus;
+import com.cts.foodchainx.enums.TraceStatus;
+import com.cts.foodchainx.enums.WarehouseStatus;
 import com.cts.foodchainx.exception.WarehouseCapacityException;
 import com.cts.foodchainx.model.*;
 import com.cts.foodchainx.aspect.Auditable;
@@ -23,8 +28,6 @@ import java.util.Objects;
 @Slf4j
 @RequiredArgsConstructor
 public class LogisticsService {
-
-    private static final String STATUS_DELIVERED = "DELIVERED";
 
     private final ShipmentRepository shipmentRepository;
     private final ProductionBatchRepository batchRepository;
@@ -49,8 +52,7 @@ public class LogisticsService {
         User distributorObj = userRepository.findById(Objects.requireNonNull(request.getDistributorId()))
                 .orElseThrow(() -> new EntityNotFoundException("Distributor not found"));
 
-        if (!"PASSED".equalsIgnoreCase(batchObj.getQualityStatus()) &&
-            !"Compliant".equalsIgnoreCase(batchObj.getQualityStatus())) {
+        if (batchObj.getQualityStatus() != QualityStatus.PASSED) {
             throw new EntityNotFoundException("Batch is not Compliant. Shipment cannot be initiated.");
         }
 
@@ -59,13 +61,13 @@ public class LogisticsService {
         shipment.setDistributor(distributorObj);
         shipment.setDepartureDate(request.getDepartureDate());
         shipment.setArrivalDate(request.getArrivalDate());
-        shipment.setStatus("IN_TRANSIT");
+        shipment.setStatus(ShipmentStatus.IN_TRANSIT);
 
         TraceRecord shipmentTrace = new TraceRecord();
         shipmentTrace.setProductionBatch(batchObj);
         shipmentTrace.setFarm(batchObj.getFarm());
         shipmentTrace.setDistributor(distributorObj); 
-        shipmentTrace.setStatus("IN_TRANSIT");
+        shipmentTrace.setStatus(TraceStatus.IN_TRANSIT);
         shipmentTrace.setDate(LocalDate.now());
         traceRecordRepository.save(shipmentTrace);
 
@@ -86,12 +88,12 @@ public class LogisticsService {
 
         shipment.setStatus(request.getStatus());
 
-        if (STATUS_DELIVERED.equalsIgnoreCase(request.getStatus())) {
+        if (request.getStatus() == ShipmentStatus.DELIVERED) {
             traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(shipment.getBatch().getProductionId())
                 .stream()
                 .findFirst()
                 .ifPresent(traceRecord -> {
-                    traceRecord.setStatus("ARRIVED_AT_WAREHOUSE");
+                    traceRecord.setStatus(TraceStatus.ARRIVED_AT_WAREHOUSE);
                     traceRecordRepository.save(traceRecord);
                 });
         }
@@ -110,7 +112,7 @@ public class LogisticsService {
         Warehouse warehouse = warehouseRepository.findById(Objects.requireNonNull(request.getWarehouseId()))
                 .orElseThrow(() -> new EntityNotFoundException("Warehouse not found"));
 
-        if ("Full".equalsIgnoreCase(warehouse.getStatus())) {
+        if (warehouse.getStatus() == WarehouseStatus.FULL) {
            throw new WarehouseCapacityException("Warehouse " + warehouse.getWarehouseId() + " is at maximum capacity");
         }
 
@@ -121,22 +123,31 @@ public class LogisticsService {
                 .orElseThrow(() -> new EntityNotFoundException("Retailer user not found"));
 
         ProductionBatch batch = shipment.getBatch();
-        shipment.setStatus(STATUS_DELIVERED);
+        shipment.setStatus(ShipmentStatus.DELIVERED);
         shipmentRepository.save(shipment);
 
         Delivery delivery = new Delivery();
         delivery.setShipment(shipment);
         delivery.setRetailer(retailerObj);
         delivery.setDate(request.getDeliveryDate());
-        delivery.setStatus(STATUS_DELIVERED);
+        delivery.setStatus(ShipmentStatus.DELIVERED);
         deliveryRepository.save(delivery);
 
         Inventory newInventory = new Inventory();
         newInventory.setBatchId(batch.getProductionId());
         newInventory.setRetailerId(retailerObj.getUserId()); 
-        newInventory.setQuantity(batch.getQuantity().longValue()); 
+        long quantity = batch.getQuantity().longValue();
+        newInventory.setQuantity(quantity); 
         newInventory.setDateAdded(LocalDate.now());
-        newInventory.setStatus("ACTIVE");
+
+        if (quantity == 0) {
+            newInventory.setStatus(InventoryStatus.OUT_OF_STOCK);
+        } else if (quantity <= 10) {
+            newInventory.setStatus(InventoryStatus.LOW_STOCK);
+        } else {
+            newInventory.setStatus(InventoryStatus.AVAILABLE);
+        }
+        
         inventoryRepository.save(newInventory);
 
         TraceRecord deliveryTrace = new TraceRecord();
@@ -144,7 +155,7 @@ public class LogisticsService {
         deliveryTrace.setFarm(batch.getFarm());
         deliveryTrace.setDistributor(shipment.getDistributor());
         deliveryTrace.setRetailer(retailerObj);
-        deliveryTrace.setStatus("ON_SHELF_AT_STORE");
+        deliveryTrace.setStatus(TraceStatus.ON_SHELF_AT_STORE);
         deliveryTrace.setDate(LocalDate.now());
         traceRecordRepository.save(deliveryTrace);
     }

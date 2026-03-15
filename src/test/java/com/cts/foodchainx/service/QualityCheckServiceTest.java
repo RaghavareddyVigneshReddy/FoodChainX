@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
@@ -21,6 +22,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.cts.foodchainx.dto.quality.QualityRequestDto;
 import com.cts.foodchainx.dto.quality.QualityResponseDto;
+import com.cts.foodchainx.enums.QualityStatus; // Added
+import com.cts.foodchainx.enums.TraceStatus;   // Added
 import com.cts.foodchainx.model.ProductionBatch;
 import com.cts.foodchainx.model.QualityCheck;
 import com.cts.foodchainx.model.User;
@@ -29,15 +32,15 @@ import com.cts.foodchainx.repository.QualityLoggingRepository;
 import com.cts.foodchainx.repository.TraceRecordRepository;
 import com.cts.foodchainx.repository.UserRepository;
 
+import jakarta.persistence.EntityNotFoundException;
+
 @ExtendWith(MockitoExtension.class)
 class QualityCheckServiceTest {
 
     @Mock private QualityLoggingRepository qualityRepo;
     @Mock private ProductionBatchRepository batchRepo;
     @Mock private UserRepository userRepo;
-
-    @Mock
-    private TraceRecordRepository traceRecordRepository;
+    @Mock private TraceRecordRepository traceRecordRepository;
 
     @InjectMocks private QualityCheckService qualityCheckService;
 
@@ -51,7 +54,7 @@ class QualityCheckServiceTest {
     void setUp() {
         sampleBatch = new ProductionBatch();
         sampleBatch.setProductionId(BATCH_ID);
-        sampleBatch.setQualityStatus("PENDING");
+        sampleBatch.setQualityStatus(QualityStatus.PENDING); // Updated to Enum
 
         sampleInspector = new User();
         sampleInspector.setUserId(10L);
@@ -60,64 +63,74 @@ class QualityCheckServiceTest {
                 .qualityId(QUALITY_ID)
                 .batch(sampleBatch)
                 .inspector(sampleInspector)
-                .status("APPROVED")
+                .status(QualityStatus.PASSED) // Updated to Enum
                 .findings("Excellent quality")
                 .date(LocalDate.now())
                 .build();
     }
 
-    // --- 1. INSPECT BATCH TEST ---
     @Test
+    @DisplayName("Inspect Batch - Success and Trace Update")
     void testInspectBatch_Success() {
-        QualityRequestDto request = new QualityRequestDto(BATCH_ID, 10L, "Passed test", "APPROVED");
+        // Arrange
+        QualityRequestDto request = new QualityRequestDto(BATCH_ID, 10L, "Passed test", QualityStatus.PASSED);
 
         when(batchRepo.findById(BATCH_ID)).thenReturn(Optional.of(sampleBatch));
         when(userRepo.findById(10L)).thenReturn(Optional.of(sampleInspector));
         when(qualityRepo.save(any(QualityCheck.class))).thenReturn(sampleCheck);
 
+        // Act
         String result = qualityCheckService.inspectBatch(request);
 
+        // Assert
         assertTrue(result.contains("Inspection completed"));
-        assertEquals("APPROVED", sampleBatch.getQualityStatus());
+        assertEquals(QualityStatus.PASSED, sampleBatch.getQualityStatus());
         verify(qualityRepo, times(1)).save(any(QualityCheck.class));
         verify(batchRepo, times(1)).save(sampleBatch);
+        verify(traceRecordRepository, times(1)).save(any());
     }
 
-    // --- 2. GET INSPECTIONS BY STATUS TEST ---
-    @Test
+@Test
+    @DisplayName("Get Inspections By Status - Success")
     void testGetInspectionsByStatus_Success() {
-        when(qualityRepo.findByStatusIgnoreCase("APPROVED")).thenReturn(List.of(sampleCheck));
+        // Arrange
+        when(qualityRepo.findByStatus(QualityStatus.PASSED)).thenReturn(List.of(sampleCheck));
 
-        List<QualityResponseDto> results = qualityCheckService.getInspectionsByStatus("APPROVED");
+        // Act
+        List<QualityResponseDto> results = qualityCheckService.getInspectionsByStatus(QualityStatus.PASSED);
 
+        // Assert
         assertFalse(results.isEmpty());
-        assertEquals("APPROVED", results.get(0).getStatus());
-        verify(qualityRepo, times(1)).findByStatusIgnoreCase("APPROVED");
+        // FIXED: Use .name() to ensure we are comparing String to String
+        assertEquals(QualityStatus.PASSED, results.get(0).getStatus()); 
+        verify(qualityRepo, times(1)).findByStatus(QualityStatus.PASSED);
     }
 
-    // --- 3. REMOVE QUALITY LOG TEST ---
     @Test
+    @DisplayName("Remove Quality Log - Reset to PENDING")
     void testRemoveQualityLog_Success() {
-        // Set initial status to APPROVED
-        sampleBatch.setQualityStatus("APPROVED");
-        
+        // Arrange
+        sampleBatch.setQualityStatus(QualityStatus.PASSED);
         when(qualityRepo.findById(QUALITY_ID)).thenReturn(Optional.of(sampleCheck));
 
+        // Act
         String result = qualityCheckService.removeQualityLog(QUALITY_ID);
 
+        // Assert
         assertTrue(result.contains("reset to PENDING"));
-        assertEquals("PENDING", sampleBatch.getQualityStatus()); // Verify reset logic
+        assertEquals(QualityStatus.PENDING, sampleBatch.getQualityStatus());
         verify(qualityRepo).delete(sampleCheck);
         verify(batchRepo).save(sampleBatch);
     }
 
-    // --- 4. EXCEPTION TEST (BATCH NOT FOUND) ---
     @Test
+    @DisplayName("Inspect Batch - Throws Exception when Batch Not Found")
     void testInspectBatch_NotFound() {
-        QualityRequestDto request = new QualityRequestDto(999L, 10L, "Findings", "APPROVED");
-        
+        // Arrange
+        QualityRequestDto request = new QualityRequestDto(999L, 10L, "Findings", QualityStatus.PASSED);
         when(batchRepo.findById(999L)).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () -> qualityCheckService.inspectBatch(request));
+        // Act & Assert
+        assertThrows(EntityNotFoundException.class, () -> qualityCheckService.inspectBatch(request));
     }
 }

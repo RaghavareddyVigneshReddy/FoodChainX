@@ -1,5 +1,7 @@
 package com.cts.foodchainx.dto.quality;
 
+import com.cts.foodchainx.enums.QualityStatus;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -36,5 +38,5 @@ public class QualityRequestDto {
      * The resulting status determined by the inspection.
      * <p><b>Expected Values:</b> PASSED, REJECTED, or PENDING.</p>
      */
-    private String status;
+    private QualityStatus status;
 }

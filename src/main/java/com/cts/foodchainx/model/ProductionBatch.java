@@ -5,6 +5,8 @@ import lombok.*;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.cts.foodchainx.enums.QualityStatus;
+
 /**
  * Entity representing a specific harvest unit (Batch) in the production cycle.
  * <p>This class acts as the central hub of the supply chain, connecting a Farm 
@@ -58,8 +60,9 @@ public class ProductionBatch {
     /**
      * Current state of the batch in the QA lifecycle (e.g., PENDING, PASSED, REJECTED).
      */
+    @Enumerated(EnumType.STRING)
     @Column(name = "QualityStatus", length = 50, nullable = false)
-    private String qualityStatus;
+    private QualityStatus qualityStatus;
 
     /**
      * A collection of all quality inspections performed on this specific batch.
