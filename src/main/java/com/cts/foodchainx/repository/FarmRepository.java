@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import com.cts.foodchainx.enums.CertificationStatus;
 import com.cts.foodchainx.model.Farm;
 
 /**
@@ -31,5 +32,5 @@ public interface FarmRepository extends JpaRepository<Farm, Long> {
      * * @param status The certification status to filter by (e.g., PENDING, APPROVED).
      * @return A list of farms matching the specified status.
      */
-    List<Farm> findByCertificationStatusIgnoreCase(String status);
+    List<Farm> findByCertificationStatus(CertificationStatus status);
 }

@@ -1,6 +1,8 @@
 package com.cts.foodchainx.service;
 
 import com.cts.foodchainx.aspect.Auditable;
+import com.cts.foodchainx.enums.InventoryStatus;
+import com.cts.foodchainx.enums.TraceStatus;
 import com.cts.foodchainx.exception.ConsumerNotFoundException;
 import com.cts.foodchainx.exception.InsufficientStockException;
 import com.cts.foodchainx.exception.InventoryNotFoundException;
@@ -77,7 +79,6 @@ public class SaleService {
     /**
      * Internal helper to fetch inventory with error handling.
      */
-    @NonNull
     private Inventory getInventory(@NonNull Long inventoryId) {
 
         return inventoryRepository.findById(inventoryId)
@@ -102,12 +103,18 @@ public class SaleService {
     private void updateInventory(@NonNull Inventory inventory, @NonNull Long quantity) {
 
         long remainingStock = inventory.getQuantity() - quantity;
-
+        // Basic safety check: Ensure stock doesn't go negative
+        if (remainingStock < 0) {
+            throw new InsufficientStockException("Insufficient stock for inventory ID: " + inventory.getInventoryId());
+        }
         inventory.setQuantity(remainingStock);
 
         if (remainingStock == 0) {
-
-            inventory.setStatus("OUT_OF_STOCK");
+            inventory.setStatus(InventoryStatus.OUT_OF_STOCK);
+        } else if (remainingStock <= 10) {
+            inventory.setStatus(InventoryStatus.LOW_STOCK);
+        } else {
+            inventory.setStatus(InventoryStatus.AVAILABLE);
         }
 
         inventoryRepository.save(inventory);
@@ -145,7 +152,7 @@ public class SaleService {
 
                     saleRecord.setConsumer(consumer);
 
-                    saleRecord.setStatus("SOLD");
+                    saleRecord.setStatus(TraceStatus.SOLD);
 
                     saleRecord.setDate(LocalDate.now());
 

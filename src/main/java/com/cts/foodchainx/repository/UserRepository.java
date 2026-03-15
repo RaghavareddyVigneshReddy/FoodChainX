@@ -1,6 +1,6 @@
 package com.cts.foodchainx.repository;
 
-import com.cts.foodchainx.model.Role;
+import com.cts.foodchainx.enums.Role;
 import com.cts.foodchainx.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

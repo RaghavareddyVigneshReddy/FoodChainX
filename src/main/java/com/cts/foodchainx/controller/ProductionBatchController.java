@@ -32,7 +32,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ProductionBatchController {
 
-    private final ProductionBatchService service;
     private final ProductionBatchService batchService;
 
     /**
@@ -44,7 +43,7 @@ public class ProductionBatchController {
     @PostMapping("/add")
     public ResponseEntity<BatchResponseDto> createBatch(@Valid @RequestBody BatchRequestDto dto) {
         log.info("REST request to create new Production Batch for Farm ID: {}", dto.getFarmId());
-        return new ResponseEntity<>(service.createBatch(dto), HttpStatus.CREATED);
+        return new ResponseEntity<>(batchService.createBatch(dto), HttpStatus.CREATED);
     }
 
     /**
@@ -55,7 +54,7 @@ public class ProductionBatchController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<BatchResponseDto> getBatchById(@PathVariable @NonNull Long id) {
-        return ResponseEntity.ok(service.getBatchById(id));
+        return ResponseEntity.ok(batchService.getBatchById(id));
     }
 
     /**
@@ -66,7 +65,7 @@ public class ProductionBatchController {
      */
     @GetMapping("/farm/{farmId}")
     public ResponseEntity<List<BatchResponseDto>> getBatchesByFarm(@PathVariable @NonNull Long farmId) {
-        return ResponseEntity.ok(service.getBatchesByFarm(farmId));
+        return ResponseEntity.ok(batchService.getBatchesByFarm(farmId));
     }
 
     /**
@@ -79,7 +78,7 @@ public class ProductionBatchController {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteBatch(@PathVariable @NonNull Long id) {
         log.warn("REST request to DELETE Production Batch ID: {}", id);
-        return ResponseEntity.ok(service.deleteBatch(id));
+        return ResponseEntity.ok(batchService.deleteBatch(id));
     }
 
     /**

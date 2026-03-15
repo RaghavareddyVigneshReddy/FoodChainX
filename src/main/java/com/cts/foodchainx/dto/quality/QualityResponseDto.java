@@ -2,6 +2,8 @@ package com.cts.foodchainx.dto.quality;
 
 import java.time.LocalDate;
 
+import com.cts.foodchainx.enums.QualityStatus;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -34,7 +36,7 @@ public class QualityResponseDto {
      * The final result of the quality assessment.
      * <p><b>Common Values:</b> PASSED, REJECTED, NEEDS_RECHECK.</p>
      */
-    private String status;   
+    private QualityStatus status;   
 
     /**
      * The descriptive notes or laboratory findings provided by the inspector.

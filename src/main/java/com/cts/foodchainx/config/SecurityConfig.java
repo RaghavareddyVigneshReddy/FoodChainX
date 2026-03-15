@@ -1,7 +1,7 @@
 package com.cts.foodchainx.config;
 
 import com.cts.foodchainx.model.User;
-import com.cts.foodchainx.model.UserStatus;
+import com.cts.foodchainx.enums.UserStatus;
 import com.cts.foodchainx.repository.UserRepository;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

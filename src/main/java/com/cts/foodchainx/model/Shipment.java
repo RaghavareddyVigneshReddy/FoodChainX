@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.time.LocalDate;
 
+import com.cts.foodchainx.enums.ShipmentStatus;
+
 /**
  * Entity representing a Shipment within the supply chain.
  * Maps to the SHIPMENT table and tracks the movement of a ProductionBatch.
@@ -35,6 +37,7 @@ public class Shipment {
     @Column(name="ArrivalDate")
     private LocalDate arrivalDate;
 
+    @Enumerated(EnumType.STRING)
     @Column(name="Status", length=50)
-    private String status;
+    private ShipmentStatus status;
 }

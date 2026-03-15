@@ -2,6 +2,7 @@ package com.cts.foodchainx.service;
 
 import com.cts.foodchainx.dto.notification.NotificationRequestDTO;
 import com.cts.foodchainx.dto.notification.NotificationResponseDTO;
+import com.cts.foodchainx.enums.NotificationStatus;
 import com.cts.foodchainx.exception.NotificationNotFoundException;
 import com.cts.foodchainx.model.Notification;
 import com.cts.foodchainx.aspect.Auditable;
@@ -46,7 +47,7 @@ public class NotificationService {
         Notification n = repository.findById(notificationId)
                 .orElseThrow(() -> new NotificationNotFoundException("Notification ID " + notificationId + " not found"));
         
-        n.setStatus("Read");
+        n.setStatus(NotificationStatus.READ);
         Notification saved = repository.save(n);
         return mapToResponseDTO(saved);
     }
@@ -65,7 +66,7 @@ public class NotificationService {
         notification.setEntityId(dto.getEntityId());
         notification.setMessage(dto.getMessage());
         notification.setCategory(dto.getCategory());
-        notification.setStatus("Unread");
+        notification.setStatus(NotificationStatus.UNREAD);
         notification.setCreatedDate(java.time.LocalDateTime.now());
 
         // 3. Save and map to Response DTO
@@ -93,7 +94,7 @@ public class NotificationService {
                 .entityId(n.getEntityId())
                 .message(n.getMessage())
                 .category(n.getCategory())
-                .status(n.getStatus())
+                .status(n.getStatus().name())
                 .createdDate(n.getCreatedDate())
                 .build();
     }

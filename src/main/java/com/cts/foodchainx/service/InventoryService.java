@@ -1,6 +1,7 @@
 package com.cts.foodchainx.service;
 
 import com.cts.foodchainx.aspect.Auditable;
+import com.cts.foodchainx.enums.InventoryStatus;
 import com.cts.foodchainx.exception.InventoryNotFoundException;
 import com.cts.foodchainx.model.Inventory;
 import com.cts.foodchainx.repository.InventoryRepository;
@@ -47,11 +48,11 @@ public class InventoryService {
         inventory.setDateAdded(LocalDate.now());
 
         if (inventory.getQuantity() == 0) {
-            inventory.setStatus("OUT_OF_STOCK");
+            inventory.setStatus(InventoryStatus.OUT_OF_STOCK);
         } else if (inventory.getQuantity() <= 10) {
-            inventory.setStatus("LOW_STOCK");
+            inventory.setStatus(InventoryStatus.LOW_STOCK);
         } else {
-            inventory.setStatus("AVAILABLE");
+            inventory.setStatus(InventoryStatus.AVAILABLE);
         }
 
         return inventoryRepository.save(inventory);

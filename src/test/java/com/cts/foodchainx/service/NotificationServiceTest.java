@@ -2,6 +2,7 @@ package com.cts.foodchainx.service;
 
 import com.cts.foodchainx.dto.notification.NotificationRequestDTO;
 import com.cts.foodchainx.dto.notification.NotificationResponseDTO;
+import com.cts.foodchainx.enums.NotificationStatus;
 import com.cts.foodchainx.model.Notification;
 import com.cts.foodchainx.model.User;
 import com.cts.foodchainx.repository.NotificationRepository;
@@ -48,7 +49,7 @@ class NotificationServiceTest {
         // FIXED: Using Long literal (L)
         mockNotification.setNotificationId(101L); 
         mockNotification.setMessage("Test Alert");
-        mockNotification.setStatus("Unread");
+        mockNotification.setStatus(NotificationStatus.UNREAD);
         mockNotification.setUser(mockUser);
         // Ensure entityId is also Long if your model was updated
         mockNotification.setEntityId(501L); 
@@ -81,7 +82,7 @@ class NotificationServiceTest {
 
         NotificationResponseDTO result = notificationService.markAsRead(101L);
 
-        assertEquals("Read", result.getStatus());
+        assertEquals("READ", result.getStatus());
     }
 
     @Test

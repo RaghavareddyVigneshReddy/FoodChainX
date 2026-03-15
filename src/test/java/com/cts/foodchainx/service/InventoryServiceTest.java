@@ -1,8 +1,9 @@
 package com.cts.foodchainx.service;
 
+import com.cts.foodchainx.enums.InventoryStatus; // Import the new Enum
 import com.cts.foodchainx.model.Inventory;
 import com.cts.foodchainx.repository.InventoryRepository;
-import com.cts.foodchainx.service.InventoryService;
+import com.cts.foodchainx.exception.InventoryNotFoundException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,35 +28,45 @@ class InventoryServiceTest {
 
     @InjectMocks
     private InventoryService inventoryService;
+
     private Inventory inventory;
 
     @BeforeEach
     void setUp() {
-
         inventory = new Inventory();
         inventory.setInventoryId(1L);
         inventory.setRetailerId(2L);
         inventory.setBatchId(100L);
         inventory.setQuantity(50L);
-        inventory.setStatus("ACTIVE");
+        // Updated to use Enum
+        inventory.setStatus(InventoryStatus.AVAILABLE); 
     }
 
     @Test
-    void testCreateInventory() {
-
+    void testCreateInventory_ShouldSetStatusToAvailable() {
+        // We expect the service to calculate status based on quantity (50 > 10)
         when(inventoryRepository.save(any(Inventory.class))).thenReturn(inventory);
 
         Inventory result = inventoryService.createInventory(inventory);
 
         assertNotNull(result);
-        assertEquals(50, result.getQuantity());
-
+        assertEquals(InventoryStatus.AVAILABLE, result.getStatus());
         verify(inventoryRepository).save(inventory);
     }
 
     @Test
-    void testGetInventoryById() {
+    void testCreateInventory_ShouldSetStatusToLowStock() {
+        // Setup inventory with low quantity
+        inventory.setQuantity(5L);
+        when(inventoryRepository.save(any(Inventory.class))).thenAnswer(i -> i.getArguments()[0]);
 
+        Inventory result = inventoryService.createInventory(inventory);
+
+        assertEquals(InventoryStatus.LOW_STOCK, result.getStatus());
+    }
+
+    @Test
+    void testGetInventoryById_Success() {
         when(inventoryRepository.findById(1L)).thenReturn(Optional.of(inventory));
 
         Inventory result = inventoryService.getInventoryById(1L);
@@ -65,14 +76,23 @@ class InventoryServiceTest {
     }
 
     @Test
+    void testGetInventoryById_NotFound() {
+        when(inventoryRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(InventoryNotFoundException.class, () -> {
+            inventoryService.getInventoryById(99L);
+        });
+    }
+
+    @Test
     void testGetAllInventory() {
-
         List<Inventory> inventoryList = Arrays.asList(inventory);
-
         when(inventoryRepository.findAll()).thenReturn(inventoryList);
 
         List<Inventory> result = inventoryService.getAllInventory();
 
+        assertFalse(result.isEmpty());
         assertEquals(1, result.size());
+        assertEquals(InventoryStatus.AVAILABLE, result.get(0).getStatus());
     }
 }

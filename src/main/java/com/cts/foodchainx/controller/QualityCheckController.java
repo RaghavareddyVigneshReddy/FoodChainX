@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.cts.foodchainx.dto.quality.QualityRequestDto;
 import com.cts.foodchainx.dto.quality.QualityResponseDto;
+import com.cts.foodchainx.enums.QualityStatus;
 import com.cts.foodchainx.service.ProductionBatchService;
 import com.cts.foodchainx.service.QualityCheckService;
 
@@ -53,7 +54,7 @@ public class QualityCheckController {
      * @return ResponseEntity containing a list of matching QualityResponseDto objects.
      */
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<QualityResponseDto>> getInspectionsByStatus(@PathVariable String status) {
+    public ResponseEntity<List<QualityResponseDto>> getInspectionsByStatus(@PathVariable QualityStatus status) {
         List<QualityResponseDto> inspections = qualityCheckService.getInspectionsByStatus(status);
         return ResponseEntity.ok(inspections);
     }

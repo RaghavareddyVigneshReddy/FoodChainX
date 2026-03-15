@@ -2,6 +2,8 @@ package com.cts.foodchainx.repository;
 
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.cts.foodchainx.enums.ShipmentStatus;
 import com.cts.foodchainx.model.Shipment;
 
 /**
@@ -18,9 +20,9 @@ public interface ShipmentRepository extends JpaRepository<Shipment, Long> {
 
     List<Shipment> findByBatch_ProductionId(Long productionId);
 
-    List<Shipment> findByStatus(String status);
+    List<Shipment> findByStatus(ShipmentStatus status);
 
     List<Shipment> findByDistributor_UserIdOrderByDepartureDateDesc(Long userId);
 
-    List<Shipment> findByDistributor_UserIdAndStatus(Long userId, String status);
+    List<Shipment> findByDistributor_UserIdAndStatus(Long userId, ShipmentStatus status);
 }

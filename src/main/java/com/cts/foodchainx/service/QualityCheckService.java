@@ -11,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.cts.foodchainx.aspect.Auditable;
 import com.cts.foodchainx.dto.quality.QualityRequestDto;
 import com.cts.foodchainx.dto.quality.QualityResponseDto;
+import com.cts.foodchainx.enums.QualityStatus;
+import com.cts.foodchainx.enums.TraceStatus;
 import com.cts.foodchainx.model.ProductionBatch;
 import com.cts.foodchainx.model.QualityCheck;
 import com.cts.foodchainx.model.TraceRecord;
@@ -75,7 +77,10 @@ public class QualityCheckService {
         TraceRecord qualityTrace = new TraceRecord();
         qualityTrace.setProductionBatch(batch);
         qualityTrace.setFarm(batch.getFarm());
-        qualityTrace.setStatus("PASSED".equalsIgnoreCase(dto.getStatus()) ? "QUALITY_CERTIFIED" : "QUALITY_REJECTED");
+        TraceStatus traceStatus = (dto.getStatus() == QualityStatus.PASSED) 
+                                  ? TraceStatus.QUALITY_CERTIFIED 
+                                  : TraceStatus.QUALITY_REJECTED;
+        qualityTrace.setStatus(traceStatus);
         qualityTrace.setDate(LocalDate.now());
         traceRecordRepository.save(qualityTrace);
 
@@ -87,8 +92,8 @@ public class QualityCheckService {
      * * @param status The status string to filter by (case-insensitive).
      * @return List of {@link QualityResponseDto} containing summary data of the inspections.
      */
-    public List<QualityResponseDto> getInspectionsByStatus(String status) {
-        return qualityRepo.findByStatusIgnoreCase(status).stream()
+    public List<QualityResponseDto> getInspectionsByStatus(QualityStatus status) {
+        return qualityRepo.findByStatus(status).stream()
                 .map(q -> new QualityResponseDto(
                         q.getQualityId(), 
                         q.getDate(), 
@@ -113,7 +118,7 @@ public class QualityCheckService {
 
         // Revert Batch Status to PENDING
         ProductionBatch batch = check.getBatch();
-        batch.setQualityStatus("PENDING");
+        batch.setQualityStatus(QualityStatus.PENDING);
         batchRepo.save(batch);
 
         // Delete the log

@@ -1,42 +1,43 @@
 package com.cts.foodchainx.service;
 
-import com.cts.foodchainx.aspect.Auditable;
 import com.cts.foodchainx.model.Audit;
-import com.cts.foodchainx.repository.AuditRepository;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.lang.NonNull;
-import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+/**
+ * Service interface for managing high-level regulatory audits.
+ * <p>
+ * This service handles the formal lifecycle of a supply chain audit, providing 
+ * the administrative structure for regulators to oversee production, 
+ * distribution, and retail operations. It ensures that every audit is 
+ * properly initiated and formally concluded.
+ * </p>
+ */
+public interface AuditService {
 
-@Service
-@Slf4j
-@RequiredArgsConstructor
-public class AuditService {
+    /**
+     * Initiates a new formal audit record in the system.
+     * <p>
+     * This method is called by a Regulator to define the scope and initial 
+     * objectives of an inspection. The audit status is typically set to 'OPEN' 
+     * upon creation to allow for ongoing compliance record logging.
+     * </p>
+     *
+     * @param audit The {@link Audit} entity containing regulator ID, scope, and initial findings.
+     * @return The persisted {@link Audit} entity with a generated ID and timestamp.
+     */
+    Audit createAudit(Audit audit);
 
-    
-    private final AuditRepository auditRepository;
-    @Auditable(action = "INITIATE_AUDIT_RECORD", resource = "AUDIT_PROCESS")
-    public Audit createAudit(Audit audit) {
-        log.info("Creating new Audit record for Entity: {}", audit.getAuditId());
-        audit.setDate(LocalDate.now());
-        audit.setStatus("OPEN");
-        Audit savedAudit = auditRepository.save(audit);
-        log.debug("Audit record saved with ID: {}", savedAudit.getAuditId());
-        return savedAudit;
-    }
-
-    @Auditable(action = "CLOSE_AUDIT_RECORD", resource = "AUDIT_PROCESS")
-    public Audit closeAudit(@NonNull Long auditId) {
-
-        Audit audit = auditRepository.findById(auditId)
-                .orElseThrow(() -> new RuntimeException("Audit not found"));
-
-        audit.setStatus("CLOSED");
-
-        return auditRepository.save(audit);
-    }
+    /**
+     * Finalizes an ongoing audit and marks it as complete.
+     * <p>
+     * Concluding an audit transition the status to 'CLOSED', making the 
+     * findings immutable. This process is essential for generating historical 
+     * compliance reports and ensuring regulatory accountability.
+     * </p>
+     *
+     * @param auditId The unique identifier of the audit to be closed. Must not be null.
+     * @return The updated {@link Audit} entity reflecting the CLOSED status.
+     * @throws jakarta.persistence.EntityNotFoundException if no audit exists with the given ID.
+     */
+    Audit closeAudit(@NonNull Long auditId);
 }

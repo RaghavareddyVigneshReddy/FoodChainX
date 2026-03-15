@@ -1,5 +1,7 @@
 package com.cts.foodchainx.dto.logistics;
 
+import com.cts.foodchainx.enums.WarehouseStatus;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,5 +26,5 @@ public class WarehouseRequestDTO {
     private Long capacity; 
     
     /** Operational status (e.g., Active, Full, Maintenance) */
-    private String status;
+    private WarehouseStatus status;
 }
