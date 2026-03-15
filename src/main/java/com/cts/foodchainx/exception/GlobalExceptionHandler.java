@@ -230,5 +230,24 @@ public class GlobalExceptionHandler {
 
     }
 
+    /** 10. 404 – Not Found (Inventory item does not exist) */
+    @ExceptionHandler(InventoryNotFoundException.class)
+    public ResponseEntity<String> handleInventoryNotFound(InventoryNotFoundException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    /** 11. 400 – Bad Request (Stock level lower than requested amount) */
+    @ExceptionHandler(InsufficientStockException.class)
+    public ResponseEntity<String> handleInsufficientStock(InsufficientStockException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    /** 12. 404 – Not Found (Sale record does not exist) */
+    @ExceptionHandler(SaleNotFoundException.class)
+    public ResponseEntity<String> handleSaleNotFound(SaleNotFoundException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+
 }
  

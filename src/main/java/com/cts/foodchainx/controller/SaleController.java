@@ -3,7 +3,9 @@ package com.cts.foodchainx.controller;
 import com.cts.foodchainx.dto.sale.SaleRequestDTO;
 import com.cts.foodchainx.model.Sale;
 import com.cts.foodchainx.service.SaleService;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -15,13 +17,14 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/retail/sales")
+@Slf4j
+@RequiredArgsConstructor
 public class SaleController {
 
     /**
      * Service responsible for sale-related business logic and persistence.
      */
-    @Autowired
-    private SaleService saleService;
+    private final SaleService saleService;
 
     /**
      * Processes and records a new sale transaction.
