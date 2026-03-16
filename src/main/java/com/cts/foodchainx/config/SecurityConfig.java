@@ -151,6 +151,11 @@ public class SecurityConfig {
                 // SECURED: Admin-Only actions
                 .requestMatchers(HttpMethod.DELETE, "/api/quality-checks/**").hasRole(ROLE_ADMIN)
 
+                // SECURED: Compliance & Audit Module
+                .requestMatchers("/api/compliance/failed").hasRole(ROLE_REGULATOR)
+                .requestMatchers(HttpMethod.POST, "/api/compliance/records").hasRole(ROLE_REGULATOR)
+                .requestMatchers("/api/compliance/history/**").hasAnyRole(ROLE_REGULATOR, ROLE_ADMIN, ROLE_FARMER)
+
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
