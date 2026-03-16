@@ -2,6 +2,7 @@ package com.cts.foodchainx.serviceimpl;
 
 import com.cts.foodchainx.aspect.Auditable;
 import com.cts.foodchainx.enums.AuditStatus;
+import com.cts.foodchainx.exception.AuditNotFoundException;
 import com.cts.foodchainx.model.Audit;
 import com.cts.foodchainx.repository.AuditRepository;
 import com.cts.foodchainx.service.AuditService;
@@ -68,7 +69,7 @@ public class AuditServiceImpl implements AuditService {
         log.info("Closing Audit record with ID: {}", auditId);
         
         Audit audit = auditRepository.findById(auditId)
-                .orElseThrow(() -> new RuntimeException("Audit record not found for ID: " + auditId));
+                .orElseThrow(() -> new AuditNotFoundException(auditId));
 
         audit.setStatus(AuditStatus.CLOSED);
 

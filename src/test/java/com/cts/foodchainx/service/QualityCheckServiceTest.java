@@ -22,8 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.cts.foodchainx.dto.quality.QualityRequestDto;
 import com.cts.foodchainx.dto.quality.QualityResponseDto;
-import com.cts.foodchainx.enums.QualityStatus; // Added
-import com.cts.foodchainx.enums.TraceStatus;   // Added
+import com.cts.foodchainx.enums.QualityStatus; 
 import com.cts.foodchainx.model.ProductionBatch;
 import com.cts.foodchainx.model.QualityCheck;
 import com.cts.foodchainx.model.User;
@@ -31,6 +30,7 @@ import com.cts.foodchainx.repository.ProductionBatchRepository;
 import com.cts.foodchainx.repository.QualityLoggingRepository;
 import com.cts.foodchainx.repository.TraceRecordRepository;
 import com.cts.foodchainx.repository.UserRepository;
+import com.cts.foodchainx.serviceimpl.QualityCheckServiceImpl;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -42,7 +42,7 @@ class QualityCheckServiceTest {
     @Mock private UserRepository userRepo;
     @Mock private TraceRecordRepository traceRecordRepository;
 
-    @InjectMocks private QualityCheckService qualityCheckService;
+    @InjectMocks private QualityCheckServiceImpl qualityCheckService;
 
     private ProductionBatch sampleBatch;
     private User sampleInspector;

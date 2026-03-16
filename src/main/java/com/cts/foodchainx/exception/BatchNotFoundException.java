@@ -1,5 +1,8 @@
 package com.cts.foodchainx.exception;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
 /**
  * Exception thrown when a specific production batch cannot be located in the traceability system.
  * This typically occurs during a Consumer Portal search or a QR code scan if the 
@@ -7,6 +10,7 @@ package com.cts.foodchainx.exception;
  * * <p>Extends {@link RuntimeException} to allow for unchecked exception handling within 
  * the Spring Boot service layer.</p>
  */
+@ResponseStatus(HttpStatus.NOT_FOUND)
 public class BatchNotFoundException extends RuntimeException {
 
     /**

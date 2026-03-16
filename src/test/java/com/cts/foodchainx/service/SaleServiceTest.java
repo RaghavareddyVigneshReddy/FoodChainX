@@ -1,5 +1,7 @@
 package com.cts.foodchainx.service;
 
+import com.cts.foodchainx.exception.InsufficientStockException;
+import com.cts.foodchainx.exception.InventoryNotFoundException;
 import com.cts.foodchainx.model.Inventory;
 import com.cts.foodchainx.model.Sale;
 import com.cts.foodchainx.model.TraceRecord;
@@ -26,7 +28,7 @@ import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
-class SaleServiceImplTest {
+class SaleServiceTest {
 
     @Mock
     private SaleRepository saleRepository;
@@ -96,11 +98,8 @@ class SaleServiceImplTest {
 
         when(inventoryRepository.findById(1L)).thenReturn(Optional.empty());
 
-        RuntimeException exception =
-                assertThrows(RuntimeException.class,
-                        () -> saleServiceImpl.createSale(sale));
-
-        assertEquals("Inventory not found with ID: 1", exception.getMessage());
+        assertThrows(InventoryNotFoundException.class, 
+            () -> saleServiceImpl.createSale(sale));
     }
 
     @Test
@@ -109,12 +108,8 @@ class SaleServiceImplTest {
         inventory.setQuantity(5L);
 
         when(inventoryRepository.findById(1L)).thenReturn(Optional.of(inventory));
-
-        RuntimeException exception =
-                assertThrows(RuntimeException.class,
-                        () -> saleServiceImpl.createSale(sale));
-
-        assertEquals("Insufficient stock available", exception.getMessage());
+        assertThrows(InsufficientStockException.class, 
+            () -> saleServiceImpl.createSale(sale));
     }
 
 }

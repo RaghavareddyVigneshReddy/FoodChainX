@@ -4,6 +4,8 @@ import com.cts.foodchainx.model.ComplianceRecord;
 import com.cts.foodchainx.service.ComplianceRecordService;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,6 +32,7 @@ public class ComplianceRecordController {
      * @return The saved {@link ComplianceRecord} entity including the generated ID and timestamp.
      */
     @PostMapping("/records")
+    @ResponseStatus(HttpStatus.CREATED)
     public ComplianceRecord createComplianceRecord(@RequestBody ComplianceRecord complianceRecord) {
         return complianceRecordService.createComplianceRecord(complianceRecord);
     }
@@ -41,6 +44,7 @@ public class ComplianceRecordController {
      * @return A list of {@link ComplianceRecord} objects associated with the given entity ID.
      */
     @GetMapping("/history/{entityId}")
+    @ResponseStatus(HttpStatus.OK)
     public List<ComplianceRecord> getComplianceHistory(@PathVariable Long entityId) {
         return complianceRecordService.getHistoryByEntity(entityId);
     }
@@ -55,6 +59,7 @@ public class ComplianceRecordController {
      * * @return A list of {@link ComplianceRecord} entries with a FAILED status.
      */
     @GetMapping("/failed")
+    @ResponseStatus(HttpStatus.OK)
     public List<ComplianceRecord> getFailedComplianceRecords() {
         return complianceRecordService.getFailedRecords();
     }

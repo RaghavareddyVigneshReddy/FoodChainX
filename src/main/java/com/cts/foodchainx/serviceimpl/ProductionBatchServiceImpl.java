@@ -2,7 +2,6 @@ package com.cts.foodchainx.serviceimpl;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Objects;
 
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
@@ -55,7 +54,8 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
      * {@inheritDoc}
      * <p>Creates a batch and an initial 'HARVESTED' trace record in a single transaction.</p>
      */
-    @Override
+    @SuppressWarnings("null")
+@Override
     @Transactional
     @Auditable(action = "HARVEST_BATCH", resource = "PRODUCTION_BATCH")
     public BatchResponseDto createBatch(@NonNull BatchRequestDto dto) {
@@ -89,7 +89,8 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
      * {@inheritDoc}
      * <p>Transitions the batch status and logs a corresponding certification trace.</p>
      */
-    @Override
+    @SuppressWarnings("null")
+@Override
     @Transactional
     @Auditable(action = "PERFORM_QUALITY_CHECK", resource = "PRODUCTION_BATCH")
     public String performQualityCheck(@NonNull QualityRequestDto dto) {

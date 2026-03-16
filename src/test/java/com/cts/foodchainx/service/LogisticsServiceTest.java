@@ -8,6 +8,8 @@ import com.cts.foodchainx.enums.*;
 import com.cts.foodchainx.exception.WarehouseCapacityException;
 import com.cts.foodchainx.model.*;
 import com.cts.foodchainx.repository.*;
+import com.cts.foodchainx.serviceimpl.LogisticsServiceImpl;
+
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -37,7 +39,7 @@ class LogisticsServiceTest {
     @Mock private InventoryRepository inventoryRepository;
 
     @InjectMocks
-    private LogisticsService logisticsService;
+    private LogisticsServiceImpl logisticsService;
 
     private ProductionBatch sampleBatch;
     private User sampleDistributor;
