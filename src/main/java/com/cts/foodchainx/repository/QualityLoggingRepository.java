@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import com.cts.foodchainx.enums.QualityStatus;
 import com.cts.foodchainx.model.QualityCheck;
 
 /**
@@ -23,7 +24,7 @@ public interface QualityLoggingRepository extends JpaRepository<QualityCheck, Lo
      * * @param status The result of the inspection (e.g., APPROVED, REJECTED).
      * @return A list of quality checks matching the given status.
      */
-    List<QualityCheck> findByStatusIgnoreCase(String status);
+    List<QualityCheck> findByStatus(QualityStatus status);
 
     /**
      * Retrieves the most recent quality check performed on a specific production batch.

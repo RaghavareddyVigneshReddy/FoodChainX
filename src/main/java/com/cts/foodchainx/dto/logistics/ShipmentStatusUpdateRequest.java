@@ -1,5 +1,7 @@
 package com.cts.foodchainx.dto.logistics;
 
+import com.cts.foodchainx.enums.ShipmentStatus;
+
 import lombok.Data;
 
 /**
@@ -9,5 +11,5 @@ import lombok.Data;
 @Data
 public class ShipmentStatusUpdateRequest {
     /** The new status string to be applied to the shipment record */
-    private String status;
+    private ShipmentStatus status;
 }

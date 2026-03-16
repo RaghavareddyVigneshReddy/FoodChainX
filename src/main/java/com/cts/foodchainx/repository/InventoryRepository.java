@@ -2,6 +2,8 @@ package com.cts.foodchainx.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+
+import com.cts.foodchainx.enums.InventoryStatus;
 import com.cts.foodchainx.model.Inventory;
 import java.util.List;
 
@@ -40,5 +42,5 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
      * @param status The status string (e.g., "AVAILABLE", "LOW_STOCK").
      * @return A list of {@link Inventory} items matching the status.
      */
-    List<Inventory> findByStatus(String status);
+    List<Inventory> findByStatus(InventoryStatus status);
 }

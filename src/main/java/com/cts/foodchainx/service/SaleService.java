@@ -1,14 +1,19 @@
 package com.cts.foodchainx.service;
 
 import com.cts.foodchainx.aspect.Auditable;
+import com.cts.foodchainx.enums.InventoryStatus;
+import com.cts.foodchainx.enums.TraceStatus;
+import com.cts.foodchainx.exception.ConsumerNotFoundException;
+import com.cts.foodchainx.exception.InsufficientStockException;
+import com.cts.foodchainx.exception.InventoryNotFoundException;
 import com.cts.foodchainx.model.*;
 import com.cts.foodchainx.repository.*;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDate;
 import java.util.Objects;
 
@@ -41,12 +46,11 @@ public class SaleService {
      *
      * @param sale The sale request containing inventory, consumer, and quantity data.
      * @return The successfully persisted {@link Sale} record.
-     * @throws EntityNotFoundException if Inventory or Consumer IDs do not exist.
-     * @throws IllegalStateException if the requested quantity exceeds available stock.
      */
     @Transactional
     @Auditable(action = "CREATE_SALE", resource = "INVENTORY_SALE")
     public Sale createSale(@NonNull Sale sale) {
+
         Inventory inventory = Objects.requireNonNull(
                 getInventory(Objects.requireNonNull(sale.getInventoryId(), "Inventory ID is required")),
                 "Inventory record could not be retrieved"
@@ -55,9 +59,11 @@ public class SaleService {
         Long quantity = Objects.requireNonNull(sale.getQuantity(), "Quantity is required for sale");
 
         validateStock(inventory, quantity);
+
         updateInventory(inventory, quantity);
 
         sale.setDate(LocalDate.now());
+
         sale.setBatchId(inventory.getBatchId());
 
         Sale savedSale = saleRepository.save(sale);
@@ -73,18 +79,21 @@ public class SaleService {
     /**
      * Internal helper to fetch inventory with error handling.
      */
-    @NonNull
     private Inventory getInventory(@NonNull Long inventoryId) {
+
         return inventoryRepository.findById(inventoryId)
-                .orElseThrow(() -> new EntityNotFoundException("Inventory not found with ID: " + inventoryId));
+                .orElseThrow(() ->
+                        new InventoryNotFoundException("Inventory not found with ID: " + inventoryId));
     }
 
     /**
      * Verifies if the inventory has enough stock for the requested sale.
      */
     private void validateStock(@NonNull Inventory inventory, @NonNull Long quantity) {
+
         if (inventory.getQuantity() < quantity) {
-            throw new IllegalStateException("Insufficient stock available");
+
+            throw new InsufficientStockException("Insufficient stock available");
         }
     }
 
@@ -92,11 +101,22 @@ public class SaleService {
      * Deducts stock and updates the inventory status if it hits zero.
      */
     private void updateInventory(@NonNull Inventory inventory, @NonNull Long quantity) {
+
         long remainingStock = inventory.getQuantity() - quantity;
-        inventory.setQuantity(remainingStock);
-        if (remainingStock == 0) {
-            inventory.setStatus("OUT_OF_STOCK");
+        // Basic safety check: Ensure stock doesn't go negative
+        if (remainingStock < 0) {
+            throw new InsufficientStockException("Insufficient stock for inventory ID: " + inventory.getInventoryId());
         }
+        inventory.setQuantity(remainingStock);
+
+        if (remainingStock == 0) {
+            inventory.setStatus(InventoryStatus.OUT_OF_STOCK);
+        } else if (remainingStock <= 10) {
+            inventory.setStatus(InventoryStatus.LOW_STOCK);
+        } else {
+            inventory.setStatus(InventoryStatus.AVAILABLE);
+        }
+
         inventoryRepository.save(inventory);
     }
 
@@ -109,24 +129,35 @@ public class SaleService {
      * @param consumerId The consumer purchasing the item.
      */
     private void updateTraceRecord(@NonNull Long batchId, @NonNull Long consumerId) {
-        User consumer = userRepository.findById(consumerId)
-                .orElseThrow(() -> new EntityNotFoundException("Consumer not found"));
 
-        traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(batchId)
+        User consumer = userRepository.findById(consumerId)
+                .orElseThrow(() ->
+                        new ConsumerNotFoundException("Consumer not found with ID: " + consumerId));
+
+        traceRecordRepository
+                .findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(batchId)
                 .stream()
                 .findFirst()
                 .ifPresent(latestRecord -> {
+
                     var saleRecord = new TraceRecord();
+
                     saleRecord.setProductionBatch(latestRecord.getProductionBatch());
+
                     saleRecord.setFarm(latestRecord.getFarm());
+
                     saleRecord.setDistributor(latestRecord.getDistributor());
+
                     saleRecord.setRetailer(latestRecord.getRetailer());
 
                     saleRecord.setConsumer(consumer);
-                    saleRecord.setStatus("SOLD");
+
+                    saleRecord.setStatus(TraceStatus.SOLD);
+
                     saleRecord.setDate(LocalDate.now());
 
                     traceRecordRepository.save(saleRecord);
+
                     log.info("New Trace Entry: Batch {} marked as SOLD to {}", batchId, consumer.getName());
                 });
     }

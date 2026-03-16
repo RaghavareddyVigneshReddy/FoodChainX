@@ -4,6 +4,7 @@ import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.cts.foodchainx.dto.logistics.*;
+import com.cts.foodchainx.enums.*;
 import com.cts.foodchainx.exception.WarehouseCapacityException;
 import com.cts.foodchainx.model.*;
 import com.cts.foodchainx.repository.*;
@@ -21,10 +22,8 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Unit tests for {@link LogisticsService}.
- * * This class verifies the core logistics business logic including shipment lifecycles,
- * warehouse capacity validations, and automated traceability record updates.
- * It uses Mockito to isolate the service layer from the database repositories.
+ * Unit tests for LogisticsService.
+ * Fixes: Replaced String statuses with Enum constants to match Service implementation.
  */
 @ExtendWith(MockitoExtension.class)
 class LogisticsServiceTest {
@@ -44,10 +43,6 @@ class LogisticsServiceTest {
     private User sampleDistributor;
     private ShipmentRequestDTO shipmentRequest;
 
-    /**
-     * Sets up common test data before each test execution.
-     * Aligns data types (Double for quantity, Long for capacity) with the project DTOs.
-     */
     @BeforeEach
     void setUp() {
         // Setup a mock Distributor user
@@ -55,11 +50,11 @@ class LogisticsServiceTest {
         sampleDistributor.setUserId(201L);
         sampleDistributor.setRole(Role.DISTRIBUTOR); 
 
-        // Setup a mock Production Batch with required quality status
+        // Setup a mock Production Batch - FIXED: Use QualityStatus Enum
         sampleBatch = new ProductionBatch();
         sampleBatch.setProductionId(501L);
-        sampleBatch.setQualityStatus("PASSED");
-        sampleBatch.setQuantity(500.0); // Aligns with Double type in Batch DTOs
+        sampleBatch.setQualityStatus(QualityStatus.PASSED); 
+        sampleBatch.setQuantity(500.0);
         sampleBatch.setFarm(new Farm());
 
         // Create a standard Shipment initiation request
@@ -70,10 +65,6 @@ class LogisticsServiceTest {
         shipmentRequest.setArrivalDate(LocalDate.now().plusDays(3));
     }
 
-    /**
-     * Verifies that a shipment is successfully initiated when the batch is quality-compliant.
-     * Confirms that a TraceRecord is saved to track the "IN_TRANSIT" status.
-     */
     @Test
     @DisplayName("Initiate Shipment - Success with Compliant Batch")
     void testInitiateShipment_Success() {
@@ -84,25 +75,22 @@ class LogisticsServiceTest {
         savedShipment.setShipmentId(1L);
         savedShipment.setBatch(sampleBatch);
         savedShipment.setDistributor(sampleDistributor);
-        savedShipment.setStatus("IN_TRANSIT");
+        savedShipment.setStatus(ShipmentStatus.IN_TRANSIT); // FIXED: Use ShipmentStatus Enum
 
         when(shipmentRepository.save(any(Shipment.class))).thenReturn(savedShipment);
 
         ShipmentResponseDTO response = logisticsService.initiateShipment(shipmentRequest);
 
         assertNotNull(response);
-        assertEquals("IN_TRANSIT", response.getStatus());
+        // FIXED: Assertion uses Enum
+        assertEquals(ShipmentStatus.IN_TRANSIT, response.getStatus());
         verify(traceRecordRepository, times(1)).save(any(TraceRecord.class));
     }
 
-    /**
-     * Verifies that shipment initiation is blocked if the batch quality is not "PASSED".
-     * Validates business logic that prevents non-compliant goods from entering the supply chain.
-     */
     @Test
     @DisplayName("Initiate Shipment - Fails on Non-Compliant Quality")
     void testInitiateShipment_NonCompliant_ThrowsException() {
-        sampleBatch.setQualityStatus("REJECTED");
+        sampleBatch.setQualityStatus(QualityStatus.REJECTED); // FIXED: Use QualityStatus Enum
         when(batchRepository.findById(501L)).thenReturn(Optional.of(sampleBatch));
         when(userRepository.findById(201L)).thenReturn(Optional.of(sampleDistributor));
 
@@ -111,17 +99,13 @@ class LogisticsServiceTest {
         });
     }
 
-    /**
-     * Tests that a delivery record cannot be created if the destination warehouse is marked as 'Full'.
-     * Validates that {@link WarehouseCapacityException} is thrown correctly.
-     */
     @Test
     @DisplayName("Record Delivery - Fails when Warehouse Status is Full")
     void testRecordDelivery_WarehouseFull_ThrowsException() {
         Warehouse fullWarehouse = new Warehouse();
         fullWarehouse.setWarehouseId(10L);
-        fullWarehouse.setStatus("Full");
-        fullWarehouse.setCapacity(1000L); // Aligns with Long type in Warehouse DTOs
+        fullWarehouse.setStatus(WarehouseStatus.FULL); // FIXED: Use WarehouseStatus Enum
+        fullWarehouse.setCapacity(1000L);
 
         DeliveryRequestDTO request = new DeliveryRequestDTO();
         request.setWarehouseId(10L);
@@ -133,15 +117,11 @@ class LogisticsServiceTest {
         });
     }
 
-    /**
-     * Tests the complete delivery workflow including shipment status update,
-     * retailer inventory creation, and final traceability logging.
-     */
     @Test
     @DisplayName("Record Delivery - Success Updates Inventory and Traceability")
     void testRecordDelivery_Success() {
         Warehouse availableWarehouse = new Warehouse();
-        availableWarehouse.setStatus("Available");
+        availableWarehouse.setStatus(WarehouseStatus.AVAILABLE); // FIXED: Use WarehouseStatus Enum
 
         Shipment activeShipment = new Shipment();
         activeShipment.setBatch(sampleBatch);
@@ -163,23 +143,20 @@ class LogisticsServiceTest {
 
         logisticsService.recordDelivery(request);
 
-        assertEquals("DELIVERED", activeShipment.getStatus());
+        // FIXED: Assertion uses Enum
+        assertEquals(ShipmentStatus.DELIVERED, activeShipment.getStatus());
         verify(inventoryRepository, times(1)).save(any(Inventory.class));
         verify(traceRecordRepository, times(1)).save(any(TraceRecord.class));
         verify(deliveryRepository, times(1)).save(any(Delivery.class));
     }
 
-    /**
-     * Verifies the retrieval and mapping of warehouse records.
-     * Ensures that entity data is correctly transformed into {@link WarehouseResponseDTO}.
-     */
     @Test
     @DisplayName("Get All Warehouses - Returns Correct List")
     void testGetAllWarehouses() {
         Warehouse w = new Warehouse();
         w.setWarehouseId(1L);
         w.setCapacity(2500L);
-        w.setStatus("Active");
+        w.setStatus(WarehouseStatus.AVAILABLE); // FIXED: Use WarehouseStatus Enum
 
         when(warehouseRepository.findAll()).thenReturn(List.of(w));
 

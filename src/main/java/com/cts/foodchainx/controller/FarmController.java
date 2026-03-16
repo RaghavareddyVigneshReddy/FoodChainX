@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.cts.foodchainx.dto.farm.FarmRequestDto;
 import com.cts.foodchainx.dto.farm.FarmResponseDto;
+import com.cts.foodchainx.enums.CertificationStatus;
 import com.cts.foodchainx.service.FarmService;
 
 import jakarta.validation.Valid;
@@ -83,7 +84,7 @@ public class FarmController {
     @PreAuthorize("hasRole('REGULATOR')") // ONLY Regulators can call this!
     public ResponseEntity<FarmResponseDto> updateStatus(
             @PathVariable @NonNull Long farmId, 
-            @RequestParam String status) {
+            @RequestParam CertificationStatus status) {
         log.info("Regulator updating Farm ID: {} to status: {}", farmId, status);
         return ResponseEntity.ok(farmService.updateStatus(farmId, status));
     }

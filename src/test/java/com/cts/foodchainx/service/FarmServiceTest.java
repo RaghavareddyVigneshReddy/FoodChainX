@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.cts.foodchainx.dto.farm.FarmRequestDto;
 import com.cts.foodchainx.dto.farm.FarmResponseDto;
+import com.cts.foodchainx.enums.CertificationStatus;
 import com.cts.foodchainx.model.Farm;
 import com.cts.foodchainx.model.User;
 import com.cts.foodchainx.repository.FarmRepository;
@@ -55,7 +55,7 @@ class FarmServiceTest {
         sampleFarm.setFarmId(FARM_ID);
         sampleFarm.setName("Green Valley");
         sampleFarm.setLocation("Texas");
-        sampleFarm.setCertificationStatus("PENDING");
+        sampleFarm.setCertificationStatus(CertificationStatus.PENDING);
         sampleFarm.setFarmer(sampleUser);
     }
 
@@ -71,6 +71,7 @@ class FarmServiceTest {
 
         assertNotNull(response);
         assertEquals("Green Valley", response.getName());
+        assertEquals(CertificationStatus.PENDING.name(), response.getCertificationStatus());
         verify(farmRepository, times(1)).save(any(Farm.class));
     }
 
@@ -94,27 +95,12 @@ class FarmServiceTest {
         when(farmRepository.findById(FARM_ID)).thenReturn(Optional.of(sampleFarm));
         when(farmRepository.save(any(Farm.class))).thenReturn(sampleFarm);
 
-        FarmResponseDto response = farmService.updateStatus(FARM_ID, "APPROVED");
+        FarmResponseDto response = farmService.updateStatus(FARM_ID, CertificationStatus.APPROVED);
 
-        assertEquals("APPROVED", response.getCertificationStatus());
+        assertEquals(CertificationStatus.APPROVED.name(), response.getCertificationStatus());
     }
 
-    // 4. Test Update Status - FAILURE (Validation Logic)
-    @Test
-    @DisplayName("Update Status - Error when using anything except APPROVED, PENDING, REJECTED")
-    void testUpdateStatus_InvalidStatus() {
-        when(farmRepository.findById(FARM_ID)).thenReturn(Optional.of(sampleFarm));
-
-        // This ensures your code throws an error if status is NOT one of the 3 allowed words
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            farmService.updateStatus(FARM_ID, "CERTIFIED"); // CERTIFIED is not allowed
-        });
-
-        assertTrue(exception.getMessage().contains("Invalid status"));
-        verify(farmRepository, never()).save(any());
-    }
-
-    // 5. Test Delete Farm - Success (Owner)
+    // 4. Test Delete Farm - Success (Owner)
     @Test
     @DisplayName("Delete Farm - Success as Owner")
     void testDeleteFarm_Success() {
@@ -126,7 +112,7 @@ class FarmServiceTest {
         verify(farmRepository, times(1)).delete(sampleFarm);
     }
 
-    // 6. Test Delete Farm - Unauthorized (Not Owner)
+    // 5. Test Delete Farm - Unauthorized (Not Owner)
     @Test
     @DisplayName("Delete Farm - Unauthorized if user is not the owner")
     void testDeleteFarm_Unauthorized() {

@@ -1,5 +1,7 @@
 package com.cts.foodchainx.model;
 
+import com.cts.foodchainx.enums.CertificationStatus;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -49,6 +51,7 @@ public class Farm {
     /**
      * The current regulatory status of the farm (e.g., PENDING, APPROVED, REJECTED).
      */
+    @Enumerated(EnumType.STRING)
     @Column(name = "CertificationStatus", length = 100)
-    private String certificationStatus;
+    private CertificationStatus certificationStatus;
 }

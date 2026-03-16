@@ -13,6 +13,8 @@ import com.cts.foodchainx.dto.batch.BatchDetailResponseDto;
 import com.cts.foodchainx.dto.batch.BatchRequestDto;
 import com.cts.foodchainx.dto.batch.BatchResponseDto;
 import com.cts.foodchainx.dto.quality.QualityRequestDto;
+import com.cts.foodchainx.enums.QualityStatus;
+import com.cts.foodchainx.enums.TraceStatus;
 import com.cts.foodchainx.exception.BatchNotFoundException;
 import com.cts.foodchainx.exception.FarmNotFoundException;
 import com.cts.foodchainx.model.Farm;
@@ -66,7 +68,7 @@ public class ProductionBatchService {
                 .cropType(dto.getCropType())
                 .quantity(dto.getQuantity())
                 .harvestDate(dto.getHarvestDate())
-                .qualityStatus("PENDING")
+                .qualityStatus(QualityStatus.PENDING)
                 .build();
 
         ProductionBatch saved = Objects.requireNonNull(batchRepository.save(batch));
@@ -74,11 +76,11 @@ public class ProductionBatchService {
         TraceRecord initialTrace = new TraceRecord();
         initialTrace.setProductionBatch(saved);
         initialTrace.setFarm(farm);
-        initialTrace.setStatus("HARVESTED_AT_FARM");
+        initialTrace.setStatus(TraceStatus.HARVESTED);
         initialTrace.setDate(LocalDate.now());
         traceRecordRepository.save(initialTrace);
 
-        return new BatchResponseDto(saved.getProductionId(), saved.getQualityStatus());
+        return new BatchResponseDto(saved.getProductionId(), saved.getQualityStatus().name());
     }
 
     /**
@@ -116,8 +118,8 @@ public class ProductionBatchService {
         qualityTrace.setProductionBatch(batch);
         qualityTrace.setFarm(batch.getFarm());
 
-        String traceStatus = "PASSED".equalsIgnoreCase(dto.getStatus())
-                ? "QUALITY_CERTIFIED" : "QUALITY_REJECTED";
+        TraceStatus traceStatus = (dto.getStatus() == QualityStatus.PASSED)
+                ? TraceStatus.QUALITY_CERTIFIED : TraceStatus.QUALITY_REJECTED;
 
         qualityTrace.setStatus(traceStatus);
         qualityTrace.setDate(LocalDate.now());
@@ -145,7 +147,7 @@ public class ProductionBatchService {
                 batch.getProductionId(),
                 batch.getCropType(),
                 batch.getQuantity(),
-                batch.getQualityStatus(),
+                batch.getQualityStatus().name(),
                 findingsList,
                 batch.getFarm().getName(),
                 batch.getFarm().getLocation()
@@ -163,7 +165,7 @@ public class ProductionBatchService {
         ProductionBatch batch = batchRepository.findById(batchId)
                 .orElseThrow(() -> new BatchNotFoundException(batchId));
 
-        return new BatchResponseDto(batch.getProductionId(), batch.getQualityStatus());
+        return new BatchResponseDto(batch.getProductionId(), batch.getQualityStatus().name());
     }
 
     /**
@@ -173,7 +175,7 @@ public class ProductionBatchService {
      */
     public List<BatchResponseDto> getBatchesByFarm(@NonNull Long farmId) {
         return batchRepository.findByFarm_FarmId(farmId).stream()
-                .map(batch -> new BatchResponseDto(batch.getProductionId(), batch.getQualityStatus()))
+                .map(batch -> new BatchResponseDto(batch.getProductionId(), batch.getQualityStatus().name()))
                 .toList();
     }
 
@@ -192,7 +194,7 @@ public class ProductionBatchService {
         ProductionBatch batch = batchRepository.findById(batchId)
                 .orElseThrow(() -> new BatchNotFoundException(batchId));
 
-        if ("PASSED".equalsIgnoreCase(batch.getQualityStatus())) {
+        if (batch.getQualityStatus() == QualityStatus.PASSED) {
             throw new IllegalStateException("Cannot delete a batch that has already passed quality check.");
         }
 

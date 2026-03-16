@@ -1,8 +1,8 @@
 package com.cts.foodchainx.controller;
 
 import com.cts.foodchainx.dto.user.UserResponse;
-import com.cts.foodchainx.model.Role;
-import com.cts.foodchainx.model.UserStatus;
+import com.cts.foodchainx.enums.Role;
+import com.cts.foodchainx.enums.UserStatus;
 import com.cts.foodchainx.service.AuthService;
 import com.cts.foodchainx.service.AuditLogService;
 import org.junit.jupiter.api.DisplayName;
@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -22,6 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
+@ActiveProfiles("test")
 @AutoConfigureMockMvc
 class AdminControllerTest {
 

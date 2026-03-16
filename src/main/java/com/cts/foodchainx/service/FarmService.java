@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.cts.foodchainx.aspect.Auditable;
 import com.cts.foodchainx.dto.farm.FarmRequestDto;
 import com.cts.foodchainx.dto.farm.FarmResponseDto;
+import com.cts.foodchainx.enums.CertificationStatus;
 import com.cts.foodchainx.exception.FarmNotFoundException;
 import com.cts.foodchainx.model.Farm;
 import com.cts.foodchainx.model.User;
@@ -47,7 +48,7 @@ public class FarmService {
         Farm farmEntity = new Farm();
         farmEntity.setName(request.getName());
         farmEntity.setLocation(request.getLocation());
-        farmEntity.setCertificationStatus("PENDING");
+        farmEntity.setCertificationStatus(CertificationStatus.PENDING);
         farmEntity.setFarmer(farmer); 
 
         Farm savedFarm = farmRepository.save(farmEntity);
@@ -86,8 +87,8 @@ public class FarmService {
      * * @param status The status string to filter by (e.g., APPROVED, PENDING).
      * @return List of FarmResponseDto matching the criteria.
      */
-    public List<FarmResponseDto> getFarmsByCertificationStatus(String status) {
-        return farmRepository.findByCertificationStatusIgnoreCase(status).stream()
+    public List<FarmResponseDto> getFarmsByCertificationStatus(CertificationStatus status) {
+        return farmRepository.findByCertificationStatus(status).stream()
                 .map(this::mapToResponseDto)
                 .toList();
     }
@@ -103,16 +104,11 @@ public class FarmService {
      */
     @Transactional
     @Auditable(action = "UPDATE_FARM_STATUS", resource = "FARM")
-    public FarmResponseDto updateStatus(@NonNull Long farmId, String newStatus) {
+    public FarmResponseDto updateStatus(@NonNull Long farmId, CertificationStatus newStatus) {
         Farm farm = farmRepository.findById(farmId)
                 .orElseThrow(() -> new FarmNotFoundException(farmId));
 
-        String status = newStatus.toUpperCase();
-        if (!status.equals("APPROVED") && !status.equals("REJECTED") && !status.equals("PENDING")) {
-            throw new IllegalArgumentException("Invalid status: " + status + ". Use APPROVED, REJECTED, or PENDING.");
-        }
-
-        farm.setCertificationStatus(status);
+        farm.setCertificationStatus(newStatus);
         return mapToResponseDto(farmRepository.save(farm));
     }
 
@@ -148,7 +144,7 @@ public class FarmService {
         dto.setFarmId(farm.getFarmId());
         dto.setName(farm.getName());
         dto.setLocation(farm.getLocation());
-        dto.setCertificationStatus(farm.getCertificationStatus());
+        dto.setCertificationStatus(farm.getCertificationStatus().name());
         return dto;
     }
 }
