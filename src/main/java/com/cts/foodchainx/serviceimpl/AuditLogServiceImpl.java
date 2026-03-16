@@ -1,6 +1,7 @@
 package com.cts.foodchainx.serviceimpl;
 
 import com.cts.foodchainx.dto.audit.AuditLogResponse;
+import com.cts.foodchainx.exception.AuditNotFoundException;
 import com.cts.foodchainx.model.AuditLog;
 import com.cts.foodchainx.model.User;
 import com.cts.foodchainx.repository.AuditLogRepository;
@@ -51,9 +52,15 @@ public class AuditLogServiceImpl implements AuditLogService {
      * @return A list of {@link AuditLogResponse} DTOs.
      */
     public List<AuditLogResponse> getLogsForUser(@NonNull User user) {
-        return auditLogRepository.findByUser(user).stream()
-                .map(this::mapToDto)
-                .toList();
+        List<AuditLogResponse> logs = auditLogRepository.findByUser(user).stream()
+            .map(this::mapToDto)
+            .toList();
+            
+        if (logs.isEmpty()) {
+            throw new AuditNotFoundException("No audit logs found for user: " + user.getEmail());
+        }
+        
+        return logs;
     }
 
     /**
