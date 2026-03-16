@@ -4,31 +4,30 @@ import com.cts.foodchainx.dto.auth.LoginRequest;
 import com.cts.foodchainx.dto.auth.RegisterRequest;
 import com.cts.foodchainx.dto.auth.TokenResponse;
 import com.cts.foodchainx.dto.user.UserResponse;
+import com.cts.foodchainx.enums.UserStatus;
+import com.cts.foodchainx.exception.AccountStatusException;
+import com.cts.foodchainx.exception.InvalidCredentialsException;
 import com.cts.foodchainx.exception.UserAlreadyExistsException;
 import com.cts.foodchainx.model.User;
-import com.cts.foodchainx.enums.UserStatus;
 import com.cts.foodchainx.repository.UserRepository;
 import com.cts.foodchainx.service.AuthService;
 import com.cts.foodchainx.service.AuditLogService;
 import com.cts.foodchainx.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.DisabledException;
-import org.springframework.security.authentication.LockedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
 import static java.util.Objects.requireNonNull;
 
 /**
- * Implementation of {@link AuthService} providing business logic for IAM.
- * <p>
- * This service coordinates with Spring Security, the persistence layer, 
- * and the Audit module to ensure secure and logged user operations.
- * </p>
+ * Implementation of AuthService providing business logic for Identity & Access Management (IAM).
  */
 @Service
 @RequiredArgsConstructor
@@ -41,14 +40,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuditLogService auditLogService;
 
     /**
-     * Registers a new user with duplicate validation.
-     * <p>
-     * Enforces uniqueness for both Email and Phone number. Upon success, 
-     * the password is encrypted and an audit log is generated.
-     * </p>
-     * * @param req The registration payload.
-     * @return {@link UserResponse} containing the generated User ID and basic info.
-     * @throws UserAlreadyExistsException if email or phone is already in use.
+     * Registers a new user with uniqueness validation for email and phone.
      */
     @Override
     @Transactional
@@ -62,7 +54,7 @@ public class AuthServiceImpl implements AuthService {
             throw new UserAlreadyExistsException("Phone number " + req.phone() + " is already in use.");
         }
 
-        // 2. Build and Persist Entity
+        // 2. Build and Persist Entity (Mapping password to passwordHash)
         User user = User.builder()
                 .name(req.name())
                 .email(req.email().toLowerCase())
@@ -81,58 +73,54 @@ public class AuthServiceImpl implements AuthService {
     }
 
     /**
-     * Authenticates user and checks account state.
-     * <p>
-     * Verifies credentials via the {@link AuthenticationManager}. Before issuing a token, 
-     * it verifies that the user is not {@code SUSPENDED} or {@code INACTIVE}.
-     * </p>
-     * * @param req Credentials payload.
-     * @return {@link TokenResponse} including Bearer token.
-     * @throws LockedException if the account status is SUSPENDED.
-     * @throws DisabledException if the account status is INACTIVE.
+     * Authenticates user and verifies account lifecycle status.
      */
     @Override
+    @Transactional(readOnly = true)
     public TokenResponse login(LoginRequest req) {
-        // 1. Credentials Verification
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(req.email(), req.password())
-        );
+        try {
+            // 1. Credentials Verification via Spring Security
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(req.email(), req.password())
+            );
+        } catch (BadCredentialsException e) {
+            // Re-throw as custom InvalidCredentialsException for GlobalExceptionHandler (401)
+            throw new InvalidCredentialsException("Invalid email or password.");
+        }
 
-        // 2. Fetch authenticated identity
+        // 2. Fetch User Identity
         User user = userRepository.findByEmailIgnoreCase(req.email())
-                .orElseThrow(() -> new RuntimeException("User not found after successful authentication"));
+                .orElseThrow(() -> new InvalidCredentialsException("User record not found."));
 
-        // 3. Domain-level Lifecycle Checks
+        // 3. Domain-level Status Checks (Caught as 403 Forbidden by Handler)
         if (user.getStatus() == UserStatus.SUSPENDED) {
-            throw new LockedException("Your account has been suspended. Please contact support.");
+            throw new AccountStatusException("Your account has been suspended. Please contact support.");
         }
 
         if (user.getStatus() == UserStatus.INACTIVE) {
-            throw new DisabledException("Your account is inactive.");
+            throw new AccountStatusException("Your account is currently inactive.");
         }
 
         // 4. Token Generation and Logging
         String token = jwtService.generateToken(user);
-        auditLogService.log(requireNonNull(user), "USER_LOGIN", "auth/login");
+        auditLogService.log(user, "USER_LOGIN", "auth/login");
 
         return new TokenResponse(token, "Bearer", 86400); // 24-hour expiration
     }
 
     /**
-     * Lists all system users.
-     * * @return List of mapped UserResponse DTOs.
+     * Retrieves all system users mapped to DTOs.
      */
     @Override
+    @Transactional(readOnly = true)
     public List<UserResponse> listUsers() {
         return userRepository.findAll().stream()
                 .map(this::mapToResponse)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     /**
-     * Internal mapper to transform User entity to UserResponse DTO.
-     * * @param user The source entity.
-     * @return The target DTO.
+     * Internal mapper: Entity -> UserResponse Record.
      */
     private UserResponse mapToResponse(User user) {
         return new UserResponse(
@@ -145,4 +133,3 @@ public class AuthServiceImpl implements AuthService {
         );
     }
 }
-
