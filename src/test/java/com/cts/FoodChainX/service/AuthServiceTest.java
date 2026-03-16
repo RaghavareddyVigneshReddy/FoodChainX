@@ -2,9 +2,10 @@ package com.cts.foodchainx.service;
 
 import com.cts.foodchainx.dto.auth.RegisterRequest;
 import com.cts.foodchainx.exception.UserAlreadyExistsException;
-import com.cts.foodchainx.model.Role;
+import com.cts.foodchainx.enums.Role;
 import com.cts.foodchainx.model.User;
 import com.cts.foodchainx.repository.UserRepository;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

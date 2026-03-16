@@ -6,7 +6,7 @@ import org.springframework.lang.NonNull;
 /**
  * Custom annotation used to mark service methods that require audit logging.
  * <p>
- * This annotation is intercepted by the {@link AuditAspect} to capture 
+ * This annotation is intercepted by the {@link AuditAspect} to capture
  * user actions and resource modifications within the FoodChainX platform.
  * </p>
  */

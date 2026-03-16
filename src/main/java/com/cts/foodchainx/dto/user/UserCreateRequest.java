@@ -1,6 +1,6 @@
 package com.cts.foodchainx.dto.user;
 
-import com.cts.foodchainx.model.Role;
+import com.cts.foodchainx.enums.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

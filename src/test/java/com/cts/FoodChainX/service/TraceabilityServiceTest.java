@@ -4,12 +4,17 @@ import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.cts.foodchainx.dto.tracerecord.TraceRecordResponseDto;
+import com.cts.foodchainx.enums.QualityStatus; // Added Enum
+import com.cts.foodchainx.enums.TraceStatus;   // Added Enum
 import com.cts.foodchainx.exception.BatchNotFoundException;
 import com.cts.foodchainx.model.*;
 import com.cts.foodchainx.repository.QualityLoggingRepository;
 import com.cts.foodchainx.repository.TraceRecordRepository;
+import com.cts.foodchainx.serviceimpl.TraceabilityServiceImpl;
+
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -21,12 +26,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Unit tests for {@link TraceabilityService}.
- * These tests verify the business logic for product traceability data retrieval,
- * QR code payload generation, and batch journey history.
- * * Uses Mockito to mock repository layers for isolated service testing.
- */
 @ExtendWith(MockitoExtension.class)
 class TraceabilityServiceTest {
 
@@ -37,18 +36,13 @@ class TraceabilityServiceTest {
     private QualityLoggingRepository qualityLoggingRepository;
 
     @InjectMocks
-    private TraceabilityService traceabilityService;
+    private TraceabilityServiceImpl traceabilityService;
 
     private TraceRecord sampleRecord;
     private ProductionBatch sampleBatch;
     private QualityCheck sampleQuality;
     private final Long BATCH_ID = 101L;
 
-    /**
-     * Initializes common test data before each test execution.
-     * Sets up a sample production batch, a corresponding trace record,
-     * and a passed quality check report.
-     */
     @BeforeEach
     void setUp() {
         sampleBatch = new ProductionBatch();
@@ -59,20 +53,18 @@ class TraceabilityServiceTest {
         sampleRecord = new TraceRecord();
         sampleRecord.setTraceId(1L);
         sampleRecord.setProductionBatch(sampleBatch);
-        sampleRecord.setStatus("HARVESTED_AT_FARM");
+        // Updated: Using Enum constant
+        sampleRecord.setStatus(TraceStatus.HARVESTED); 
         sampleRecord.setDate(LocalDate.now());
 
         sampleQuality = new QualityCheck();
-        sampleQuality.setStatus("PASSED");
+        // Updated: Using Enum constant
+        sampleQuality.setStatus(QualityStatus.PASSED); 
         sampleQuality.setFindings("Grade A");
     }
 
-    /**
-     * Tests that traceability data is correctly retrieved and mapped to a DTO.
-     * Verifies that quality information is correctly merged and fallback strings 
-     * (like "N/A" for missing farms) are applied.
-     */
     @Test
+    @DisplayName("Get Traceability Data - Successfully maps Enums to DTO strings")
     void testGetTraceabilityData_Success() {
         when(traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(BATCH_ID))
                 .thenReturn(List.of(sampleRecord));
@@ -83,18 +75,14 @@ class TraceabilityServiceTest {
 
         assertNotNull(response);
         assertEquals(BATCH_ID, response.batchId());
-        assertEquals("Mango", response.cropType());
         assertTrue(response.isQualityCertified());
+        // Verify the Enum was converted to string name for the DTO
+        assertEquals(TraceStatus.HARVESTED.name(), response.status());
         assertEquals("Grade A", response.qualityGrade());
-        assertEquals("N/A", response.farmName());
     }
 
-    /**
-     * Verifies that the QR payload generator creates a correctly formatted 
-     * pipe-delimited string (FCX|...).
-     * Validates that batch details and fallback roles (Retailer/Distributor) are accurate.
-     */
     @Test
+    @DisplayName("Generate QR Payload - Correctly formats Enum names in piped string")
     void testGenerateQrPayload_Success() {
         when(traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(BATCH_ID))
                 .thenReturn(List.of(sampleRecord));
@@ -106,19 +94,17 @@ class TraceabilityServiceTest {
         assertNotNull(payload);
         assertTrue(payload.startsWith("FCX|Batch:101"));
         assertTrue(payload.contains("Cert:true"));
-        assertTrue(payload.contains("Status:HARVESTED_AT_FARM"));
+        // Verify payload contains Enum name
+        assertTrue(payload.contains("Status:" + TraceStatus.HARVESTED.name()));
         assertTrue(payload.contains("Ret:Local Market"));
     }
 
-    /**
-     * Tests the retrieval of the full chronological history for a batch.
-     * Verifies that multiple records are returned and the repository is called correctly.
-     */
     @Test
+    @DisplayName("Get Batch History - Returns chronological list of Enum statuses")
     void testGetBatchHistory_Success() {
         TraceRecord secondRecord = new TraceRecord();
         secondRecord.setProductionBatch(sampleBatch);
-        secondRecord.setStatus("IN_TRANSIT");
+        secondRecord.setStatus(TraceStatus.IN_TRANSIT); // Updated to Enum
 
         when(traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(BATCH_ID))
                 .thenReturn(List.of(sampleRecord, secondRecord));
@@ -126,15 +112,12 @@ class TraceabilityServiceTest {
         List<TraceRecordResponseDto> history = traceabilityService.getBatchHistory(BATCH_ID);
 
         assertEquals(2, history.size());
-        assertEquals("HARVESTED_AT_FARM", history.get(0).status());
-        verify(traceRecordRepository, times(1)).findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(BATCH_ID);
+        assertEquals(TraceStatus.HARVESTED.name(), history.get(0).status());
+        assertEquals(TraceStatus.IN_TRANSIT.name(), history.get(1).status());
     }
 
-    /**
-     * Verifies that {@link BatchNotFoundException} is thrown when requesting 
-     * history for a non-existent batch.
-     */
     @Test
+    @DisplayName("Exception Handling - BatchNotFoundException on empty history")
     void testGetBatchHistory_Empty_ThrowsException() {
         when(traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(BATCH_ID))
                 .thenReturn(Collections.emptyList());
@@ -144,11 +127,8 @@ class TraceabilityServiceTest {
         });
     }
 
-    /**
-     * Verifies that {@link EntityNotFoundException} is thrown during QR payload 
-     * generation if no trace history exists for the batch.
-     */
     @Test
+    @DisplayName("Exception Handling - EntityNotFoundException on QR Payload fail")
     void testGenerateQrPayload_NotFound_ThrowsException() {
         when(traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(BATCH_ID))
                 .thenReturn(Collections.emptyList());

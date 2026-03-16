@@ -18,12 +18,19 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.cts.foodchainx.dto.farm.FarmRequestDto;
 import com.cts.foodchainx.dto.farm.FarmResponseDto;
+import com.cts.foodchainx.enums.CertificationStatus;
 import com.cts.foodchainx.service.FarmService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * REST Controller for managing Farm-related operations in the food supply chain.
+ * Provides endpoints for registration, retrieval, status updates, and deletion of farms.
+ * * @author Your Name/Team
+ * @version 1.0
+ */
 @RestController
 @RequestMapping("/api/farms")
 @Slf4j
@@ -33,13 +40,16 @@ public class FarmController {
     private final FarmService farmService;
 
     /**
-     * POST: http://localhost:8081/api/farms/register
-     * Securely registers a farm using the email from the JWT token.
+     * Registers a new farm in the system.
+     * Endpoint: POST /api/farms/register
+     * * @param request The farm details (name, location, etc.) provided in the request body.
+     * @param authentication The current security context containing the user's credentials.
+     * @return ResponseEntity containing the created FarmResponseDto and HTTP status 200 OK.
      */
     @PostMapping("/register")
     public ResponseEntity<FarmResponseDto> registerFarm(
-           @Valid @RequestBody FarmRequestDto request, 
-            Authentication authentication) {
+            @Valid @RequestBody FarmRequestDto request, 
+             Authentication authentication) {
         
         // authentication.getName() returns the email/username set during JWT validation
         String email = authentication.getName(); 
@@ -49,8 +59,10 @@ public class FarmController {
     }
 
     /**
-     * GET: http://localhost:8081/api/farms/my-farms
-     * Returns all farms belonging to the currently logged-in user.
+     * Retrieves a list of all farms owned by the currently authenticated user.
+     * Endpoint: GET /api/farms/my-farms
+     * * @param authentication The current security context used to identify the user's email.
+     * @return ResponseEntity containing a list of FarmResponseDto objects and HTTP status 200 OK.
      */
     @GetMapping("/my-farms")
     public ResponseEntity<List<FarmResponseDto>> getMyFarms(Authentication authentication) {
@@ -61,20 +73,28 @@ public class FarmController {
     }
 
     /**
-     * PATCH: http://localhost:8081/api/farms/{farmId}/status?status=CERTIFIED
-     * Typically used by a REGULATOR to update certification.
+     * Updates the certification or operational status of a specific farm.
+     * Access is restricted to users with the 'REGULATOR' role.
+     * Endpoint: PATCH /api/farms/{farmId}/status?status=VALUE
+     * * @param farmId The unique identifier of the farm to update.
+     * @param status The new status string to apply (e.g., CERTIFIED, SUSPENDED).
+     * @return ResponseEntity containing the updated FarmResponseDto and HTTP status 200 OK.
      */
-     @PatchMapping("/{farmId}/status")
-@PreAuthorize("hasRole('REGULATOR')") // ONLY Regulators can call this!
-public ResponseEntity<FarmResponseDto> updateStatus(
-        @PathVariable @NonNull Long farmId, 
-        @RequestParam String status) {
-    log.info("Regulator updating Farm ID: {} to status: {}", farmId, status);
-    return ResponseEntity.ok(farmService.updateStatus(farmId, status));
-}
+    @PatchMapping("/{farmId}/status")
+    @PreAuthorize("hasRole('REGULATOR')") // ONLY Regulators can call this!
+    public ResponseEntity<FarmResponseDto> updateStatus(
+            @PathVariable @NonNull Long farmId, 
+            @RequestParam CertificationStatus status) {
+        log.info("Regulator updating Farm ID: {} to status: {}", farmId, status);
+        return ResponseEntity.ok(farmService.updateStatus(farmId, status));
+    }
 
     /**
-     * DELETE: http://localhost:8081/api/farms/{farmId}
+     * Removes a farm from the system.
+     * Endpoint: DELETE /api/farms/{farmId}
+     * * @param farmId The unique identifier of the farm to be deleted.
+     * @param authentication The current security context used to verify ownership or permissions.
+     * @return ResponseEntity containing a confirmation message and HTTP status 200 OK.
      */
     @DeleteMapping("/{farmId}")
     public ResponseEntity<String> removeFarm(@PathVariable @NonNull Long farmId, Authentication authentication) {

@@ -1,5 +1,6 @@
 package com.cts.foodchainx.repository;
 
+import com.cts.foodchainx.enums.NotificationStatus;
 import com.cts.foodchainx.model.Notification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
@@ -9,5 +10,5 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     // Navigate from Notification -> User -> userId
     List<Notification> findByUserUserIdOrderByCreatedDateDesc(Long userId);
 
-    List<Notification> findByUserUserIdAndStatus(Long userId, String status);
+    List<Notification> findByUserUserIdAndStatus(Long userId, NotificationStatus status);
 }

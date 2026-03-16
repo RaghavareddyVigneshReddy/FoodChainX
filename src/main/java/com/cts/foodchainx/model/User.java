@@ -5,6 +5,9 @@ import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+
+import com.cts.foodchainx.enums.Role;
+import com.cts.foodchainx.enums.UserStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.*;
 

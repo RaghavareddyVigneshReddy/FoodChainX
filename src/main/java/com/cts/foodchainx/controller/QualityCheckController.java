@@ -14,11 +14,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.cts.foodchainx.dto.quality.QualityRequestDto;
 import com.cts.foodchainx.dto.quality.QualityResponseDto;
+import com.cts.foodchainx.enums.QualityStatus;
 import com.cts.foodchainx.service.ProductionBatchService;
 import com.cts.foodchainx.service.QualityCheckService;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * REST Controller for managing Quality Assurance operations.
+ * Handles crop inspections, status-based filtering for regulators, and quality log management.
+ */
 @RestController
 @RequestMapping("/api/quality-checks")
 @RequiredArgsConstructor
@@ -29,8 +34,11 @@ public class QualityCheckController {
     private final ProductionBatchService productionBatchService;
 
     /**
-     * PERFORM INSPECTION & UPDATE PRODUCTION STATUS
-     * POST http://localhost:8080/api/quality-checks/inspect
+     * Performs a quality inspection on a production batch and updates its global status.
+     * This endpoint triggers the transition of a batch from PENDING to APPROVED or REJECTED.
+     * <p><b>Endpoint:</b> POST /api/quality-checks/inspect</p>
+     * * @param dto The inspection details including batch ID, findings, and result status.
+     * @return ResponseEntity containing a success message and HTTP status 200 OK.
      */
     @PostMapping("/inspect")
     public ResponseEntity<String> performInspection(@RequestBody @NonNull QualityRequestDto dto) {
@@ -39,18 +47,24 @@ public class QualityCheckController {
     }
 
     /**
-     * GET BATCHES BY STATUS (Filtered Views for Regulator)
-     * GET http://localhost:8080/api/quality-checks/status/APPROVED
+     * Retrieves a list of quality inspections filtered by a specific status.
+     * Useful for regulators to view only APPROVED or REJECTED batches.
+     * <p><b>Endpoint:</b> GET /api/quality-checks/status/{status}</p>
+     * * @param status The quality status to filter by (e.g., "APPROVED", "REJECTED").
+     * @return ResponseEntity containing a list of matching QualityResponseDto objects.
      */
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<QualityResponseDto>> getInspectionsByStatus(@PathVariable String status) {
+    public ResponseEntity<List<QualityResponseDto>> getInspectionsByStatus(@PathVariable QualityStatus status) {
         List<QualityResponseDto> inspections = qualityCheckService.getInspectionsByStatus(status);
         return ResponseEntity.ok(inspections);
     }
 
     /**
-     * DELETE LOG & RESET BATCH TO PENDING
-     * DELETE http://localhost:8080/api/quality-checks/{id}
+     * Deletes a specific quality log entry and resets the associated batch back to PENDING status.
+     * This is typically used for correcting data entry errors.
+     * <p><b>Endpoint:</b> DELETE /api/quality-checks/{qualityId}</p>
+     * * @param qualityId The unique identifier of the quality check record to remove.
+     * @return ResponseEntity containing a confirmation message and HTTP status 200 OK.
      */
     @DeleteMapping("/{qualityId}")
     public ResponseEntity<String> deleteQualityLog(@PathVariable @NonNull Long qualityId) {

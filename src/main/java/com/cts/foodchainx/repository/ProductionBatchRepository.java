@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import com.cts.foodchainx.enums.QualityStatus;
 import com.cts.foodchainx.model.ProductionBatch;
 @Repository
 public interface ProductionBatchRepository extends JpaRepository<ProductionBatch, Long> {
@@ -18,7 +19,7 @@ public interface ProductionBatchRepository extends JpaRepository<ProductionBatch
     /**
      * Optional: Useful for the Quality Module to see what needs checking.
      */
-    List<ProductionBatch> findByQualityStatus(String status);
+    List<ProductionBatch> findByQualityStatus(QualityStatus status);
 
 
 
