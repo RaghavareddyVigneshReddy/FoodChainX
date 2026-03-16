@@ -2,7 +2,7 @@ package com.cts.foodchainx.controller;
 
 import com.cts.foodchainx.dto.sale.SaleRequestDTO;
 import com.cts.foodchainx.model.Sale;
-import com.cts.foodchainx.service.SaleService;
+import com.cts.foodchainx.serviceimpl.SaleServiceImpl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +24,7 @@ public class SaleController {
     /**
      * Service responsible for sale-related business logic and persistence.
      */
-    private final SaleService saleService;
+    private final SaleServiceImpl saleServiceImpl;
 
     /**
      * Processes and records a new sale transaction.
@@ -45,6 +45,6 @@ public class SaleController {
         sale.setQuantity(dto.getQuantity());
         sale.setPrice(dto.getPrice());
 
-        return saleService.createSale(sale);
+        return saleServiceImpl.createSale(sale);
     }
 }
