@@ -29,15 +29,15 @@ import lombok.NoArgsConstructor;
 public class Warehouse {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "WarehouseID")
+    @Column(name = "Warehouse_ID")
     private Long warehouseId;
 
-    @Column(name = "WarehouseName")
+    @Column(name = "Warehouse_Name")
     private String name;
 
     /** The distributor user who manages this warehouse */
     @ManyToOne(fetch = FetchType.LAZY) 
-    @JoinColumn(name = "DistributorID", nullable = false) 
+    @JoinColumn(name = "Distributor_ID", nullable = false) 
     private User distributor; 
 
     @Column(name = "Location", length = 255, nullable = false)

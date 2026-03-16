@@ -33,7 +33,7 @@ public class Report {
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ReportID")
+    @Column(name = "Report_ID")
     private Long reportId;
 
     /**
@@ -53,6 +53,6 @@ public class Report {
     /**
      * The date on which the report was finalized and persisted to the database.
      */
-    @Column(name = "GeneratedDate", nullable = false)
+    @Column(name = "Generated_Date", nullable = false)
     private LocalDate generatedDate;
 }

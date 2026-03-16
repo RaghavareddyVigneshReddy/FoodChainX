@@ -38,14 +38,14 @@ public class Audit {
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "AuditID")
+    @Column(name = "Audit_ID")
     private Long auditId;
 
     /**
      * The ID of the Regulator responsible for conducting this audit.
      * Links back to the User entity with the 'REGULATOR' role.
      */
-    @Column(name = "RegulatorID", nullable = false)
+    @Column(name = "Regulator_ID", nullable = false)
     private Long regulatorId;
 
     /**

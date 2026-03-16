@@ -24,7 +24,7 @@ public class Farm {
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "FarmID")
+    @Column(name = "Farm_ID")
     private Long farmId;
 
     /**
@@ -45,13 +45,13 @@ public class Farm {
      * <p><b>Fetch Type:</b> LAZY - The farmer details are only loaded from the database when specifically accessed.</p>
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "farmerid", referencedColumnName = "user_id", nullable = false)
+    @JoinColumn(name = "farmer_id", referencedColumnName = "user_id", nullable = false)
     private User farmer;
 
     /**
      * The current regulatory status of the farm (e.g., PENDING, APPROVED, REJECTED).
      */
     @Enumerated(EnumType.STRING)
-    @Column(name = "CertificationStatus", length = 100)
+    @Column(name = "Certification_Status", length = 100)
     private CertificationStatus certificationStatus;
 }

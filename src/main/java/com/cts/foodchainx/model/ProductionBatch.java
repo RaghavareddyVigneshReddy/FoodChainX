@@ -26,7 +26,7 @@ public class ProductionBatch {
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "BatchID")
+    @Column(name = "Batch_ID")
     private Long productionId;
 
     /**
@@ -36,13 +36,13 @@ public class ProductionBatch {
      * until explicitly requested via getFarm().</p>
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "FarmID", nullable = false)
+    @JoinColumn(name = "Farm_ID", nullable = false)
     private Farm farm;
 
     /**
      * The type of crop harvested (e.g., Wheat, Corn, Organic Apples).
      */
-    @Column(name = "CropType", length = 100, nullable = false)
+    @Column(name = "Crop_Type", length = 100, nullable = false)
     private String cropType;
 
     /**
@@ -54,14 +54,14 @@ public class ProductionBatch {
     /**
      * The date on which the crop was harvested.
      */
-    @Column(name = "HarvestDate", nullable = false)
+    @Column(name = "Harvest_Date", nullable = false)
     private LocalDate harvestDate;
 
     /**
      * Current state of the batch in the QA lifecycle (e.g., PENDING, PASSED, REJECTED).
      */
     @Enumerated(EnumType.STRING)
-    @Column(name = "QualityStatus", length = 50, nullable = false)
+    @Column(name = "Quality_Status", length = 50, nullable = false)
     private QualityStatus qualityStatus;
 
     /**

@@ -27,25 +27,25 @@ public class Sale {
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "SaleID")
+    @Column(name = "Sale_ID")
     private Long saleId;
 
     /**
      * Foreign key reference to the specific {@link Inventory} record used for this sale.
      */
-    @Column(name = "InventoryID", nullable = false)
+    @Column(name = "Inventory_ID", nullable = false)
     private Long inventoryId;
 
     /**
      * Foreign key reference to the {@link User} (Consumer) who purchased the product.
      */
-    @Column(name = "ConsumerID", nullable = false)
+    @Column(name = "Consumer_ID", nullable = false)
     private Long consumerId;
 
     /**
      * Foreign key reference to the original {@link ProductionBatch} for tracking purposes.
      */
-    @Column(name = "BatchID", nullable = false)
+    @Column(name = "Batch_ID", nullable = false)
     private Long batchId;
 
     /**
@@ -71,7 +71,7 @@ public class Sale {
      * Marked with {@link JsonIgnore} to optimize API responses and avoid circular references.
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "InventoryID", insertable = false, updatable = false)
+    @JoinColumn(name = "Inventory_ID", insertable = false, updatable = false)
     @JsonIgnore
     private Inventory inventory;
 
@@ -80,7 +80,7 @@ public class Sale {
      * Loaded lazily to improve performance during bulk sale queries.
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ConsumerID", insertable = false, updatable = false)
+    @JoinColumn(name = "Consumer_ID", insertable = false, updatable = false)
     @JsonIgnore
     private User consumer;
 
@@ -88,7 +88,7 @@ public class Sale {
      * Detailed Production Batch information for full-chain traceability lookups.
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "BatchID", insertable = false, updatable = false)
+    @JoinColumn(name = "Batch_ID", insertable = false, updatable = false)
     @JsonIgnore
     private ProductionBatch productionBatch;
 }

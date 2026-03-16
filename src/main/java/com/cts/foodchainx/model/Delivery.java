@@ -22,17 +22,17 @@ public class Delivery {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "DeliveryID")
+    @Column(name = "Delivery_ID")
     private Long deliveryId;
 
     /** The shipment associated with this specific delivery hand-off */
     @ManyToOne(fetch = FetchType.LAZY) 
-    @JoinColumn(name = "ShipmentID", nullable = false) 
+    @JoinColumn(name = "Shipment_ID", nullable = false) 
     private Shipment shipment; 
 
     /** The retail user receiving the delivery */
     @ManyToOne(fetch = FetchType.LAZY) 
-    @JoinColumn(name = "RetailerID", nullable = false) 
+    @JoinColumn(name = "Retailer_ID", nullable = false) 
     private User retailer; 
 
     @Column(name = "Date")

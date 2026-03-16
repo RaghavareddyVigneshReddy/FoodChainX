@@ -33,14 +33,14 @@ public class ComplianceRecord {
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ComplianceID")
+    @Column(name = "Compliance_ID")
     private Long complianceId;
 
     /**
      * The ID of the specific entity being audited.
      * This links the record to a Farm, Distributor, or Retailer.
      */
-    @Column(name = "EntityID", nullable = false)
+    @Column(name = "Entity_ID", nullable = false)
     private Long entityId;
 
     /**
