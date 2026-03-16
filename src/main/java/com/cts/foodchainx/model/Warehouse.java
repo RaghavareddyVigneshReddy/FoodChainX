@@ -1,17 +1,14 @@
 package com.cts.foodchainx.model;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Column;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Persistence entity representing a storage facility in the supply chain.
+ * Maps to the 'WAREHOUSE' database table and manages storage capacity for distributors.
+ */
 @Entity
 @Table(name = "WAREHOUSE")
 @Data
@@ -23,9 +20,10 @@ public class Warehouse {
     @Column(name = "WarehouseID")
     private Long warehouseId;
 
-    @Column(name = "WarehouseName") // Added for traceability display
+    @Column(name = "WarehouseName")
     private String name;
 
+    /** The distributor user who manages this warehouse */
     @ManyToOne(fetch = FetchType.LAZY) 
     @JoinColumn(name = "DistributorID", nullable = false) 
     private User distributor; 
