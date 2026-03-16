@@ -49,6 +49,7 @@ public class NotificationServiceImpl implements NotificationService {
         return mapToResponseDTO(saved);
     }
 
+    @SuppressWarnings("null")
     @Override
     public NotificationResponseDTO createNotification(@NonNull NotificationRequestDTO dto) {
         User user = userRepository.findById(Objects.requireNonNull(dto.getUserId()))

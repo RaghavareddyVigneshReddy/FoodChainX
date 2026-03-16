@@ -49,7 +49,8 @@ public class QualityCheckServiceImpl implements QualityCheckService {
      * <p>This operation updates three different entities (QualityCheck, ProductionBatch, TraceRecord)
      * as a single atomic unit.</p>
      */
-    @Override
+    @SuppressWarnings("null")
+@Override
     @Transactional
     @Auditable(action = "PERFORM_INSPECTION", resource = "QUALITY_CHECK")
     public String inspectBatch(@NonNull QualityRequestDto dto) {
