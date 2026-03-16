@@ -12,4 +12,8 @@ public class AuditNotFoundException extends RuntimeException {
     public AuditNotFoundException(Long auditId) {
         super("Audit record not found for ID: " + auditId);
     }
+
+    public AuditNotFoundException(String message) {
+        super(message);
+    }
 }

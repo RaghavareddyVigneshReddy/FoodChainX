@@ -22,7 +22,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 
@@ -76,7 +75,7 @@ public class AuthServiceImpl implements AuthService {
      * Authenticates user and verifies account lifecycle status.
      */
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public TokenResponse login(LoginRequest req) {
         try {
             // 1. Credentials Verification via Spring Security
@@ -116,7 +115,7 @@ public class AuthServiceImpl implements AuthService {
     public List<UserResponse> listUsers() {
         return userRepository.findAll().stream()
                 .map(this::mapToResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
