@@ -2,6 +2,7 @@ package com.cts.foodchainx.serviceimpl;
 
 import com.cts.foodchainx.aspect.Auditable;
 import com.cts.foodchainx.enums.ComplianceResult;
+import com.cts.foodchainx.exception.ComplianceRecordNotFoundException;
 import com.cts.foodchainx.model.ComplianceRecord;
 import com.cts.foodchainx.repository.ComplianceRecordRepository;
 import com.cts.foodchainx.service.ComplianceRecordService;
@@ -51,7 +52,13 @@ public class ComplianceRecordServiceImpl implements ComplianceRecordService {
      */
     @Override
     public List<ComplianceRecord> getHistoryByEntity(Long entityId) {
-        return complianceRecordRepository.findByEntityId(entityId);
+        List<ComplianceRecord> records = complianceRecordRepository.findByEntityId(entityId);
+        
+        if (records.isEmpty()) {
+            log.warn("No compliance records found for entity ID: {}", entityId);
+            throw new ComplianceRecordNotFoundException(entityId);
+        }
+        return records;
     }
 
     /**
@@ -61,6 +68,12 @@ public class ComplianceRecordServiceImpl implements ComplianceRecordService {
      */
     @Override
     public List<ComplianceRecord> getFailedRecords() {
-        return complianceRecordRepository.findByResult(ComplianceResult.FAILED);
+        List<ComplianceRecord> failedRecords = complianceRecordRepository.findByResult(ComplianceResult.FAILED);
+        
+        if (failedRecords.isEmpty()) {
+            log.info("Clean audit slate: No failed compliance records found.");
+            throw new ComplianceRecordNotFoundException("No failed compliance records found in the system.");
+        }
+        return failedRecords;
     }
 }
