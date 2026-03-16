@@ -50,7 +50,7 @@ public class SaleServiceImpl implements SaleService {
      */
     @Transactional
     @Auditable(action = "CREATE_SALE", resource = "INVENTORY_SALE")
-    public Sale createSale(@NonNull Sale sale) {
+    public Sale createSale(Sale sale) {
 
         Inventory inventory = Objects.requireNonNull(
                 getInventory(Objects.requireNonNull(sale.getInventoryId(), "Inventory ID is required")),
