@@ -2,7 +2,7 @@ package com.cts.foodchainx.controller;
 
 import com.cts.foodchainx.dto.inventory.InventoryRequestDTO;
 import com.cts.foodchainx.model.Inventory;
-import com.cts.foodchainx.service.InventoryService;
+import com.cts.foodchainx.serviceimpl.InventoryServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
@@ -28,7 +28,7 @@ public class InventoryController {
     /**
      * Service layer dependency for inventory logic.
      */
-    private final InventoryService inventoryService;
+    private final InventoryServiceImpl inventoryServiceImpl;
 
     /**
      * Creates a new inventory record.
@@ -45,7 +45,7 @@ public class InventoryController {
         inventory.setBatchId(Objects.requireNonNull(dto.getBatchId(), "Batch ID must not be null"));
         inventory.setQuantity(Objects.requireNonNull(dto.getQuantity(), "Quantity must not be null"));
 
-        return inventoryService.createInventory(inventory);
+        return inventoryServiceImpl.createInventory(inventory);
     }
 
     /**
@@ -55,7 +55,7 @@ public class InventoryController {
      */
     @GetMapping
     public List<Inventory> getAllInventory() {
-        return inventoryService.getAllInventory();
+        return inventoryServiceImpl.getAllInventory();
     }
 
     /**
@@ -66,7 +66,7 @@ public class InventoryController {
      */
     @GetMapping("/{id}")
     public Inventory getInventoryById(@PathVariable @NonNull Long id) {
-        return inventoryService.getInventoryById(id);
+        return inventoryServiceImpl.getInventoryById(id);
     }
 
     /**
@@ -77,6 +77,6 @@ public class InventoryController {
      */
     @GetMapping("/retailer/{retailerId}")
     public List<Inventory> getInventoryByRetailer(@PathVariable @NonNull Long retailerId) {
-        return inventoryService.getInventoryByRetailer(retailerId);
+        return inventoryServiceImpl.getInventoryByRetailer(retailerId);
     }
 }

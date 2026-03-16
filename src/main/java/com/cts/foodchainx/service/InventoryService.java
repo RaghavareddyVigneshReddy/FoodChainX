@@ -1,94 +1,46 @@
 package com.cts.foodchainx.service;
 
-import com.cts.foodchainx.aspect.Auditable;
-import com.cts.foodchainx.enums.InventoryStatus;
-import com.cts.foodchainx.exception.InventoryNotFoundException;
 import com.cts.foodchainx.model.Inventory;
-import com.cts.foodchainx.repository.InventoryRepository;
 import org.springframework.lang.NonNull;
-import org.springframework.stereotype.Service;
-import lombok.RequiredArgsConstructor;
-import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Service class handling business logic for Retail Inventory management.
- * <p>
- * This service manages stock levels, automatically assigns inventory statuses
- * based on quantities, and ensures all additions are tracked via auditing.
- * </p>
+ * Service interface for managing {@link Inventory} operations within the FoodChainX system.
+ * This service provides methods for creating, retrieving, and filtering inventory records
+ * associated with various retailers.
  */
-@Service
-@RequiredArgsConstructor
-public class InventoryService {
+public interface InventoryService {
 
     /**
-     * Data access object for Inventory persistence.
-     */
-    private final InventoryRepository inventoryRepository;
-
-    /**
-     * Saves a new inventory record and automatically calculates its status.
-     * <p>
-     * <b>Status Logic:</b>
-     * <ul>
-     * <li>Quantity = 0: OUT_OF_STOCK</li>
-     * <li>Quantity ≤ 10: LOW_STOCK</li>
-     * <li>Quantity > 10: AVAILABLE</li>
-     * </ul>
-     * This method is intercepted by {@link Auditable} for security logging.
-     * </p>
+     * Creates and persists a new inventory record.
      *
-     * @param inventory The inventory entity to be persisted.
-     * @return The saved {@link Inventory} entity with generated ID and status.
+     * @param inventory The {@link Inventory} object containing the details to be saved.
+     * @return The saved {@link Inventory} object, typically including its generated ID.
      */
-    @Auditable(action = "ADD_RETAIL_INVENTORY", resource = "INVENTORY")
-    public Inventory createInventory(Inventory inventory) {
-
-        inventory.setDateAdded(LocalDate.now());
-
-        if (inventory.getQuantity() == 0) {
-            inventory.setStatus(InventoryStatus.OUT_OF_STOCK);
-        } else if (inventory.getQuantity() <= 10) {
-            inventory.setStatus(InventoryStatus.LOW_STOCK);
-        } else {
-            inventory.setStatus(InventoryStatus.AVAILABLE);
-        }
-
-        return inventoryRepository.save(inventory);
-    }
+    Inventory createInventory(Inventory inventory);
 
     /**
-     * Retrieves all inventory records across all retailers.
+     * Retrieves all inventory records present in the system.
      *
-     * @return List of all {@link Inventory} items.
+     * @return A {@link List} of all {@link Inventory} objects; returns an empty list if none exist.
      */
-    public List<Inventory> getAllInventory() {
-        return inventoryRepository.findAll();
-    }
+    List<Inventory> getAllInventory();
 
     /**
-     * Finds a specific inventory record by ID.
+     * Finds a specific inventory record by its unique identifier.
      *
-     * @param inventoryId The unique ID of the inventory.
-     * @return The found {@link Inventory} record.
-     * @throws InventoryNotFoundException if no record exists for the given ID.
+     * @param inventoryId The unique ID of the inventory to retrieve. Must not be null.
+     * @return The found {@link Inventory} object.
+     * @throws RuntimeException (or specific EntityNotFoundException) if no inventory exists with the given ID.
      */
-    public Inventory getInventoryById(@NonNull Long inventoryId) {
-
-        return inventoryRepository.findById(inventoryId)
-                .orElseThrow(() ->
-                        new InventoryNotFoundException("Inventory not found with ID: " + inventoryId));
-    }
+    Inventory getInventoryById(@NonNull Long inventoryId);
 
     /**
-     * Retrieves all inventory items belonging to a specific retailer.
+     * Retrieves all inventory items associated with a specific retailer.
      *
-     * @param retailerId The unique ID of the retailer.
-     * @return A list of {@link Inventory} records for that retailer.
+     * @param retailerId The unique ID of the retailer whose inventory is being queried. Must not be null.
+     * @return A {@link List} of {@link Inventory} objects belonging to the specified retailer.
      */
-    public List<Inventory> getInventoryByRetailer(@NonNull Long retailerId) {
+    List<Inventory> getInventoryByRetailer(@NonNull Long retailerId);
 
-        return inventoryRepository.findByRetailerId(retailerId);
-    }
 }

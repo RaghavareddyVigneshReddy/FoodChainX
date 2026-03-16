@@ -1,188 +1,45 @@
 package com.cts.foodchainx.service;
 
 import com.cts.foodchainx.dto.logistics.*;
-import com.cts.foodchainx.enums.InventoryStatus;
-import com.cts.foodchainx.enums.QualityStatus;
-import com.cts.foodchainx.enums.ShipmentStatus;
-import com.cts.foodchainx.enums.TraceStatus;
-import com.cts.foodchainx.enums.WarehouseStatus;
 import com.cts.foodchainx.exception.WarehouseCapacityException;
-import com.cts.foodchainx.model.*;
-import com.cts.foodchainx.aspect.Auditable;
-import com.cts.foodchainx.repository.*;
-import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import java.time.LocalDate;
+
 import java.util.List;
-import java.util.Objects;
 
 /**
- * Service class handling core logistics business logic.
- * Responsible for shipment lifecycle, warehouse validation, and traceability updates.
+ * Service interface for managing supply chain logistics.
+ * <p>
+ * Handles the end-to-end shipment lifecycle, from initiation at the farm 
+ * to inventory intake at the retail level, ensuring capacity and quality compliance.
+ * </p>
  */
-@Service
-@Slf4j
-@RequiredArgsConstructor
-public class LogisticsService {
-
-    private final ShipmentRepository shipmentRepository;
-    private final ProductionBatchRepository batchRepository;
-    private final WarehouseRepository warehouseRepository;
-    private final DeliveryRepository deliveryRepository;
-    private final TraceRecordRepository traceRecordRepository;
-    private final UserRepository userRepository;
-    private final InventoryRepository inventoryRepository;
+public interface LogisticsService {
 
     /**
      * Initiates a shipment only if the production batch is quality-compliant.
-     * * @param request the shipment initiation details
-     * @return ShipmentResponseDTO containing the saved shipment details
-     
+     * * @param request details of the shipment to be started.
+     * @return ShipmentResponseDTO containing the assigned ID and tracking status.
      */
-    @Transactional
-    @Auditable(action = "INITIATE_SHIPMENT", resource = "LOGISTICS")
-    public ShipmentResponseDTO initiateShipment(@NonNull ShipmentRequestDTO request) {
-        ProductionBatch batchObj = batchRepository.findById(Objects.requireNonNull(request.getBatchId()))
-                .orElseThrow(() -> new EntityNotFoundException("Batch not found"));
-        
-        User distributorObj = userRepository.findById(Objects.requireNonNull(request.getDistributorId()))
-                .orElseThrow(() -> new EntityNotFoundException("Distributor not found"));
-
-        if (batchObj.getQualityStatus() != QualityStatus.PASSED) {
-            throw new EntityNotFoundException("Batch is not Compliant. Shipment cannot be initiated.");
-        }
-
-        Shipment shipment = new Shipment();
-        shipment.setBatch(batchObj);
-        shipment.setDistributor(distributorObj);
-        shipment.setDepartureDate(request.getDepartureDate());
-        shipment.setArrivalDate(request.getArrivalDate());
-        shipment.setStatus(ShipmentStatus.IN_TRANSIT);
-
-        TraceRecord shipmentTrace = new TraceRecord();
-        shipmentTrace.setProductionBatch(batchObj);
-        shipmentTrace.setFarm(batchObj.getFarm());
-        shipmentTrace.setDistributor(distributorObj); 
-        shipmentTrace.setStatus(TraceStatus.IN_TRANSIT);
-        shipmentTrace.setDate(LocalDate.now());
-        traceRecordRepository.save(shipmentTrace);
-
-        return convertToShipmentResponseDTO(shipmentRepository.save(shipment));
-    }
+    ShipmentResponseDTO initiateShipment(@NonNull ShipmentRequestDTO request);
 
     /**
-     * Updates shipment status and triggers traceability updates if delivered.
-     * * @param id the shipment ID
-     * @param request the status update DTO
-     * @return the updated shipment details
+     * Updates shipment status (e.g., DELIVERED) and triggers traceability updates.
+     * * @param id the shipment ID.
+     * @param request the status update details.
+     * @return the updated shipment record.
      */
-    @Transactional
-    @Auditable(action = "UPDATE_SHIPMENT_STATUS", resource = "LOGISTICS")
-    public ShipmentResponseDTO updateShipmentStatus(@NonNull Long id, @NonNull ShipmentStatusUpdateRequest request) {
-        Shipment shipment = shipmentRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Shipment record not found"));
-
-        shipment.setStatus(request.getStatus());
-
-        if (request.getStatus() == ShipmentStatus.DELIVERED) {
-            traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(shipment.getBatch().getProductionId())
-                .stream()
-                .findFirst()
-                .ifPresent(traceRecord -> {
-                    traceRecord.setStatus(TraceStatus.ARRIVED_AT_WAREHOUSE);
-                    traceRecordRepository.save(traceRecord);
-                });
-        }
-        return convertToShipmentResponseDTO(shipmentRepository.save(shipment));
-    }
+    ShipmentResponseDTO updateShipmentStatus(@NonNull Long id, @NonNull ShipmentStatusUpdateRequest request);
 
     /**
-     * Records a delivery, checks warehouse capacity, and creates a new inventory record for the retailer.
-     * * @param request the delivery request data
-     * @throws WarehouseCapacityException if the target warehouse is marked as 'Full'
- * @throws EntityNotFoundException if any provided IDs do not exist
+     * Records a delivery, validates warehouse capacity, and populates retailer inventory.
+     * * @param request delivery data including shipment and warehouse IDs.
+     * @throws WarehouseCapacityException if the target warehouse is FULL.
      */
-    @Transactional
-    @Auditable(action = "RECORD_DELIVERY", resource = "LOGISTICS")
-    public void recordDelivery(@NonNull DeliveryRequestDTO request) {
-        Warehouse warehouse = warehouseRepository.findById(Objects.requireNonNull(request.getWarehouseId()))
-                .orElseThrow(() -> new EntityNotFoundException("Warehouse not found"));
-
-        if (warehouse.getStatus() == WarehouseStatus.FULL) {
-           throw new WarehouseCapacityException("Warehouse " + warehouse.getWarehouseId() + " is at maximum capacity");
-        }
-
-        Shipment shipment = shipmentRepository.findById(Objects.requireNonNull(request.getShipmentId()))
-                .orElseThrow(() -> new EntityNotFoundException("Shipment not found"));
-
-        User retailerObj = userRepository.findById(Objects.requireNonNull(request.getRetailerId()))
-                .orElseThrow(() -> new EntityNotFoundException("Retailer user not found"));
-
-        ProductionBatch batch = shipment.getBatch();
-        shipment.setStatus(ShipmentStatus.DELIVERED);
-        shipmentRepository.save(shipment);
-
-        Delivery delivery = new Delivery();
-        delivery.setShipment(shipment);
-        delivery.setRetailer(retailerObj);
-        delivery.setDate(request.getDeliveryDate());
-        delivery.setStatus(ShipmentStatus.DELIVERED);
-        deliveryRepository.save(delivery);
-
-        Inventory newInventory = new Inventory();
-        newInventory.setBatchId(batch.getProductionId());
-        newInventory.setRetailerId(retailerObj.getUserId()); 
-        long quantity = batch.getQuantity().longValue();
-        newInventory.setQuantity(quantity); 
-        newInventory.setDateAdded(LocalDate.now());
-
-        if (quantity == 0) {
-            newInventory.setStatus(InventoryStatus.OUT_OF_STOCK);
-        } else if (quantity <= 10) {
-            newInventory.setStatus(InventoryStatus.LOW_STOCK);
-        } else {
-            newInventory.setStatus(InventoryStatus.AVAILABLE);
-        }
-        
-        inventoryRepository.save(newInventory);
-
-        TraceRecord deliveryTrace = new TraceRecord();
-        deliveryTrace.setProductionBatch(batch);
-        deliveryTrace.setFarm(batch.getFarm());
-        deliveryTrace.setDistributor(shipment.getDistributor());
-        deliveryTrace.setRetailer(retailerObj);
-        deliveryTrace.setStatus(TraceStatus.ON_SHELF_AT_STORE);
-        deliveryTrace.setDate(LocalDate.now());
-        traceRecordRepository.save(deliveryTrace);
-    }
+    void recordDelivery(@NonNull DeliveryRequestDTO request);
 
     /**
-     * Fetches all warehouses available in the system.
-     * * @return a list of all warehouse response DTOs
+     * Retrieves all warehouses currently registered in the system.
+     * * @return a list of all warehouse locations and their current status.
      */
-    public List<WarehouseResponseDTO> getAllWarehouses() {
-        return warehouseRepository.findAll().stream()
-                .map(w -> WarehouseResponseDTO.builder()
-                        .warehouseId(w.getWarehouseId())
-                        .location(w.getLocation())
-                        .capacity(w.getCapacity())
-                        .status(w.getStatus())
-                        .build())
-                .toList();
-    }
-
-    private ShipmentResponseDTO convertToShipmentResponseDTO(Shipment s) {
-        return ShipmentResponseDTO.builder()
-                .shipmentId(s.getShipmentId())
-                .batchId(s.getBatch().getProductionId())
-                .distributorId(s.getDistributor().getUserId())
-                .status(s.getStatus())
-                .departureDate(s.getDepartureDate())
-                .arrivalDate(s.getArrivalDate())
-                .build();
-    }
+    List<WarehouseResponseDTO> getAllWarehouses();
 }

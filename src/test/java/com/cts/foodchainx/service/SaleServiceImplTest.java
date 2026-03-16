@@ -9,6 +9,7 @@ import com.cts.foodchainx.repository.SaleRepository;
 import com.cts.foodchainx.repository.TraceRecordRepository;
 import com.cts.foodchainx.repository.UserRepository;
 
+import com.cts.foodchainx.serviceimpl.SaleServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,7 +26,7 @@ import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
-class SaleServiceTest {
+class SaleServiceImplTest {
 
     @Mock
     private SaleRepository saleRepository;
@@ -40,7 +41,7 @@ class SaleServiceTest {
     private TraceRecordRepository traceRecordRepository;
 
     @InjectMocks
-    private SaleService saleService;
+    private SaleServiceImpl saleServiceImpl;
 
     private Sale sale;
     private Inventory inventory;
@@ -81,7 +82,7 @@ class SaleServiceTest {
 
         when(saleRepository.save(any(Sale.class))).thenReturn(sale);
 
-        Sale result = saleService.createSale(sale);
+        Sale result = saleServiceImpl.createSale(sale);
 
         assertNotNull(result);
         assertEquals(10L, result.getQuantity());
@@ -97,7 +98,7 @@ class SaleServiceTest {
 
         RuntimeException exception =
                 assertThrows(RuntimeException.class,
-                        () -> saleService.createSale(sale));
+                        () -> saleServiceImpl.createSale(sale));
 
         assertEquals("Inventory not found with ID: 1", exception.getMessage());
     }
@@ -111,7 +112,7 @@ class SaleServiceTest {
 
         RuntimeException exception =
                 assertThrows(RuntimeException.class,
-                        () -> saleService.createSale(sale));
+                        () -> saleServiceImpl.createSale(sale));
 
         assertEquals("Insufficient stock available", exception.getMessage());
     }

@@ -17,6 +17,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Persistence entity representing a storage facility in the supply chain.
+ * Maps to the 'WAREHOUSE' database table and manages storage capacity for distributors.
+ */
 @Entity
 @Table(name = "WAREHOUSE")
 @Data
@@ -28,9 +32,10 @@ public class Warehouse {
     @Column(name = "WarehouseID")
     private Long warehouseId;
 
-    @Column(name = "WarehouseName") // Added for traceability display
+    @Column(name = "WarehouseName")
     private String name;
 
+    /** The distributor user who manages this warehouse */
     @ManyToOne(fetch = FetchType.LAZY) 
     @JoinColumn(name = "DistributorID", nullable = false) 
     private User distributor; 

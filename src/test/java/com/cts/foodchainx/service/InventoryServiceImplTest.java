@@ -5,6 +5,7 @@ import com.cts.foodchainx.model.Inventory;
 import com.cts.foodchainx.repository.InventoryRepository;
 import com.cts.foodchainx.exception.InventoryNotFoundException;
 
+import com.cts.foodchainx.serviceimpl.InventoryServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,13 +22,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class InventoryServiceTest {
+class InventoryServiceImplTest {
 
     @Mock
     private InventoryRepository inventoryRepository;
 
     @InjectMocks
-    private InventoryService inventoryService;
+    private InventoryServiceImpl inventoryServiceImpl;
 
     private Inventory inventory;
 
@@ -47,7 +48,7 @@ class InventoryServiceTest {
         // We expect the service to calculate status based on quantity (50 > 10)
         when(inventoryRepository.save(any(Inventory.class))).thenReturn(inventory);
 
-        Inventory result = inventoryService.createInventory(inventory);
+        Inventory result = inventoryServiceImpl.createInventory(inventory);
 
         assertNotNull(result);
         assertEquals(InventoryStatus.AVAILABLE, result.getStatus());
@@ -60,7 +61,7 @@ class InventoryServiceTest {
         inventory.setQuantity(5L);
         when(inventoryRepository.save(any(Inventory.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        Inventory result = inventoryService.createInventory(inventory);
+        Inventory result = inventoryServiceImpl.createInventory(inventory);
 
         assertEquals(InventoryStatus.LOW_STOCK, result.getStatus());
     }
@@ -69,7 +70,7 @@ class InventoryServiceTest {
     void testGetInventoryById_Success() {
         when(inventoryRepository.findById(1L)).thenReturn(Optional.of(inventory));
 
-        Inventory result = inventoryService.getInventoryById(1L);
+        Inventory result = inventoryServiceImpl.getInventoryById(1L);
 
         assertNotNull(result);
         assertEquals(1L, result.getInventoryId());
@@ -80,7 +81,7 @@ class InventoryServiceTest {
         when(inventoryRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThrows(InventoryNotFoundException.class, () -> {
-            inventoryService.getInventoryById(99L);
+            inventoryServiceImpl.getInventoryById(99L);
         });
     }
 
@@ -89,7 +90,7 @@ class InventoryServiceTest {
         List<Inventory> inventoryList = Arrays.asList(inventory);
         when(inventoryRepository.findAll()).thenReturn(inventoryList);
 
-        List<Inventory> result = inventoryService.getAllInventory();
+        List<Inventory> result = inventoryServiceImpl.getAllInventory();
 
         assertFalse(result.isEmpty());
         assertEquals(1, result.size());
