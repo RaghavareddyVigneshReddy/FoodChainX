@@ -42,20 +42,23 @@ class ComplianceRecordControllerTest {
     @Test
     @DisplayName("POST /api/compliance/records - Success when REGULATOR")
     @WithMockUser(roles = "REGULATOR")
+    @SuppressWarnings("null")
     void createRecord_Success() throws Exception {
-        ComplianceRecord record = ComplianceRecord.builder()
+        ComplianceRecord complianceRecord = ComplianceRecord.builder()
                 .entityId(500L)
                 .type(ComplianceType.FARMER)
                 .result(ComplianceResult.PASSED)
                 .build();
 
         when(complianceRecordService.createComplianceRecord(any(ComplianceRecord.class)))
-                .thenReturn(record);
+                .thenReturn(complianceRecord);
+
+        String jsonContent = objectMapper.writeValueAsString(complianceRecord);
 
         mockMvc.perform(post("/api/compliance/records")
                         .with(csrf()) // Required if CSRF is enabled in SecurityConfig
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(record)))
+                        .content(jsonContent))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.entityId").value(500))
                 .andExpect(jsonPath("$.result").value("PASSED"));
@@ -65,8 +68,8 @@ class ComplianceRecordControllerTest {
     @DisplayName("GET /api/compliance/history/{id} - Success for authenticated users")
     @WithMockUser(roles = "FARMER")
     void getHistory_Success() throws Exception {
-        ComplianceRecord record = ComplianceRecord.builder().entityId(500L).build();
-        when(complianceRecordService.getHistoryByEntity(500L)).thenReturn(List.of(record));
+        ComplianceRecord complianceRecord = ComplianceRecord.builder().entityId(500L).build();
+        when(complianceRecordService.getHistoryByEntity(500L)).thenReturn(List.of(complianceRecord));
 
         mockMvc.perform(get("/api/compliance/history/500"))
                 .andExpect(status().isOk())
