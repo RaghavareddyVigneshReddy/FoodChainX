@@ -15,6 +15,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Objects;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -54,8 +56,8 @@ class AuditControllerIntegrationTest {
         mockMvc.perform(post("/api/compliance/audits")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(inputAudit)))
-                .andExpect(status().isOk()) // Or .isCreated() if you add @ResponseStatus
+                        .content(Objects.requireNonNull(objectMapper.writeValueAsString(inputAudit))))
+                .andExpect(status().isCreated()) // Updated to match @ResponseStatus
                 .andExpect(jsonPath("$.auditId").value(1))
                 .andExpect(jsonPath("$.status").value("OPEN"));
     }
@@ -87,7 +89,7 @@ class AuditControllerIntegrationTest {
         mockMvc.perform(post("/api/compliance/audits")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(audit)))
-                .andExpect(status().isForbidden());
+                        .content(Objects.requireNonNull(objectMapper.writeValueAsString(audit))))
+                .andExpect(status().isForbidden()); // This should now pass because of @EnableMethodSecurity
     }
 }
