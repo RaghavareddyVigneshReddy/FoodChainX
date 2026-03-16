@@ -27,6 +27,7 @@ import com.cts.foodchainx.model.Farm;
 import com.cts.foodchainx.model.User;
 import com.cts.foodchainx.repository.FarmRepository;
 import com.cts.foodchainx.repository.UserRepository;
+import com.cts.foodchainx.serviceimpl.FarmServiceImpl;
 
 @ExtendWith(MockitoExtension.class)
 class FarmServiceTest {
@@ -38,7 +39,7 @@ class FarmServiceTest {
     private UserRepository userRepository;
 
     @InjectMocks
-    private FarmService farmService;
+    private FarmServiceImpl farmService;
 
     private User sampleUser;
     private Farm sampleFarm;

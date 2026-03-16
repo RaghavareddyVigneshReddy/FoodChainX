@@ -7,7 +7,7 @@ import com.cts.foodchainx.model.Notification;
 import com.cts.foodchainx.model.User;
 import com.cts.foodchainx.repository.NotificationRepository;
 import com.cts.foodchainx.repository.UserRepository;
-import com.cts.foodchainx.service.NotificationService;
+import com.cts.foodchainx.serviceimpl.NotificationServiceImpl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,7 +33,7 @@ class NotificationServiceTest {
     private UserRepository userRepository;
 
     @InjectMocks
-    private NotificationService notificationService;
+    private NotificationServiceImpl notificationService;
 
     private User mockUser;
     private Notification mockNotification;

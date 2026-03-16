@@ -31,6 +31,7 @@ import com.cts.foodchainx.repository.ProductionBatchRepository;
 import com.cts.foodchainx.repository.QualityLoggingRepository;
 import com.cts.foodchainx.repository.TraceRecordRepository;
 import com.cts.foodchainx.repository.UserRepository;
+import com.cts.foodchainx.serviceimpl.ProductionBatchServiceImpl;
 
 @ExtendWith(MockitoExtension.class)
 class ProductionBatchServiceTest {
@@ -41,7 +42,7 @@ class ProductionBatchServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private TraceRecordRepository traceRecordRepository;
 
-    @InjectMocks private ProductionBatchService batchService;
+    @InjectMocks private ProductionBatchServiceImpl batchService;
 
     private Farm sampleFarm;
     private ProductionBatch sampleBatch;

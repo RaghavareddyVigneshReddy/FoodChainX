@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,6 +35,7 @@ public class ConsumerPortalController {
      * @throws BatchNotFoundException if no record exists for the batchId
      */
     @GetMapping("/trace/{batchId}")
+    @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<TraceRecordResponseDto> getTraceRecord(@PathVariable Long batchId) {
         log.info("REST request to get traceability data for Batch ID: {}", batchId);
         return ResponseEntity.ok(traceabilityService.getTraceabilityData(batchId));
@@ -48,6 +50,7 @@ public class ConsumerPortalController {
      * @return a {@link ResponseEntity} containing the raw QR payload string
      */
     @GetMapping("/qr/{batchId}")
+    @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<String> getQrCodePayload(@PathVariable Long batchId) {
         log.info("REST request to generate QR payload for Batch ID: {}", batchId);
         return ResponseEntity.ok(traceabilityService.generateQrPayload(batchId));
@@ -61,6 +64,7 @@ public class ConsumerPortalController {
      * @return a {@link ResponseEntity} containing a {@link List} of {@link TraceRecordResponseDto}
      */
     @GetMapping("/history/{batchId}")
+    @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<List<TraceRecordResponseDto>> getBatchHistory(@PathVariable Long batchId) {
         log.info("REST request to get full history for Batch ID: {}", batchId);
         return ResponseEntity.ok(traceabilityService.getBatchHistory(batchId));
