@@ -26,7 +26,7 @@ public class QualityCheck {
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "qualityid")
+    @Column(name = "quality_id")
     private Long qualityId;
 
     /**
@@ -35,7 +35,7 @@ public class QualityCheck {
      * <p><b>Database Join:</b> Linked via 'batchid'.</p>
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "batchid", nullable = false)
+    @JoinColumn(name = "batch_id", nullable = false)
     private ProductionBatch batch;
 
     /**
@@ -44,7 +44,7 @@ public class QualityCheck {
      * <p><b>Database Join:</b> Linked via 'inspectorid'.</p>
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "inspectorid", nullable = false)
+    @JoinColumn(name = "inspector_id", nullable = false)
     private User inspector; 
 
     /**

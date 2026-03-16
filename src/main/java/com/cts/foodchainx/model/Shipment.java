@@ -20,21 +20,21 @@ import com.cts.foodchainx.enums.ShipmentStatus;
 public class Shipment {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
-    @Column(name="ShipmentID")
+    @Column(name="Shipment_ID")
     private Long shipmentId;
 
     @ManyToOne(fetch = FetchType.LAZY) 
-    @JoinColumn(name="BatchID", nullable=false) 
+    @JoinColumn(name="Batch_ID", nullable=false) 
     private ProductionBatch batch; 
     
     @ManyToOne(fetch = FetchType.LAZY) 
-    @JoinColumn(name="DistributorID", nullable=false) 
+    @JoinColumn(name="Distributor_ID", nullable=false) 
     private User distributor; 
 
-    @Column(name="Departuredate", nullable=false)
+    @Column(name="Departure_date", nullable=false)
     private LocalDate departureDate;
 
-    @Column(name="ArrivalDate")
+    @Column(name="Arrival_Date")
     private LocalDate arrivalDate;
 
     @Enumerated(EnumType.STRING)

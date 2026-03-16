@@ -27,19 +27,19 @@ public class Inventory {
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "InventoryID")
+    @Column(name = "Inventory_ID")
     private Long inventoryId;
 
     /**
      * Foreign key reference to the retailer (User).
      */
-    @Column(name = "RetailerID", nullable = false)
+    @Column(name = "Retailer_ID", nullable = false)
     private Long retailerId;
 
     /**
      * Foreign key reference to the production batch.
      */
-    @Column(name = "BatchID", nullable = false)
+    @Column(name = "Batch_ID", nullable = false)
     private Long batchId;
 
     /**
@@ -51,7 +51,7 @@ public class Inventory {
     /**
      * The date this inventory record was first created/received.
      */
-    @Column(name = "DateAdded", nullable = false)
+    @Column(name = "Date_Added", nullable = false)
     private LocalDate dateAdded;
 
     /**
@@ -69,7 +69,7 @@ public class Inventory {
      * </p>
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "RetailerID", insertable = false, updatable = false)
+    @JoinColumn(name = "Retailer_ID", insertable = false, updatable = false)
     @JsonIgnore
     private User retailer;
 
@@ -80,7 +80,7 @@ public class Inventory {
      * </p>
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "BatchID", insertable = false, updatable = false)
+    @JoinColumn(name = "Batch_ID", insertable = false, updatable = false)
     @JsonIgnore
     private ProductionBatch productionBatch;
 }

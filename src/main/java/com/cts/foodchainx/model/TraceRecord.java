@@ -34,42 +34,42 @@ public class TraceRecord {
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "TraceID")
+    @Column(name = "Trace_ID")
     private Long traceId;
 
     /**
      * The specific production batch associated with this trace entry.
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "BatchID")
+    @JoinColumn(name = "Batch_ID")
     private ProductionBatch productionBatch;
 
     /**
      * The farm where the product batch originated.
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "FarmID")
+    @JoinColumn(name = "Farm_ID")
     private Farm farm;
 
     /**
      * The user acting as the distributor for the batch at this point in the chain.
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "DistributorID") 
+    @JoinColumn(name = "Distributor_ID") 
     private User distributor; 
 
     /**
      * The user acting as the retailer who received the batch.
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "RetailerID")
+    @JoinColumn(name = "Retailer_ID")
     private User retailer;
 
     /**
      * The end consumer who purchased the batch, if applicable.
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ConsumerID")
+    @JoinColumn(name = "Consumer_ID")
     private User consumer;
 
     /**
