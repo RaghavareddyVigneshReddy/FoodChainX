@@ -1,5 +1,7 @@
 package com.cts.foodchainx.service;
 
+import com.cts.foodchainx.exception.InsufficientStockException;
+import com.cts.foodchainx.exception.InventoryNotFoundException;
 import com.cts.foodchainx.model.Inventory;
 import com.cts.foodchainx.model.Sale;
 import com.cts.foodchainx.model.TraceRecord;
@@ -8,8 +10,8 @@ import com.cts.foodchainx.repository.InventoryRepository;
 import com.cts.foodchainx.repository.SaleRepository;
 import com.cts.foodchainx.repository.TraceRecordRepository;
 import com.cts.foodchainx.repository.UserRepository;
-import com.cts.foodchainx.service.SaleService;
 
+import com.cts.foodchainx.serviceimpl.SaleServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Optional;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -40,7 +43,7 @@ class SaleServiceTest {
     private TraceRecordRepository traceRecordRepository;
 
     @InjectMocks
-    private SaleService saleService;
+    private SaleServiceImpl saleServiceImpl;
 
     private Sale sale;
     private Inventory inventory;
@@ -81,7 +84,7 @@ class SaleServiceTest {
 
         when(saleRepository.save(any(Sale.class))).thenReturn(sale);
 
-        Sale result = saleService.createSale(sale);
+        Sale result = saleServiceImpl.createSale(sale);
 
         assertNotNull(result);
         assertEquals(10L, result.getQuantity());
@@ -95,11 +98,8 @@ class SaleServiceTest {
 
         when(inventoryRepository.findById(1L)).thenReturn(Optional.empty());
 
-        RuntimeException exception =
-                assertThrows(RuntimeException.class,
-                        () -> saleService.createSale(sale));
-
-        assertEquals("Inventory not found", exception.getMessage());
+        assertThrows(InventoryNotFoundException.class, 
+            () -> saleServiceImpl.createSale(sale));
     }
 
     @Test
@@ -108,12 +108,8 @@ class SaleServiceTest {
         inventory.setQuantity(5L);
 
         when(inventoryRepository.findById(1L)).thenReturn(Optional.of(inventory));
-
-        RuntimeException exception =
-                assertThrows(RuntimeException.class,
-                        () -> saleService.createSale(sale));
-
-        assertEquals("Insufficient stock available", exception.getMessage());
+        assertThrows(InsufficientStockException.class, 
+            () -> saleServiceImpl.createSale(sale));
     }
 
 }
