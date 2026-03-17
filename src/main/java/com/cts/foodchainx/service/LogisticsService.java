@@ -36,6 +36,7 @@ public interface LogisticsService {
      * @throws WarehouseCapacityException if the target warehouse is FULL.
      */
     void recordDelivery(@NonNull DeliveryRequestDTO request);
+    WarehouseResponseDTO registerWarehouse(@NonNull WarehouseRequestDTO request);
 
     /**
      * Retrieves all warehouses currently registered in the system.
