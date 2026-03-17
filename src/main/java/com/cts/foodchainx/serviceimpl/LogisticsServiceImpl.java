@@ -19,9 +19,9 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Implementation of {@link LogisticsService} handling business rules for the food supply chain.
- * This service manages the physical transition of goods between participants (Farms, Distributors, Retailers)
- * while ensuring warehouse capacity constraints and real-time inventory synchronization.
+ * Service implementation for managing logistics operations within the FoodChainX ecosystem.
+ * This service handles warehouse registration, shipment tracking, and delivery management,
+ * ensuring inventory synchronization and traceability across the supply chain.
  */
 @Service
 @Slf4j
@@ -37,12 +37,12 @@ public class LogisticsServiceImpl implements LogisticsService {
     private final InventoryRepository inventoryRepository;
 
     /**
-     * Registers a new warehouse facility for a distributor.
-     * Initializes the facility with zero stock and an 'AVAILABLE' status.
+     * Registers a new warehouse facility associated with a distributor.
+     * Initial stock level is set to zero and status is set to AVAILABLE.
      *
-     * @param request the warehouse details including location, capacity, and distributor ID
-     * @return the persisted {@link WarehouseResponseDTO}
-     * @throws EntityNotFoundException if the associated distributor user is not found
+     * @param request DTO containing warehouse details such as location, capacity, and distributor ID.
+     * @return WarehouseResponseDTO representing the persisted warehouse record.
+     * @throws EntityNotFoundException if the distributor ID provided does not exist.
      */
     @Override
     @Transactional
@@ -55,20 +55,21 @@ public class LogisticsServiceImpl implements LogisticsService {
         warehouse.setLocation(request.getLocation());
         warehouse.setCapacity(request.getCapacity());
         
-        // Use 0.0 to match the Double type in the entity
         warehouse.setCurrentStockLevel(0.0); 
         warehouse.setStatus(WarehouseStatus.AVAILABLE);
 
         Warehouse saved = warehouseRepository.save(warehouse);
-        log.info("New warehouse registered at {} for distributor {}", saved.getLocation(), distributorObj.getUserId());
+        log.info("New warehouse registered for distributor {}", distributorObj.getUserId());
         return convertToWarehouseResponseDTO(saved);
     }
 
     /**
-     * Initiates the shipment of a production batch from a farm to a distributor.
+     * Initiates a shipment process for a production batch from a farm to a distributor.
+     * Validates that the batch has passed quality checks before allowing shipment.
      *
-     * @param request details containing the batch ID, distributor ID, and schedule
-     * @return the created {@link ShipmentResponseDTO}
+     * @param request DTO containing shipment dates, batch ID, and distributor ID.
+     * @return ShipmentResponseDTO representing the initiated shipment.
+     * @throws EntityNotFoundException if the batch or distributor is not found, or if batch quality status is not PASSED.
      */
     @Override
     @Transactional
@@ -81,7 +82,6 @@ public class LogisticsServiceImpl implements LogisticsService {
                 .orElseThrow(() -> new EntityNotFoundException("Distributor not found"));
 
         if (batchObj.getQualityStatus() != QualityStatus.PASSED) {
-            log.warn("Shipment initiation blocked: Batch {} has failed quality status", batchObj.getProductionId());
             throw new EntityNotFoundException("Batch is not Compliant. Shipment cannot be initiated.");
         }
 
@@ -100,17 +100,18 @@ public class LogisticsServiceImpl implements LogisticsService {
         shipmentTrace.setDate(LocalDate.now());
         traceRecordRepository.save(shipmentTrace);
 
-        log.info("Shipment initiated for Batch: {} by Distributor: {}", batchObj.getProductionId(), distributorObj.getUserId());
         return convertToShipmentResponseDTO(shipmentRepository.save(shipment));
     }
 
     /**
-     * Updates shipment status and handles warehouse receiving logic.
+     * Updates the status of an existing shipment. If status is updated to DELIVERED,
+     * the system automatically updates the distributor's warehouse stock levels.
      *
-     * @param id the unique shipment ID
-     * @param request the status update payload
-     * @return the updated {@link ShipmentResponseDTO}
-     * @throws WarehouseCapacityException if receiving the shipment would exceed warehouse limits
+     * @param id The unique identifier of the shipment.
+     * @param request DTO containing the new status.
+     * @return ShipmentResponseDTO representing the updated shipment.
+     * @throws EntityNotFoundException if the shipment or associated warehouse is not found.
+     * @throws WarehouseCapacityException if the incoming batch quantity exceeds available warehouse capacity.
      */
     @Override
     @Transactional
@@ -124,7 +125,7 @@ public class LogisticsServiceImpl implements LogisticsService {
         if (request.getStatus() == ShipmentStatus.DELIVERED) {
             Warehouse warehouse = warehouseRepository.findByDistributor_UserId(shipment.getDistributor().getUserId())
                     .stream().findFirst()
-                    .orElseThrow(() -> new EntityNotFoundException("No warehouse found for the distributor"));
+                    .orElseThrow(() -> new EntityNotFoundException("No warehouse found for distributor"));
 
             double incomingQty = shipment.getBatch().getQuantity();
             double updatedStock = warehouse.getCurrentStockLevel() + incomingQty;
@@ -140,23 +141,22 @@ public class LogisticsServiceImpl implements LogisticsService {
             warehouseRepository.save(warehouse);
 
             traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(shipment.getBatch().getProductionId())
-                .stream()
-                .findFirst()
-                .ifPresent(traceRecord -> {
-                    traceRecord.setStatus(TraceStatus.ARRIVED_AT_WAREHOUSE);
-                    traceRecordRepository.save(traceRecord);
+                .stream().findFirst().ifPresent(trace -> {
+                    trace.setStatus(TraceStatus.ARRIVED_AT_WAREHOUSE);
+                    traceRecordRepository.save(trace);
                 });
-            
-            log.info("Shipment {} received. Warehouse {} stock increased to {}", id, warehouse.getWarehouseId(), updatedStock);
         }
         
         return convertToShipmentResponseDTO(shipmentRepository.save(shipment));
     }
 
     /**
-     * Finalizes the delivery of a batch from the warehouse to a retail store.
+     * Records the final delivery of a production batch to a retailer.
+     * This operation reduces warehouse stock, updates shipment status, 
+     * and initializes the retailer's inventory record.
      *
-     * @param request payload containing warehouse, shipment, and retailer identifiers
+     * @param request DTO containing IDs for the warehouse, shipment, and retailer, along with the delivery date.
+     * @throws EntityNotFoundException if any of the requested IDs do not match existing records.
      */
     @Override
     @Transactional
@@ -169,11 +169,10 @@ public class LogisticsServiceImpl implements LogisticsService {
                 .orElseThrow(() -> new EntityNotFoundException("Shipment not found"));
 
         User retailerObj = userRepository.findById(Objects.requireNonNull(request.getRetailerId()))
-                .orElseThrow(() -> new EntityNotFoundException("Retailer user not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Retailer not found"));
 
         ProductionBatch batch = shipment.getBatch();
 
-        // Stock reduction logic with explicit double handling
         double departingQty = batch.getQuantity();
         double updatedStock = Math.max(0.0, warehouse.getCurrentStockLevel() - departingQty);
         warehouse.setCurrentStockLevel(updatedStock);
@@ -186,7 +185,6 @@ public class LogisticsServiceImpl implements LogisticsService {
         shipment.setStatus(ShipmentStatus.DELIVERED);
         shipmentRepository.save(shipment);
 
-        // Create Delivery Record
         Delivery delivery = new Delivery();
         delivery.setShipment(shipment);
         delivery.setRetailer(retailerObj);
@@ -194,21 +192,15 @@ public class LogisticsServiceImpl implements LogisticsService {
         delivery.setStatus(ShipmentStatus.DELIVERED);
         deliveryRepository.save(delivery);
 
-        // Retailer Inventory Initialization - Explicit cast from double to long
         Inventory newInventory = new Inventory();
         newInventory.setBatchId(batch.getProductionId());
         newInventory.setRetailerId(retailerObj.getUserId()); 
-        long quantity = batch.getQuantity().longValue(); // Use longValue() helper
+        long quantity = batch.getQuantity().longValue(); 
         newInventory.setQuantity(quantity); 
         newInventory.setDateAdded(LocalDate.now());
-
-        if (quantity == 0) {
-            newInventory.setStatus(InventoryStatus.OUT_OF_STOCK);
-        } else if (quantity <= 10) {
-            newInventory.setStatus(InventoryStatus.LOW_STOCK);
-        } else {
-            newInventory.setStatus(InventoryStatus.AVAILABLE);
-        }
+        newInventory.setStatus(quantity == 0 ? InventoryStatus.OUT_OF_STOCK : 
+                               quantity <= 10 ? InventoryStatus.LOW_STOCK : InventoryStatus.AVAILABLE);
+        
         inventoryRepository.save(newInventory);
 
         TraceRecord deliveryTrace = new TraceRecord();
@@ -219,11 +211,13 @@ public class LogisticsServiceImpl implements LogisticsService {
         deliveryTrace.setStatus(TraceStatus.ON_SHELF_AT_STORE);
         deliveryTrace.setDate(LocalDate.now());
         traceRecordRepository.save(deliveryTrace);
-        
-        log.info("Delivery recorded. Warehouse {} stock decreased to {}. Batch {} moved to Retailer {}", 
-                warehouse.getWarehouseId(), updatedStock, batch.getProductionId(), retailerObj.getUserId());
     }
 
+    /**
+     * Retrieves a list of all registered warehouses.
+     *
+     * @return List of WarehouseResponseDTOs.
+     */
     @Override
     public List<WarehouseResponseDTO> getAllWarehouses() {
         return warehouseRepository.findAll().stream()
@@ -231,6 +225,12 @@ public class LogisticsServiceImpl implements LogisticsService {
                 .toList();
     }
 
+    /**
+     * Helper method to convert a Warehouse entity to a WarehouseResponseDTO.
+     *
+     * @param w The warehouse entity.
+     * @return The populated DTO.
+     */
     private WarehouseResponseDTO convertToWarehouseResponseDTO(Warehouse w) {
         return WarehouseResponseDTO.builder()
                 .warehouseId(w.getWarehouseId())
@@ -240,6 +240,12 @@ public class LogisticsServiceImpl implements LogisticsService {
                 .build();
     }
 
+    /**
+     * Helper method to convert a Shipment entity to a ShipmentResponseDTO.
+     *
+     * @param s The shipment entity.
+     * @return The populated DTO.
+     */
     private ShipmentResponseDTO convertToShipmentResponseDTO(Shipment s) {
         return ShipmentResponseDTO.builder()
                 .shipmentId(s.getShipmentId())
