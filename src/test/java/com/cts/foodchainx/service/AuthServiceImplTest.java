@@ -90,8 +90,6 @@ class AuthServiceImplTest {
     void login_WrongPassword_ThrowsException() {
         LoginRequest req = new LoginRequest("test@foodchainx.com", "wrongPass");
         
-        when(userRepository.findByEmailIgnoreCase(anyString())).thenReturn(Optional.of(activeUser));
-        
         // Simulating Spring Security Authentication Failure
         doThrow(new BadCredentialsException("Bad credentials"))
                 .when(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));

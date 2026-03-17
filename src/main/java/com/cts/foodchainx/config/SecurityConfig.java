@@ -133,6 +133,8 @@ public class SecurityConfig {
                 .requestMatchers("/foodchainx/notifications/**", "/notifications/**").permitAll()
                 .requestMatchers("/api/trace/**", "/api/consumer/**").permitAll()
 
+                .requestMatchers("/api/admin/**").hasRole(ROLE_ADMIN)
+
                 // SECURED: Reporting Module
                 .requestMatchers("/api/reports/**").authenticated()
 
@@ -149,9 +151,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/quality-checks/inspect").hasAnyRole(ROLE_REGULATOR, ROLE_ADMIN)
                 .requestMatchers(HttpMethod.GET, "/api/production/**", "/api/quality-checks/status/**")
                     .hasAnyRole(ROLE_FARMER, ROLE_REGULATOR, ROLE_ADMIN)
-
-                // SECURED: Admin-Only actions
-                .requestMatchers(HttpMethod.DELETE, "/api/quality-checks/**").hasRole(ROLE_ADMIN)
+                .requestMatchers(HttpMethod.DELETE, "/api/quality-checks/**").hasAnyRole(ROLE_ADMIN, ROLE_REGULATOR)
 
                 // SECURED: Compliance & Audit Module
                 .requestMatchers("/api/compliance/failed").hasRole(ROLE_REGULATOR)
