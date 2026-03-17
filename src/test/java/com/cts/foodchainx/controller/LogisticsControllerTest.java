@@ -36,6 +36,7 @@ class LogisticsControllerIT {
     @MockitoBean
     private LogisticsService logisticsService;
 
+    @SuppressWarnings("null")
     @Test
     @DisplayName("POST /api/logistics/shipments - Success")
     @WithMockUser(roles = "LOGISTICS_MANAGER")
@@ -52,6 +53,7 @@ class LogisticsControllerIT {
                 .andExpect(status().isCreated());
     }
 
+    @SuppressWarnings("null")
     @Test
     @DisplayName("PUT /api/logistics/shipments/{id}/status - Success")
     @WithMockUser(roles = "LOGISTICS_MANAGER")
@@ -68,6 +70,7 @@ class LogisticsControllerIT {
                 .andExpect(status().isOk());
     }
 
+    @SuppressWarnings("null")
     @Test
     @DisplayName("GET /api/logistics/warehouses - Success")
     @WithMockUser(roles = "LOGISTICS_MANAGER")
@@ -80,6 +83,7 @@ class LogisticsControllerIT {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
+    @SuppressWarnings("null")
     @Test
     @DisplayName("POST /api/logistics/deliveries - Forbidden for FARMER")
     @WithMockUser(roles = "FARMER")
@@ -92,6 +96,7 @@ class LogisticsControllerIT {
                 .andExpect(status().isForbidden());
     }
 
+    @SuppressWarnings("null")
     @Test
     @DisplayName("POST /api/logistics/deliveries - Success for RETAILER")
     @WithMockUser(roles = "RETAILER")
