@@ -23,7 +23,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.cts.foodchainx.dto.farm.FarmRequestDto;
 import com.cts.foodchainx.dto.farm.FarmResponseDto;
-import com.cts.foodchainx.enums.CertificationStatus;
 import com.cts.foodchainx.service.FarmService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
