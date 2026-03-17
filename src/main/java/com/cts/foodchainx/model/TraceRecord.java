@@ -41,7 +41,7 @@ public class TraceRecord {
      * The specific production batch associated with this trace entry.
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "Batch_ID")
+    @JoinColumn(name = "batch_id")
     private ProductionBatch productionBatch;
 
     /**
