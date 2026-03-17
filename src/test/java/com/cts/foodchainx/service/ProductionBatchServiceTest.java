@@ -47,17 +47,17 @@ class ProductionBatchServiceTest {
     private Farm sampleFarm;
     private ProductionBatch sampleBatch;
     private User sampleInspector;
-    private final Long BATCH_ID = 100L;
-    private final Long FARM_ID = 1L;
+    private final Long batchId = 100L;
+    private final Long farmId = 1L;
 
     @BeforeEach
     void setUp() {
         sampleFarm = new Farm();
-        sampleFarm.setFarmId(FARM_ID);
+        sampleFarm.setFarmId(farmId);
         sampleFarm.setName("Green Valley");
 
         sampleBatch = ProductionBatch.builder()
-                .productionId(BATCH_ID)
+                .productionId(batchId)
                 .farm(sampleFarm)
                 .cropType("Corn")
                 .quantity(500.0)
@@ -69,12 +69,13 @@ class ProductionBatchServiceTest {
         sampleInspector.setUserId(5L);
     }
 
+    @SuppressWarnings("null")
     @Test
     @DisplayName("Create Batch - Success and Initial Trace Harvested")
     void testCreateBatch_Success() {
-        BatchRequestDto request = new BatchRequestDto(FARM_ID, "Corn", 500.0, LocalDate.now());
+        BatchRequestDto request = new BatchRequestDto(farmId, "Corn", 500.0, LocalDate.now());
         
-        when(farmRepository.findById(FARM_ID)).thenReturn(Optional.of(sampleFarm));
+        when(farmRepository.findById(farmId)).thenReturn(Optional.of(sampleFarm));
         when(batchRepository.save(any(ProductionBatch.class))).thenReturn(sampleBatch);
 
         BatchResponseDto response = batchService.createBatch(request);
@@ -85,13 +86,14 @@ class ProductionBatchServiceTest {
         verify(traceRecordRepository, times(1)).save(any(TraceRecord.class));
     }
 
+    @SuppressWarnings("null")
     @Test
     @DisplayName("Perform Quality Check - Success (PASSED)")
     void testPerformQualityCheck_Success() {
         // Arrange: Updated DTO to use QualityStatus Enum
-        QualityRequestDto qDto = new QualityRequestDto(BATCH_ID, 5L, "Good quality", QualityStatus.PASSED);
+        QualityRequestDto qDto = new QualityRequestDto(batchId, 5L, "Good quality", QualityStatus.PASSED);
         
-        when(batchRepository.findById(BATCH_ID)).thenReturn(Optional.of(sampleBatch));
+        when(batchRepository.findById(batchId)).thenReturn(Optional.of(sampleBatch));
         when(userRepository.findById(5L)).thenReturn(Optional.of(sampleInspector));
         when(qualityRepo.save(any(QualityCheck.class))).thenReturn(new QualityCheck());
         when(batchRepository.save(any(ProductionBatch.class))).thenReturn(sampleBatch);
@@ -108,38 +110,41 @@ class ProductionBatchServiceTest {
         verify(traceRecordRepository).save(any(TraceRecord.class));
     }
 
+    @SuppressWarnings("null")
     @Test
     @DisplayName("Get Batch Detail - Success")
     void testGetBatchDetail_Success() {
-        when(batchRepository.findById(BATCH_ID)).thenReturn(Optional.of(sampleBatch));
+        when(batchRepository.findById(batchId)).thenReturn(Optional.of(sampleBatch));
 
-        BatchDetailResponseDto details = batchService.getBatchDetail(BATCH_ID);
+        BatchDetailResponseDto details = batchService.getBatchDetail(batchId);
 
         assertEquals("Corn", details.getCropType());
         assertEquals("Green Valley", details.getFarmName());
         assertEquals(QualityStatus.PENDING.name(), details.getQualityStatus());
     }
 
+    @SuppressWarnings("null")
     @Test
     @DisplayName("Delete Batch - Success (PENDING Status)")
     void testDeleteBatch_Success() {
-        when(batchRepository.findById(BATCH_ID)).thenReturn(Optional.of(sampleBatch));
+        when(batchRepository.findById(batchId)).thenReturn(Optional.of(sampleBatch));
 
-        String result = batchService.deleteBatch(BATCH_ID);
+        String result = batchService.deleteBatch(batchId);
 
         assertTrue(result.contains("deleted successfully"));
         verify(batchRepository).delete(sampleBatch);
     }
 
+    @SuppressWarnings("null")
     @Test
     @DisplayName("Delete Batch - Fails (Status is already PASSED)")
     void testDeleteBatch_FailsIfPassed() {
         // Arrange
         sampleBatch.setQualityStatus(QualityStatus.PASSED); // Updated to Enum
-        when(batchRepository.findById(BATCH_ID)).thenReturn(Optional.of(sampleBatch));
+        when(batchRepository.findById(batchId)).thenReturn(Optional.of(sampleBatch));
 
         // Act & Assert
-        assertThrows(IllegalStateException.class, () -> batchService.deleteBatch(BATCH_ID));
+        assertThrows(IllegalStateException.class, () -> batchService.deleteBatch(batchId));
         verify(batchRepository, never()).delete(any());
     }
 }

@@ -59,6 +59,7 @@ class ProductionBatchControllerTest {
         mockResponse = new BatchResponseDto(101L, "PENDING");
     }
 
+    @SuppressWarnings("null")
     @Test
     void createBatch_ShouldReturnCreated() throws Exception {
         when(batchService.createBatch(any(BatchRequestDto.class))).thenReturn(mockResponse);

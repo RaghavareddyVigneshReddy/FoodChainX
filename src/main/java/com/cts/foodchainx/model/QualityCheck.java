@@ -58,8 +58,7 @@ public class QualityCheck {
      * <p><b>Annotation:</b> {@code @Lob} (Large Object) is used to allow for long, 
      * detailed text findings that might exceed standard VARCHAR limits.</p>
      */
-    @Lob
-    @Column(name = "findings")
+    @Column(name = "findings", columnDefinition="TEXT")
     private String findings;
 
     /**

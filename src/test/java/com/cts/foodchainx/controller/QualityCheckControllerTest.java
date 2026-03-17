@@ -55,6 +55,7 @@ class QualityCheckControllerTest {
         objectMapper.registerModule(new JavaTimeModule());
     }
 
+    @SuppressWarnings("null")
     @Test
     void performInspection_ShouldReturnSuccessMessage() throws Exception {
         QualityRequestDto requestDto = new QualityRequestDto();

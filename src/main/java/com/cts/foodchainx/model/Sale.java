@@ -45,7 +45,7 @@ public class Sale {
     /**
      * Foreign key reference to the original {@link ProductionBatch} for tracking purposes.
      */
-    @Column(name = "Batch_ID", nullable = false)
+    @Column(name = "batch_id", nullable = false)
     private Long batchId;
 
     /**
@@ -88,7 +88,7 @@ public class Sale {
      * Detailed Production Batch information for full-chain traceability lookups.
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "Batch_ID", insertable = false, updatable = false)
+    @JoinColumn(name = "batch_id", insertable = false, updatable = false)
     @JsonIgnore
     private ProductionBatch productionBatch;
 }
