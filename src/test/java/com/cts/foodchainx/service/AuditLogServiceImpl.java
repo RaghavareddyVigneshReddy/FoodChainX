@@ -41,6 +41,7 @@ class AuditLogServiceImplTest {
                 .build();
     }
 
+    @SuppressWarnings("null")
     @Test
     @DisplayName("log() - Should save AuditLog entry")
     void log_Success() {
@@ -70,6 +71,7 @@ class AuditLogServiceImplTest {
         when(auditLogRepository.findByUser(testUser)).thenReturn(List.of(logEntry));
 
         // Act
+        @SuppressWarnings("null")
         List<AuditLogResponse> results = auditLogService.getLogsForUser(testUser);
 
         // Assert
@@ -78,6 +80,7 @@ class AuditLogServiceImplTest {
         assertEquals(100L, results.get(0).userId());
     }
 
+    @SuppressWarnings("null")
     @Test
     @DisplayName("getLogsForUser() - Should throw AuditNotFoundException")
     void getLogsForUser_NotFound() {

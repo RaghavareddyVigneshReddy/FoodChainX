@@ -67,6 +67,7 @@ class LogisticsServiceTest {
         shipmentRequest.setArrivalDate(LocalDate.now().plusDays(3));
     }
 
+    @SuppressWarnings("null")
     @Test
     @DisplayName("Initiate Shipment - Success with Compliant Batch")
     void testInitiateShipment_Success() {
@@ -89,6 +90,7 @@ class LogisticsServiceTest {
         verify(traceRecordRepository, times(1)).save(any(TraceRecord.class));
     }
 
+    @SuppressWarnings("null")
     @Test
     @DisplayName("Initiate Shipment - Fails on Non-Compliant Quality")
     void testInitiateShipment_NonCompliant_ThrowsException() {
@@ -119,6 +121,7 @@ class LogisticsServiceTest {
         });
     }
 
+    @SuppressWarnings("null")
     @Test
     @DisplayName("Record Delivery - Success Updates Inventory and Traceability")
     void testRecordDelivery_Success() {

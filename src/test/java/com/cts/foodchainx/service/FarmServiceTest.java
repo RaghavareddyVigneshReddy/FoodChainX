@@ -43,17 +43,17 @@ class FarmServiceTest {
 
     private User sampleUser;
     private Farm sampleFarm;
-    private final String EMAIL = "farmer@example.com";
-    private final Long FARM_ID = 1L;
+    private final String email = "farmer@example.com";
+    private final Long farmId = 1L;
 
     @BeforeEach
     void setUp() {
         sampleUser = new User();
         sampleUser.setUserId(101L);
-        sampleUser.setEmail(EMAIL);
+        sampleUser.setEmail(email);
 
         sampleFarm = new Farm();
-        sampleFarm.setFarmId(FARM_ID);
+        sampleFarm.setFarmId(farmId);
         sampleFarm.setName("Green Valley");
         sampleFarm.setLocation("Texas");
         sampleFarm.setCertificationStatus(CertificationStatus.PENDING);
@@ -61,14 +61,15 @@ class FarmServiceTest {
     }
 
     // 1. Test Creating a Farm
+    @SuppressWarnings("null")
     @Test
     @DisplayName("Create Farm - Success")
     void testCreatingFarm_Success() {
         FarmRequestDto request = new FarmRequestDto("Green Valley", "Texas");
-        when(userRepository.findByEmailIgnoreCase(EMAIL)).thenReturn(Optional.of(sampleUser));
+        when(userRepository.findByEmailIgnoreCase(email)).thenReturn(Optional.of(sampleUser));
         when(farmRepository.save(any(Farm.class))).thenReturn(sampleFarm);
 
-        FarmResponseDto response = farmService.creatingfarm(request, EMAIL);
+        FarmResponseDto response = farmService.creatingfarm(request, email);
 
         assertNotNull(response);
         assertEquals("Green Valley", response.getName());
@@ -80,47 +81,50 @@ class FarmServiceTest {
     @Test
     @DisplayName("Get All Farms by Email - Success")
     void testGetAllFarmsByEmail() {
-        when(userRepository.findByEmailIgnoreCase(EMAIL)).thenReturn(Optional.of(sampleUser));
+        when(userRepository.findByEmailIgnoreCase(email)).thenReturn(Optional.of(sampleUser));
         when(farmRepository.findByFarmer_UserId(101L)).thenReturn(List.of(sampleFarm));
 
-        List<FarmResponseDto> result = farmService.getAllFarmsByFarmerEmail(EMAIL);
+        List<FarmResponseDto> result = farmService.getAllFarmsByFarmerEmail(email);
 
         assertFalse(result.isEmpty());
         assertEquals(1, result.size());
     }
 
     // 3. Test Update Status - SUCCESS (Using APPROVED)
+    @SuppressWarnings("null")
     @Test
     @DisplayName("Update Status - Success with APPROVED")
     void testUpdateStatus_Success() {
-        when(farmRepository.findById(FARM_ID)).thenReturn(Optional.of(sampleFarm));
+        when(farmRepository.findById(farmId)).thenReturn(Optional.of(sampleFarm));
         when(farmRepository.save(any(Farm.class))).thenReturn(sampleFarm);
 
-        FarmResponseDto response = farmService.updateStatus(FARM_ID, CertificationStatus.APPROVED);
+        FarmResponseDto response = farmService.updateStatus(farmId, CertificationStatus.APPROVED);
 
         assertEquals(CertificationStatus.APPROVED.name(), response.getCertificationStatus());
     }
 
     // 4. Test Delete Farm - Success (Owner)
+    @SuppressWarnings("null")
     @Test
     @DisplayName("Delete Farm - Success as Owner")
     void testDeleteFarm_Success() {
-        when(farmRepository.findById(FARM_ID)).thenReturn(Optional.of(sampleFarm));
+        when(farmRepository.findById(farmId)).thenReturn(Optional.of(sampleFarm));
 
-        String result = farmService.deleteFarm(FARM_ID, EMAIL);
+        String result = farmService.deleteFarm(farmId, email);
 
         assertEquals("Farm removed.", result);
         verify(farmRepository, times(1)).delete(sampleFarm);
     }
 
     // 5. Test Delete Farm - Unauthorized (Not Owner)
+    @SuppressWarnings("null")
     @Test
     @DisplayName("Delete Farm - Unauthorized if user is not the owner")
     void testDeleteFarm_Unauthorized() {
-        when(farmRepository.findById(FARM_ID)).thenReturn(Optional.of(sampleFarm));
+        when(farmRepository.findById(farmId)).thenReturn(Optional.of(sampleFarm));
 
         assertThrows(RuntimeException.class, () -> {
-            farmService.deleteFarm(FARM_ID, "wrong@email.com");
+            farmService.deleteFarm(farmId, "wrong@email.com");
         });
 
         verify(farmRepository, never()).delete(any());
