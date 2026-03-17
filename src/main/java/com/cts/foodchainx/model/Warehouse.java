@@ -45,6 +45,9 @@ public class Warehouse {
 
     @Column(name = "Capacity", nullable = false)
     private Long capacity;
+    
+    @Column(name = "Current_Stock_Level", nullable = false)
+    private Long currentStockLevel = 0L;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "Status", length = 50, nullable = false)

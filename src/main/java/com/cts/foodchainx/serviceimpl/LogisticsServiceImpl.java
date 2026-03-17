@@ -19,8 +19,9 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Implementation of LogisticsService handling business rules for the supply chain.
- * Manages the transition of goods between farms, distributors, and retailers.
+ * Implementation of {@link LogisticsService} handling business rules for the food supply chain.
+ * This service manages the physical transition of goods between participants (Farms, Distributors, Retailers)
+ * while ensuring warehouse capacity constraints and real-time inventory synchronization.
  */
 @Service
 @Slf4j
@@ -35,6 +36,40 @@ public class LogisticsServiceImpl implements LogisticsService {
     private final UserRepository userRepository;
     private final InventoryRepository inventoryRepository;
 
+    /**
+     * Registers a new warehouse facility for a distributor.
+     * Initializes the facility with zero stock and an 'AVAILABLE' status.
+     *
+     * @param request the warehouse details including location, capacity, and distributor ID
+     * @return the persisted {@link WarehouseResponseDTO}
+     * @throws EntityNotFoundException if the associated distributor user is not found
+     */
+    @Override
+    @Transactional
+    public WarehouseResponseDTO registerWarehouse(@NonNull WarehouseRequestDTO request) {
+        User distributorObj = userRepository.findById(request.getDistributorId())
+                .orElseThrow(() -> new EntityNotFoundException("Distributor not found"));
+
+        Warehouse warehouse = new Warehouse();
+        warehouse.setDistributor(distributorObj);
+        warehouse.setLocation(request.getLocation());
+        warehouse.setCapacity(request.getCapacity());
+        
+        // Use 0.0 to match the Double type in the entity
+        warehouse.setCurrentStockLevel(0.0); 
+        warehouse.setStatus(WarehouseStatus.AVAILABLE);
+
+        Warehouse saved = warehouseRepository.save(warehouse);
+        log.info("New warehouse registered at {} for distributor {}", saved.getLocation(), distributorObj.getUserId());
+        return convertToWarehouseResponseDTO(saved);
+    }
+
+    /**
+     * Initiates the shipment of a production batch from a farm to a distributor.
+     *
+     * @param request details containing the batch ID, distributor ID, and schedule
+     * @return the created {@link ShipmentResponseDTO}
+     */
     @Override
     @Transactional
     @Auditable(action = "INITIATE_SHIPMENT", resource = "LOGISTICS")
@@ -57,7 +92,6 @@ public class LogisticsServiceImpl implements LogisticsService {
         shipment.setArrivalDate(request.getArrivalDate());
         shipment.setStatus(ShipmentStatus.IN_TRANSIT);
 
-        // Logging the physical movement in TraceRecord
         TraceRecord shipmentTrace = new TraceRecord();
         shipmentTrace.setProductionBatch(batchObj);
         shipmentTrace.setFarm(batchObj.getFarm());
@@ -70,6 +104,14 @@ public class LogisticsServiceImpl implements LogisticsService {
         return convertToShipmentResponseDTO(shipmentRepository.save(shipment));
     }
 
+    /**
+     * Updates shipment status and handles warehouse receiving logic.
+     *
+     * @param id the unique shipment ID
+     * @param request the status update payload
+     * @return the updated {@link ShipmentResponseDTO}
+     * @throws WarehouseCapacityException if receiving the shipment would exceed warehouse limits
+     */
     @Override
     @Transactional
     @Auditable(action = "UPDATE_SHIPMENT_STATUS", resource = "LOGISTICS")
@@ -80,6 +122,23 @@ public class LogisticsServiceImpl implements LogisticsService {
         shipment.setStatus(request.getStatus());
 
         if (request.getStatus() == ShipmentStatus.DELIVERED) {
+            Warehouse warehouse = warehouseRepository.findByDistributor_UserId(shipment.getDistributor().getUserId())
+                    .stream().findFirst()
+                    .orElseThrow(() -> new EntityNotFoundException("No warehouse found for the distributor"));
+
+            double incomingQty = shipment.getBatch().getQuantity();
+            double updatedStock = warehouse.getCurrentStockLevel() + incomingQty;
+
+            if (updatedStock > (double) warehouse.getCapacity()) {
+                throw new WarehouseCapacityException("Cannot receive shipment: Warehouse capacity exceeded");
+            }
+
+            warehouse.setCurrentStockLevel(updatedStock);
+            if (updatedStock == (double) warehouse.getCapacity()) {
+                warehouse.setStatus(WarehouseStatus.FULL);
+            }
+            warehouseRepository.save(warehouse);
+
             traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(shipment.getBatch().getProductionId())
                 .stream()
                 .findFirst()
@@ -87,23 +146,24 @@ public class LogisticsServiceImpl implements LogisticsService {
                     traceRecord.setStatus(TraceStatus.ARRIVED_AT_WAREHOUSE);
                     traceRecordRepository.save(traceRecord);
                 });
-            log.info("Shipment {} marked as DELIVERED", id);
+            
+            log.info("Shipment {} received. Warehouse {} stock increased to {}", id, warehouse.getWarehouseId(), updatedStock);
         }
         
         return convertToShipmentResponseDTO(shipmentRepository.save(shipment));
     }
 
+    /**
+     * Finalizes the delivery of a batch from the warehouse to a retail store.
+     *
+     * @param request payload containing warehouse, shipment, and retailer identifiers
+     */
     @Override
     @Transactional
     @Auditable(action = "RECORD_DELIVERY", resource = "LOGISTICS")
     public void recordDelivery(@NonNull DeliveryRequestDTO request) {
         Warehouse warehouse = warehouseRepository.findById(Objects.requireNonNull(request.getWarehouseId()))
                 .orElseThrow(() -> new EntityNotFoundException("Warehouse not found"));
-
-        if (warehouse.getStatus() == WarehouseStatus.FULL) {
-           log.error("Delivery failed: Warehouse {} is full", warehouse.getWarehouseId());
-           throw new WarehouseCapacityException("Warehouse " + warehouse.getWarehouseId() + " is at maximum capacity");
-        }
 
         Shipment shipment = shipmentRepository.findById(Objects.requireNonNull(request.getShipmentId()))
                 .orElseThrow(() -> new EntityNotFoundException("Shipment not found"));
@@ -112,6 +172,17 @@ public class LogisticsServiceImpl implements LogisticsService {
                 .orElseThrow(() -> new EntityNotFoundException("Retailer user not found"));
 
         ProductionBatch batch = shipment.getBatch();
+
+        // Stock reduction logic with explicit double handling
+        double departingQty = batch.getQuantity();
+        double updatedStock = Math.max(0.0, warehouse.getCurrentStockLevel() - departingQty);
+        warehouse.setCurrentStockLevel(updatedStock);
+
+        if (updatedStock < (double) warehouse.getCapacity()) {
+            warehouse.setStatus(WarehouseStatus.AVAILABLE);
+        }
+        warehouseRepository.save(warehouse);
+
         shipment.setStatus(ShipmentStatus.DELIVERED);
         shipmentRepository.save(shipment);
 
@@ -123,15 +194,14 @@ public class LogisticsServiceImpl implements LogisticsService {
         delivery.setStatus(ShipmentStatus.DELIVERED);
         deliveryRepository.save(delivery);
 
-        // Update Retailer Inventory
+        // Retailer Inventory Initialization - Explicit cast from double to long
         Inventory newInventory = new Inventory();
         newInventory.setBatchId(batch.getProductionId());
         newInventory.setRetailerId(retailerObj.getUserId()); 
-        long quantity = batch.getQuantity().longValue();
+        long quantity = batch.getQuantity().longValue(); // Use longValue() helper
         newInventory.setQuantity(quantity); 
         newInventory.setDateAdded(LocalDate.now());
 
-        // Dynamic stock status mapping
         if (quantity == 0) {
             newInventory.setStatus(InventoryStatus.OUT_OF_STOCK);
         } else if (quantity <= 10) {
@@ -139,10 +209,8 @@ public class LogisticsServiceImpl implements LogisticsService {
         } else {
             newInventory.setStatus(InventoryStatus.AVAILABLE);
         }
-        
         inventoryRepository.save(newInventory);
 
-        // Final Traceability link
         TraceRecord deliveryTrace = new TraceRecord();
         deliveryTrace.setProductionBatch(batch);
         deliveryTrace.setFarm(batch.getFarm());
@@ -152,19 +220,24 @@ public class LogisticsServiceImpl implements LogisticsService {
         deliveryTrace.setDate(LocalDate.now());
         traceRecordRepository.save(deliveryTrace);
         
-        log.info("Delivery recorded. Batch {} is now inventory for Retailer {}", batch.getProductionId(), retailerObj.getUserId());
+        log.info("Delivery recorded. Warehouse {} stock decreased to {}. Batch {} moved to Retailer {}", 
+                warehouse.getWarehouseId(), updatedStock, batch.getProductionId(), retailerObj.getUserId());
     }
 
     @Override
     public List<WarehouseResponseDTO> getAllWarehouses() {
         return warehouseRepository.findAll().stream()
-                .map(w -> WarehouseResponseDTO.builder()
-                        .warehouseId(w.getWarehouseId())
-                        .location(w.getLocation())
-                        .capacity(w.getCapacity())
-                        .status(w.getStatus())
-                        .build())
+                .map(this::convertToWarehouseResponseDTO)
                 .toList();
+    }
+
+    private WarehouseResponseDTO convertToWarehouseResponseDTO(Warehouse w) {
+        return WarehouseResponseDTO.builder()
+                .warehouseId(w.getWarehouseId())
+                .location(w.getLocation())
+                .capacity(w.getCapacity())
+                .status(w.getStatus())
+                .build();
     }
 
     private ShipmentResponseDTO convertToShipmentResponseDTO(Shipment s) {
