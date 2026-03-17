@@ -16,8 +16,9 @@ public class Notification {
     @Column(name = "Notification_ID")
     private long notificationId;
 
-    @ManyToOne(fetch = FetchType.EAGER) // Change from LAZY to EAGER to ensure user is loaded
-    @JoinColumn(name = "User_ID", nullable = false)
+    @ManyToOne(fetch = FetchType.EAGER)
+    // Change "User_ID" to "userid" to match your MySQL column name
+    @JoinColumn(name = "user_id", nullable = false) 
     private User user;
 
     @Column(name = "Entity_ID")
