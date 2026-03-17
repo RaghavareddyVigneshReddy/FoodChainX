@@ -73,6 +73,7 @@ class SaleServiceTest {
         traceRecord = new TraceRecord();
     }
 
+    @SuppressWarnings("null")
     @Test
     void testCreateSale() {
 

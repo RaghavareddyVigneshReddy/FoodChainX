@@ -74,6 +74,7 @@ class NotificationServiceTest {
         assertEquals("Test Alert", result.get(0).getMessage());
     }
 
+    @SuppressWarnings("null")
     @Test
     void testMarkAsRead_Success() {
         // FIXED: 101L
@@ -85,6 +86,7 @@ class NotificationServiceTest {
         assertEquals("READ", result.getStatus());
     }
 
+    @SuppressWarnings("null")
     @Test
     void testCreateNotification_Success() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(mockUser));

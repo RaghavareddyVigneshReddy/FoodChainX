@@ -55,6 +55,7 @@ class FarmControllerTest {
         mockResponse = new FarmResponseDto(1L, "Green Valley", "California", "PENDING");
     }
 
+    @SuppressWarnings("null")
     @Test
     void registerFarm_ShouldReturnOk() throws Exception {
         when(farmService.creatingfarm(any(), any())).thenReturn(mockResponse);
@@ -68,6 +69,7 @@ class FarmControllerTest {
             .andExpect(jsonPath("$.name").value("Green Valley"));
     }
 
+    @SuppressWarnings("null")
     @Test
     void getMyFarms_ShouldReturnList() throws Exception {
         when(farmService.getAllFarmsByFarmerEmail(any())).thenReturn(List.of(mockResponse));
@@ -91,6 +93,7 @@ class FarmControllerTest {
             .andExpect(jsonPath("$.certificationStatus").value("APPROVED"));
     }
 
+    @SuppressWarnings("null")
     @Test
     void removeFarm_ShouldReturnSuccessMessage() throws Exception {
         String successMsg = "Farm deleted successfully";

@@ -38,6 +38,7 @@ class AuditServiceImplTest {
         testAudit.setScope("Annual Supply Chain Review");
     }
 
+    @SuppressWarnings("null")
     @Test
     @DisplayName("Should initialize and save a new audit record")
     void createAudit_Success() {
@@ -54,6 +55,7 @@ class AuditServiceImplTest {
         verify(auditRepository, times(1)).save(testAudit);
     }
 
+    @SuppressWarnings("null")
     @Test
     @DisplayName("Should transition audit status to CLOSED when found")
     void closeAudit_Success() {
@@ -71,6 +73,7 @@ class AuditServiceImplTest {
         verify(auditRepository).save(testAudit);
     }
 
+    @SuppressWarnings("null")
     @Test
     @DisplayName("Should throw exception when closing non-existent audit")
     void closeAudit_NotFound() {
