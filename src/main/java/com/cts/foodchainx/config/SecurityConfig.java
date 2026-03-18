@@ -128,6 +128,12 @@ public class SecurityConfig {
                 })
             )
             .authorizeHttpRequests(auth -> auth
+                // --- NEW: Swagger/OpenAPI Public Endpoints ---
+                .requestMatchers(
+                    "/v3/api-docs/**",
+                    "/swagger-ui/**",
+                    "/swagger-ui.html"
+                ).permitAll()
                 // Publicly accessible paths (Auth, Health, Consumer Portal)
                 .requestMatchers("/api/auth/**", "/foodchainx/auth/**", "/actuator/health").permitAll()
                 .requestMatchers("/foodchainx/notifications/**", "/notifications/**").permitAll()

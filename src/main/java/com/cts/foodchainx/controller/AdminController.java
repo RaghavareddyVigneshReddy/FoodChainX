@@ -9,6 +9,12 @@ import com.cts.foodchainx.service.AuditLogService;
 import com.cts.foodchainx.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 
 import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -29,6 +35,8 @@ import java.util.Objects;
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
+@Tag(name = "2. Admin Management", description = "High-privileged tasks for ADMIN and REGULATOR roles")
+@SecurityRequirement(name = "Bearer Authentication") // Applies the lock icon to all endpoints in this class
 public class AdminController {
 
     private final AuthService userService;
@@ -39,7 +47,16 @@ public class AdminController {
      * Retrieves a list of all registered users in the system.
      * * @return A list of {@link UserResponse} DTOs.
      * @throws org.springframework.security.access.AccessDeniedException if user lacks ADMIN or REGULATOR roles.
+     * 
      */
+    @Operation(
+        summary = "List All Users", 
+        description = "Returns a complete list of users. Accessible by ADMIN and REGULATOR."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved list"),
+        @ApiResponse(responseCode = "403", description = "Insufficient permissions")
+    })
     @GetMapping("/users")
     @PreAuthorize("hasRole('ADMIN') or hasRole('REGULATOR')")
     public List<UserResponse> listUsers() {
@@ -57,6 +74,15 @@ public class AdminController {
      * @param actor The currently authenticated administrator performing the action.
      * @return The updated {@link UserResponse}.
      */
+    @Operation(
+        summary = "Update User Status", 
+        description = "Change a user's status (ACTIVE/SUSPENDED). Strictly limited to ADMIN users."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Status updated and logged"),
+        @ApiResponse(responseCode = "404", description = "User ID not found"),
+        @ApiResponse(responseCode = "403", description = "Only ADMIN can perform this action")
+    })
     @PatchMapping("/users/{userId}/status")
     @PreAuthorize("hasRole('ADMIN')")
     public UserResponse updateStatus(@PathVariable @NonNull Long userId,
@@ -87,6 +113,14 @@ public class AdminController {
      * </p>
      * * @return A list of all {@link AuditLogResponse} entries.
      */
+    @Operation(
+        summary = "Fetch Global Audit Logs", 
+        description = "Aggregates all system activity logs. Used primarily for regulatory compliance."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Logs retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Authentication token missing or invalid")
+    })
     @SuppressWarnings("null")
     @GetMapping("/audit-logs")
     @PreAuthorize("hasRole('ADMIN') or hasRole('REGULATOR')")
