@@ -42,6 +42,7 @@ class AdminControllerTest {
 
     @MockitoBean private JwtService jwtService;
 
+    @SuppressWarnings("null")
     @Test
     @DisplayName("PATCH /status - Success for ADMIN")
     void updateStatus_AdminSuccess() throws Exception {
@@ -61,6 +62,7 @@ class AdminControllerTest {
                 .andExpect(status().isOk());
     }
 
+    @SuppressWarnings("null")
     @Test
     @DisplayName("PATCH /status - Forbidden for FARMER")
     void updateStatus_FarmerForbidden() throws Exception {

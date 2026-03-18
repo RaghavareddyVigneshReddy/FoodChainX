@@ -47,6 +47,22 @@ public class LogisticsController {
     }
 
     /**
+     * Registers a new warehouse facility in the supply chain.
+     * <p>
+     * maximum capacity. The warehouse is initialized with a current stock level of zero 
+     * and set to an AVAILABLE status by default.
+     * </p>
+     * * @param request the warehouse details including distributor ID, location, and capacity
+     * @return the created WarehouseResponseDTO with assigned ID and status, with HTTP 201 status
+     */
+    @PostMapping("/warehouses")
+    public ResponseEntity<WarehouseResponseDTO> createWarehouse(
+        @Valid @RequestBody @NonNull WarehouseRequestDTO request) {
+            return new ResponseEntity<>(logisticsService.registerWarehouse(request), HttpStatus.CREATED);
+    }
+    
+
+    /**
      * Retrieves a list of all registered warehouses.
      * * @return a list of WarehouseResponseDTOs
      */

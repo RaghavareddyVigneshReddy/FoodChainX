@@ -47,20 +47,20 @@ class QualityCheckServiceTest {
     private ProductionBatch sampleBatch;
     private User sampleInspector;
     private QualityCheck sampleCheck;
-    private final Long BATCH_ID = 200L;
-    private final Long QUALITY_ID = 1L;
+    private final Long batchId = 200L;
+    private final Long qualityId = 1L;
 
     @BeforeEach
     void setUp() {
         sampleBatch = new ProductionBatch();
-        sampleBatch.setProductionId(BATCH_ID);
+        sampleBatch.setProductionId(batchId);
         sampleBatch.setQualityStatus(QualityStatus.PENDING); // Updated to Enum
 
         sampleInspector = new User();
         sampleInspector.setUserId(10L);
 
         sampleCheck = QualityCheck.builder()
-                .qualityId(QUALITY_ID)
+                .qualityId(qualityId)
                 .batch(sampleBatch)
                 .inspector(sampleInspector)
                 .status(QualityStatus.PASSED) // Updated to Enum
@@ -69,13 +69,14 @@ class QualityCheckServiceTest {
                 .build();
     }
 
+    @SuppressWarnings("null")
     @Test
     @DisplayName("Inspect Batch - Success and Trace Update")
     void testInspectBatch_Success() {
         // Arrange
-        QualityRequestDto request = new QualityRequestDto(BATCH_ID, 10L, "Passed test", QualityStatus.PASSED);
+        QualityRequestDto request = new QualityRequestDto(batchId, 10L, "Passed test", QualityStatus.PASSED);
 
-        when(batchRepo.findById(BATCH_ID)).thenReturn(Optional.of(sampleBatch));
+        when(batchRepo.findById(batchId)).thenReturn(Optional.of(sampleBatch));
         when(userRepo.findById(10L)).thenReturn(Optional.of(sampleInspector));
         when(qualityRepo.save(any(QualityCheck.class))).thenReturn(sampleCheck);
 
@@ -106,15 +107,16 @@ class QualityCheckServiceTest {
         verify(qualityRepo, times(1)).findByStatus(QualityStatus.PASSED);
     }
 
+    @SuppressWarnings("null")
     @Test
     @DisplayName("Remove Quality Log - Reset to PENDING")
     void testRemoveQualityLog_Success() {
         // Arrange
         sampleBatch.setQualityStatus(QualityStatus.PASSED);
-        when(qualityRepo.findById(QUALITY_ID)).thenReturn(Optional.of(sampleCheck));
+        when(qualityRepo.findById(qualityId)).thenReturn(Optional.of(sampleCheck));
 
         // Act
-        String result = qualityCheckService.removeQualityLog(QUALITY_ID);
+        String result = qualityCheckService.removeQualityLog(qualityId);
 
         // Assert
         assertTrue(result.contains("reset to PENDING"));

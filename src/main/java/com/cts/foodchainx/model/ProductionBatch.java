@@ -26,7 +26,7 @@ public class ProductionBatch {
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "batch_id")
+    @Column(name = "batch_id") // Keep this lowercase snake_case
     private Long productionId;
 
     /**

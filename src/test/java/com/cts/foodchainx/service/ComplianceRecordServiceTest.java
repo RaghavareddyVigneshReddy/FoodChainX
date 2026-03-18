@@ -43,6 +43,7 @@ class ComplianceRecordServiceTest {
                 .build();
     }
 
+    @SuppressWarnings("null")
     @Test
     @DisplayName("Should set current date and save compliance record")
     void createComplianceRecord_Success() {

@@ -82,7 +82,8 @@ class NotificationControllerTest {
                 .andExpect(jsonPath("$.message").value("Notification updated to read successfully"));
     }
 
-    @Test
+    @SuppressWarnings("null")
+@Test
     void createInternal_ShouldReturnCreated() throws Exception {
         NotificationRequestDTO requestDTO = new NotificationRequestDTO();
         requestDTO.setUserId(1L);

@@ -97,6 +97,7 @@ class AuthServiceImplTest {
         assertThrows(InvalidCredentialsException.class, () -> authService.login(req));
     }
 
+    @SuppressWarnings("null")
     @Test
     @DisplayName("login() - Success should return token and log audit")
     void login_Success() {

@@ -43,6 +43,7 @@ class InventoryServiceImplTest {
         inventory.setStatus(InventoryStatus.AVAILABLE); 
     }
 
+    @SuppressWarnings("null")
     @Test
     void testCreateInventory_ShouldSetStatusToAvailable() {
         // We expect the service to calculate status based on quantity (50 > 10)
@@ -55,6 +56,7 @@ class InventoryServiceImplTest {
         verify(inventoryRepository).save(inventory);
     }
 
+    @SuppressWarnings("null")
     @Test
     void testCreateInventory_ShouldSetStatusToLowStock() {
         // Setup inventory with low quantity

@@ -44,7 +44,8 @@ class AuthControllerTest {
     @MockitoBean
     private JwtService jwtService; // Mocked to satisfy the security context
 
-    @Test
+    @SuppressWarnings("null")
+@Test
     @DisplayName("POST /api/auth/register - Success returns 201 Created")
     void register_Success() throws Exception {
         // Arrange - Note the order: name, role, email, phone, password
@@ -77,7 +78,8 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.status").value("ACTIVE"));
     }
 
-    @Test
+    @SuppressWarnings("null")
+@Test
     @DisplayName("POST /api/auth/login - Success returns 200 OK")
     void login_Success() throws Exception {
         // Arrange
@@ -95,7 +97,8 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.tokenType").value("Bearer"));
     }
 
-    @Test
+    @SuppressWarnings("null")
+@Test
     @DisplayName("POST /api/auth/register - Returns 400 on Validation Failure")
     void register_ValidationFailure() throws Exception {
         // Act & Assert (Empty JSON to trigger @Validated constraints)
