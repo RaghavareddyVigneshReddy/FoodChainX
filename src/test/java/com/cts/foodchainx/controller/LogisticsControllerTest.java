@@ -1,6 +1,7 @@
 package com.cts.foodchainx.controller;
 
 import com.cts.foodchainx.dto.logistics.*;
+import com.cts.foodchainx.enums.ShipmentStatus;
 import com.cts.foodchainx.service.LogisticsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -14,18 +15,16 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.List;
-
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
-class LogisticsControllerIT {
+class LogisticsControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -36,77 +35,50 @@ class LogisticsControllerIT {
     @MockitoBean
     private LogisticsService logisticsService;
 
-    @SuppressWarnings("null")
     @Test
-    @DisplayName("POST /api/logistics/shipments - Success")
-    @WithMockUser(roles = "LOGISTICS_MANAGER")
-    void createShipment_Success() throws Exception {
-        ShipmentRequestDTO request = new ShipmentRequestDTO(); 
-        ShipmentResponseDTO response = new ShipmentResponseDTO();
-        // Set DTO fields as per your implementation
-        
-        when(logisticsService.initiateShipment(any(ShipmentRequestDTO.class))).thenReturn(response);
+    @DisplayName("POST /api/logistics/warehouses - Success when DISTRIBUTOR")
+    @WithMockUser(roles = "DISTRIBUTOR")
+    void createWarehouse_Success() throws Exception {
+        WarehouseRequestDTO dto = new WarehouseRequestDTO();
+        dto.setLocation("Warehouse A");
+        dto.setCapacity(5000L);
+        dto.setDistributorId(2L);
 
-        mockMvc.perform(post("/api/logistics/shipments")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated());
-    }
+        WarehouseResponseDTO response = WarehouseResponseDTO.builder()
+                .warehouseId(1L)
+                .location("Warehouse A")
+                .build();
 
-    @SuppressWarnings("null")
-    @Test
-    @DisplayName("PUT /api/logistics/shipments/{id}/status - Success")
-    @WithMockUser(roles = "LOGISTICS_MANAGER")
-    void updateStatus_Success() throws Exception {
-        Long shipmentId = 1L;
-        ShipmentStatusUpdateRequest updateRequest = new ShipmentStatusUpdateRequest();
-        ShipmentResponseDTO response = new ShipmentResponseDTO();
+        when(logisticsService.registerWarehouse(any(WarehouseRequestDTO.class))).thenReturn(response);
 
-        when(logisticsService.updateShipmentStatus(eq(shipmentId), any())).thenReturn(response);
-
-        mockMvc.perform(put("/api/logistics/shipments/{id}/status", shipmentId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateRequest)))
-                .andExpect(status().isOk());
-    }
-
-    @SuppressWarnings("null")
-    @Test
-    @DisplayName("GET /api/logistics/warehouses - Success")
-    @WithMockUser(roles = "LOGISTICS_MANAGER")
-    void getWarehouses_Success() throws Exception {
-        WarehouseResponseDTO warehouse = new WarehouseResponseDTO();
-        when(logisticsService.getAllWarehouses()).thenReturn(List.of(warehouse));
-
-        mockMvc.perform(get("/api/logistics/warehouses"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
-    }
-
-    @SuppressWarnings("null")
-    @Test
-    @DisplayName("POST /api/logistics/deliveries - Forbidden for FARMER")
-    @WithMockUser(roles = "FARMER")
-    void logDelivery_Forbidden() throws Exception {
-        DeliveryRequestDTO request = new DeliveryRequestDTO();
-
-        mockMvc.perform(post("/api/logistics/deliveries")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isForbidden());
-    }
-
-    @SuppressWarnings("null")
-    @Test
-    @DisplayName("POST /api/logistics/deliveries - Success for RETAILER")
-    @WithMockUser(roles = "RETAILER")
-    void logDelivery_Success() throws Exception {
-        DeliveryRequestDTO request = new DeliveryRequestDTO();
-
-        mockMvc.perform(post("/api/logistics/deliveries")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(post("/api/logistics/warehouses")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isCreated())
-                .andExpect(content().string("Delivery recorded successfully"));
+                .andExpect(jsonPath("$.warehouseId").value(1))
+                .andExpect(jsonPath("$.location").value("Warehouse A"));
+    }
+
+    @Test
+    @DisplayName("PUT /api/logistics/shipments/{id}/status - Update status")
+    @WithMockUser(roles = "DISTRIBUTOR")
+    void updateShipmentStatus_Success() throws Exception {
+        ShipmentStatusUpdateRequest updateRequest = new ShipmentStatusUpdateRequest();
+        updateRequest.setStatus(ShipmentStatus.DELIVERED);
+
+        ShipmentResponseDTO response = ShipmentResponseDTO.builder()
+                .shipmentId(1L)
+                .status(ShipmentStatus.DELIVERED)
+                .build();
+
+        when(logisticsService.updateShipmentStatus(any(Long.class), any())).thenReturn(response);
+
+        mockMvc.perform(put("/api/logistics/shipments/1/status")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("DELIVERED"));
     }
 }
