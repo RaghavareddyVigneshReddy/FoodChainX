@@ -28,4 +28,6 @@ public class WarehouseResponseDTO {
 
     /** The current status of the facility (e.g., Available, Full, Inactive) */
     private WarehouseStatus status;
+
+    private Long currentStockLevel;
 }
