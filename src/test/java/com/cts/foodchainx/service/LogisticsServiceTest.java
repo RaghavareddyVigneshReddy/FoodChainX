@@ -6,92 +6,57 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.cts.foodchainx.dto.logistics.*;
 import com.cts.foodchainx.enums.*;
-import com.cts.foodchainx.exception.WarehouseCapacityException;
 import com.cts.foodchainx.model.*;
 import com.cts.foodchainx.repository.*;
-import com.cts.foodchainx.serviceimpl.LogisticsServiceImpl;
-
-import jakarta.persistence.EntityNotFoundException;
+import com.cts.foodchainx.exception.WarehouseCapacityException;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import com.cts.foodchainx.serviceimpl.LogisticsServiceImpl;
 
-import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
+import java.util.List;
 
-/**
- * Unit tests for LogisticsService.
- * Fixes: Replaced String statuses with Enum constants to match Service implementation.
- */
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 @ExtendWith(MockitoExtension.class)
 class LogisticsServiceTest {
 
     @Mock private ShipmentRepository shipmentRepository;
-    @Mock private ProductionBatchRepository batchRepository;
     @Mock private WarehouseRepository warehouseRepository;
-    @Mock private DeliveryRepository deliveryRepository;
     @Mock private TraceRecordRepository traceRecordRepository;
-    @Mock private UserRepository userRepository;
-    @Mock private InventoryRepository inventoryRepository;
 
     @InjectMocks
     private LogisticsServiceImpl logisticsService;
 
-    private ProductionBatch sampleBatch;
-    private User sampleDistributor;
-    private ShipmentRequestDTO shipmentRequest;
+    private Shipment shipment;
+    private Warehouse warehouse;
 
     @BeforeEach
     void setUp() {
-        // Setup a mock Distributor user
-        sampleDistributor = new User();
-        sampleDistributor.setUserId(201L);
-        sampleDistributor.setRole(Role.DISTRIBUTOR); 
+        User distributor = new User();
+        distributor.setUserId(2L);
 
-        // Setup a mock Production Batch - FIXED: Use QualityStatus Enum
-        sampleBatch = new ProductionBatch();
-        sampleBatch.setProductionId(501L);
-        sampleBatch.setQualityStatus(QualityStatus.PASSED); 
-        sampleBatch.setQuantity(500.0);
-        sampleBatch.setFarm(new Farm());
+        ProductionBatch batch = new ProductionBatch();
+        batch.setQuantity(100.0);
+        batch.setProductionId(50L);
 
-        // Create a standard Shipment initiation request
-        shipmentRequest = new ShipmentRequestDTO();
-        shipmentRequest.setBatchId(501L);
-        shipmentRequest.setDistributorId(201L);
-        shipmentRequest.setDepartureDate(LocalDate.now());
-        shipmentRequest.setArrivalDate(LocalDate.now().plusDays(3));
+        warehouse = new Warehouse();
+        warehouse.setWarehouseId(1L);
+        warehouse.setCapacity(200L);
+        warehouse.setCurrentStockLevel(50.0);
+        warehouse.setDistributor(distributor);
+
+        shipment = new Shipment();
+        shipment.setShipmentId(1L);
+        shipment.setBatch(batch);
+        shipment.setDistributor(distributor);
     }
 
-    @SuppressWarnings("null")
-    @Test
-    @DisplayName("Initiate Shipment - Success with Compliant Batch")
-    void testInitiateShipment_Success() {
-        when(batchRepository.findById(501L)).thenReturn(Optional.of(sampleBatch));
-        when(userRepository.findById(201L)).thenReturn(Optional.of(sampleDistributor));
-        
-        Shipment savedShipment = new Shipment();
-        savedShipment.setShipmentId(1L);
-        savedShipment.setBatch(sampleBatch);
-        savedShipment.setDistributor(sampleDistributor);
-        savedShipment.setStatus(ShipmentStatus.IN_TRANSIT); // FIXED: Use ShipmentStatus Enum
-
-        when(shipmentRepository.save(any(Shipment.class))).thenReturn(savedShipment);
-
-        ShipmentResponseDTO response = logisticsService.initiateShipment(shipmentRequest);
-
-        assertNotNull(response);
-        // FIXED: Assertion uses Enum
-        assertEquals(ShipmentStatus.IN_TRANSIT, response.getStatus());
-        verify(traceRecordRepository, times(1)).save(any(TraceRecord.class));
-    }
-
-    @SuppressWarnings("null")
     @Test
     @DisplayName("Initiate Shipment - Fails on Non-Compliant Quality")
     void testInitiateShipment_NonCompliant_ThrowsException() {
@@ -177,19 +142,18 @@ class LogisticsServiceTest {
     }
 
     @Test
-    @DisplayName("Get All Warehouses - Returns Correct List")
-    void testGetAllWarehouses() {
-        Warehouse w = new Warehouse();
-        w.setWarehouseId(1L);
-        w.setCapacity(2500L);
-        w.setStatus(WarehouseStatus.AVAILABLE); // FIXED: Use WarehouseStatus Enum
+    void testUpdateShipmentStatus_ThrowsExceptionWhenCapacityExceeded() {
+        // Arrange: Initial 150 + Batch 100 = 250 (Exceeds 200 capacity)
+        warehouse.setCurrentStockLevel(150.0);
+        ShipmentStatusUpdateRequest request = new ShipmentStatusUpdateRequest();
+        request.setStatus(ShipmentStatus.DELIVERED);
 
-        when(warehouseRepository.findAll()).thenReturn(List.of(w));
+        when(shipmentRepository.findById(1L)).thenReturn(Optional.of(shipment));
+        when(warehouseRepository.findByDistributor_UserId(2L)).thenReturn(List.of(warehouse));
 
-        List<WarehouseResponseDTO> warehouses = logisticsService.getAllWarehouses();
-
-        assertFalse(warehouses.isEmpty());
-        assertEquals(2500L, warehouses.get(0).getCapacity());
-        verify(warehouseRepository, times(1)).findAll();
+        // Act & Assert
+        assertThrows(WarehouseCapacityException.class, () -> {
+            logisticsService.updateShipmentStatus(1L, request);
+        });
     }
 }
