@@ -9,19 +9,19 @@ import com.cts.foodchainx.enums.*;
 import com.cts.foodchainx.model.*;
 import com.cts.foodchainx.repository.*;
 import com.cts.foodchainx.exception.WarehouseCapacityException;
+import com.cts.foodchainx.serviceimpl.LogisticsServiceImpl;
+import jakarta.persistence.EntityNotFoundException;
+
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import com.cts.foodchainx.serviceimpl.LogisticsServiceImpl;
 
+import java.time.LocalDate;
 import java.util.Optional;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class LogisticsServiceTest {
@@ -29,131 +29,124 @@ class LogisticsServiceTest {
     @Mock private ShipmentRepository shipmentRepository;
     @Mock private WarehouseRepository warehouseRepository;
     @Mock private TraceRecordRepository traceRecordRepository;
+    @Mock private ProductionBatchRepository batchRepository;
+    @Mock private UserRepository userRepository;
+    @Mock private InventoryRepository inventoryRepository;
+    @Mock private DeliveryRepository deliveryRepository;
 
     @InjectMocks
     private LogisticsServiceImpl logisticsService;
 
-    private Shipment shipment;
-    private Warehouse warehouse;
+    private User distributor;
+    private ProductionBatch sampleBatch;
+    private Shipment sampleShipment;
+    private Warehouse sampleWarehouse;
 
     @BeforeEach
     void setUp() {
-        User distributor = new User();
+        // Setup Distributor
+        distributor = new User();
         distributor.setUserId(2L);
+        distributor.setName("Joshna");
 
-        ProductionBatch batch = new ProductionBatch();
-        batch.setQuantity(100.0);
-        batch.setProductionId(50L);
+        // Setup Batch
+        sampleBatch = new ProductionBatch();
+        sampleBatch.setProductionId(50L);
+        sampleBatch.setQuantity(100.0);
+        sampleBatch.setQualityStatus(QualityStatus.PASSED);
 
-        warehouse = new Warehouse();
-        warehouse.setWarehouseId(1L);
-        warehouse.setCapacity(200L);
-        warehouse.setCurrentStockLevel(50.0);
-        warehouse.setDistributor(distributor);
+        // Setup Warehouse
+        sampleWarehouse = new Warehouse();
+        sampleWarehouse.setWarehouseId(10L);
+        sampleWarehouse.setCapacity(200L);
+        sampleWarehouse.setCurrentStockLevel(50.0);
+        sampleWarehouse.setDistributor(distributor);
+        sampleWarehouse.setStatus(WarehouseStatus.AVAILABLE);
 
-        shipment = new Shipment();
-        shipment.setShipmentId(1L);
-        shipment.setBatch(batch);
-        shipment.setDistributor(distributor);
+        // Setup Shipment
+        sampleShipment = new Shipment();
+        sampleShipment.setShipmentId(1L);
+        sampleShipment.setBatch(sampleBatch);
+        sampleShipment.setDistributor(distributor);
+        sampleShipment.setStatus(ShipmentStatus.IN_TRANSIT);
     }
 
     @Test
     @DisplayName("Initiate Shipment - Fails on Non-Compliant Quality")
     void testInitiateShipment_NonCompliant_ThrowsException() {
-        sampleBatch.setQualityStatus(QualityStatus.REJECTED); // FIXED: Use QualityStatus Enum
-        when(batchRepository.findById(501L)).thenReturn(Optional.of(sampleBatch));
-        when(userRepository.findById(201L)).thenReturn(Optional.of(sampleDistributor));
+        sampleBatch.setQualityStatus(QualityStatus.REJECTED);
+        ShipmentRequestDTO request = new ShipmentRequestDTO();
+        request.setBatchId(50L);
+        request.setDistributorId(2L);
+
+        when(batchRepository.findById(50L)).thenReturn(Optional.of(sampleBatch));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(distributor));
 
         assertThrows(EntityNotFoundException.class, () -> {
-            logisticsService.initiateShipment(shipmentRequest);
+            logisticsService.initiateShipment(request);
         });
     }
 
     @Test
-    @DisplayName("Record Delivery - Fails when Warehouse Status is Full")
-    void testRecordDelivery_WarehouseFull_ThrowsException() {
-        // 1. Setup Warehouse
-        Warehouse fullWarehouse = new Warehouse();
-        fullWarehouse.setWarehouseId(10L);
-        fullWarehouse.setStatus(WarehouseStatus.FULL);
-        fullWarehouse.setCapacity(1000L);
-        fullWarehouse.setCurrentStockLevel(1000.0);
-
-        // 2. Setup DTO with ALL required IDs to avoid Objects.requireNonNull NPE
-        DeliveryRequestDTO request = new DeliveryRequestDTO();
-        request.setWarehouseId(10L);
-        request.setShipmentId(100L); // Added
-        request.setRetailerId(301L); // Added
-
-        // 3. Mock all three required lookups
-        when(warehouseRepository.findById(10L)).thenReturn(Optional.of(fullWarehouse));
+    @DisplayName("Update Shipment Status - Throws Exception When Capacity Exceeded")
+    void testUpdateShipmentStatus_CapacityExceeded() {
+        // Arrange: 150 (current) + 100 (batch) = 250 (Exceeds 200 capacity)
+        sampleWarehouse.setCurrentStockLevel(150.0);
         
-        // Mocking Shipment (needed because recordDelivery fetches it immediately)
-        Shipment mockShipment = new Shipment();
-        mockShipment.setBatch(sampleBatch); 
-        when(shipmentRepository.findById(100L)).thenReturn(Optional.of(mockShipment));
-
-        // Mocking Retailer
-        when(userRepository.findById(301L)).thenReturn(Optional.of(new User()));
-
-        // Note: Based on your current service code, this will NOT throw WarehouseCapacityException
-        // because recordDelivery REDUCES stock. 
-        // If you want to test the Capacity Exception, you should test 'updateShipmentStatus'.
-        assertDoesNotThrow(() -> {
-            logisticsService.recordDelivery(request);
-        });
-    }
-
-    @SuppressWarnings("null")
-    @Test
-    @DisplayName("Record Delivery - Success Updates Inventory and Traceability")
-    void testRecordDelivery_Success() {
-        Warehouse availableWarehouse = new Warehouse();
-        availableWarehouse.setStatus(WarehouseStatus.AVAILABLE);
-        availableWarehouse.setCapacity(5000L);
-
-        Shipment activeShipment = new Shipment();
-        activeShipment.setShipmentId(100L);
-        activeShipment.setBatch(sampleBatch);
-        activeShipment.setDistributor(sampleDistributor);
-        activeShipment.setStatus(ShipmentStatus.IN_TRANSIT);
-
-        User retailer = new User();
-        retailer.setUserId(301L);
-        retailer.setRole(Role.RETAILER);
-
-        DeliveryRequestDTO request = new DeliveryRequestDTO();
-        request.setWarehouseId(10L);
-        request.setShipmentId(100L);
-        request.setRetailerId(301L);
-        request.setDeliveryDate(LocalDate.now());
-
-        when(warehouseRepository.findById(10L)).thenReturn(Optional.of(availableWarehouse));
-        when(shipmentRepository.findById(100L)).thenReturn(Optional.of(activeShipment));
-        when(userRepository.findById(301L)).thenReturn(Optional.of(retailer));
-
-        logisticsService.recordDelivery(request);
-
-        // FIXED: Assertion uses Enum
-        assertEquals(ShipmentStatus.DELIVERED, activeShipment.getStatus());
-        verify(inventoryRepository, times(1)).save(any(Inventory.class));
-        verify(traceRecordRepository, times(1)).save(any(TraceRecord.class));
-        verify(deliveryRepository, times(1)).save(any(Delivery.class));
-    }
-
-    @Test
-    void testUpdateShipmentStatus_ThrowsExceptionWhenCapacityExceeded() {
-        // Arrange: Initial 150 + Batch 100 = 250 (Exceeds 200 capacity)
-        warehouse.setCurrentStockLevel(150.0);
         ShipmentStatusUpdateRequest request = new ShipmentStatusUpdateRequest();
         request.setStatus(ShipmentStatus.DELIVERED);
+        request.setWarehouseId(10L); // Set the ID as required by new logic
 
-        when(shipmentRepository.findById(1L)).thenReturn(Optional.of(shipment));
-        when(warehouseRepository.findByDistributor_UserId(2L)).thenReturn(List.of(warehouse));
+        when(shipmentRepository.findById(1L)).thenReturn(Optional.of(sampleShipment));
+        when(warehouseRepository.findById(10L)).thenReturn(Optional.of(sampleWarehouse));
 
         // Act & Assert
         assertThrows(WarehouseCapacityException.class, () -> {
             logisticsService.updateShipmentStatus(1L, request);
         });
+    }
+
+    @Test
+    @DisplayName("Update Shipment Status - Throws IllegalStateException on Unauthorized Warehouse")
+    void testUpdateShipmentStatus_UnauthorizedWarehouse() {
+        User rogueDistributor = new User();
+        rogueDistributor.setUserId(99L); // Different ID
+        sampleWarehouse.setDistributor(rogueDistributor);
+
+        ShipmentStatusUpdateRequest request = new ShipmentStatusUpdateRequest();
+        request.setStatus(ShipmentStatus.DELIVERED);
+        request.setWarehouseId(10L);
+
+        when(shipmentRepository.findById(1L)).thenReturn(Optional.of(sampleShipment));
+        when(warehouseRepository.findById(10L)).thenReturn(Optional.of(sampleWarehouse));
+
+        assertThrows(IllegalStateException.class, () -> {
+            logisticsService.updateShipmentStatus(1L, request);
+        });
+    }
+
+    @Test
+    @DisplayName("Record Delivery - Success Updates Inventory and Traceability")
+    void testRecordDelivery_Success() {
+        // Setup Retailer
+        User retailer = new User();
+        retailer.setUserId(301L);
+
+        DeliveryRequestDTO request = new DeliveryRequestDTO();
+        request.setWarehouseId(10L);
+        request.setShipmentId(1L);
+        request.setRetailerId(301L);
+        request.setDeliveryDate(LocalDate.now());
+
+        when(warehouseRepository.findById(10L)).thenReturn(Optional.of(sampleWarehouse));
+        when(shipmentRepository.findById(1L)).thenReturn(Optional.of(sampleShipment));
+        when(userRepository.findById(301L)).thenReturn(Optional.of(retailer));
+
+        logisticsService.recordDelivery(request);
+
+        assertEquals(ShipmentStatus.DELIVERED, sampleShipment.getStatus());
+        verify(inventoryRepository, times(1)).save(any(Inventory.class));
+        verify(traceRecordRepository, times(1)).save(any(TraceRecord.class));
+        verify(deliveryRepository, times(1)).save(any(Delivery.class));
     }
 }
