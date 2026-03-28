@@ -1,6 +1,7 @@
 package com.cts.foodchainx.controller;
 
 import com.cts.foodchainx.model.Audit;
+import com.cts.foodchainx.model.ComplianceRecord;
 import com.cts.foodchainx.service.AuditService;
 
 import org.springframework.http.HttpStatus;
@@ -60,5 +61,12 @@ public class AuditController {
     @PreAuthorize("hasAnyRole('REGULATOR', 'ADMIN')")
     public Audit closeAudit(@PathVariable @NonNull Long id) {
         return auditService.closeAudit(id);
+    }
+
+    @PutMapping("/{id}/finalize")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('REGULATOR')")
+    public Audit finalizeAudit(@PathVariable @NonNull Long id, @RequestBody ComplianceRecord record) {
+        return auditService.finalizeAudit(id, record);
     }
 }

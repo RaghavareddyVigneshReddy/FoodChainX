@@ -12,6 +12,7 @@ import com.cts.foodchainx.dto.batch.BatchDetailResponseDto;
 import com.cts.foodchainx.dto.batch.BatchRequestDto;
 import com.cts.foodchainx.dto.batch.BatchResponseDto;
 import com.cts.foodchainx.dto.quality.QualityRequestDto;
+import com.cts.foodchainx.enums.CertificationStatus;
 import com.cts.foodchainx.enums.QualityStatus;
 import com.cts.foodchainx.enums.TraceStatus;
 import com.cts.foodchainx.exception.BatchNotFoundException;
@@ -55,7 +56,7 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
      * <p>Creates a batch and an initial 'HARVESTED' trace record in a single transaction.</p>
      */
     @SuppressWarnings("null")
-@Override
+        @Override
     @Transactional
     @Auditable(action = "HARVEST_BATCH", resource = "PRODUCTION_BATCH")
     public BatchResponseDto createBatch(@NonNull BatchRequestDto dto) {
@@ -63,6 +64,11 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
         
         Farm farm = farmRepository.findById(dto.getFarmId())
                 .orElseThrow(() -> new FarmNotFoundException(dto.getFarmId()));
+
+        if (farm.getCertificationStatus() != CertificationStatus.APPROVED) {
+                throw new IllegalStateException("Harvest blocked: Farm status is " + 
+                farm.getCertificationStatus() + ". An APPROVED regulatory audit is required.");
+    }
 
         ProductionBatch batch = ProductionBatch.builder()
                 .farm(farm)
@@ -97,6 +103,10 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
         ProductionBatch batch = batchRepository.findById(dto.getBatchId())
                 .orElseThrow(() -> new EntityNotFoundException("Batch not found"));
 
+        if (batch.getQualityStatus() != QualityStatus.PENDING) {
+                throw new IllegalStateException("Quality check already finalized for Batch ID: " + dto.getBatchId());
+        }
+
         User inspectorUser = userRepository.findById(dto.getInspectorId())
                 .orElseThrow(() -> new EntityNotFoundException("Inspector not found"));
 
@@ -124,6 +134,7 @@ public class ProductionBatchServiceImpl implements ProductionBatchService {
         qualityTrace.setDate(LocalDate.now());
         traceRecordRepository.save(qualityTrace);
 
+        log.info("Batch {} finalized with status {}", batch.getProductionId(), dto.getStatus());
         return "Inspection completed. Trace updated to " + traceStatus;
     }
 

@@ -12,4 +12,5 @@ import lombok.Data;
 public class ShipmentStatusUpdateRequest {
     /** The new status string to be applied to the shipment record */
     private ShipmentStatus status;
+    Long warehouseId;
 }

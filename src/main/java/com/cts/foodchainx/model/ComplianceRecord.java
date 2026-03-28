@@ -7,6 +7,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.Map;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import com.cts.foodchainx.enums.ComplianceResult;
 import com.cts.foodchainx.enums.ComplianceType;
@@ -65,6 +69,10 @@ public class ComplianceRecord {
      */
     @Column(name = "Date", nullable = false)
     private LocalDate date;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "metadata", columnDefinition = "json")
+    private Map<String, Object> metadata;
 
     /**
      * Detailed observations or remarks provided by the regulator during the audit.
