@@ -123,23 +123,42 @@ public class LogisticsServiceImpl implements LogisticsService {
         shipment.setStatus(request.getStatus());
 
         if (request.getStatus() == ShipmentStatus.DELIVERED) {
-            Warehouse warehouse = warehouseRepository.findByDistributor_UserId(shipment.getDistributor().getUserId())
-                    .stream().findFirst()
-                    .orElseThrow(() -> new EntityNotFoundException("No warehouse found for distributor"));
+            // 1. Fetch the Warehouse
+            Warehouse warehouse = warehouseRepository.findById(request.getWarehouseId())
+            .orElseThrow(() -> new EntityNotFoundException("Warehouse with ID " + request.getWarehouseId() + " not found"));
+
+            if (!warehouse.getDistributor().getUserId().equals(shipment.getDistributor().getUserId())) {
+                throw new IllegalStateException("Unauthorized: This warehouse does not belong to the shipment distributor.");
+            }
 
             double incomingQty = shipment.getBatch().getQuantity();
+            
+            // 2. Calculate Available Space
+            double availableSpace = warehouse.getCapacity() - warehouse.getCurrentStockLevel();
+
+            // 3. Validation: Check if batch fits in remaining capacity
+            if (incomingQty > availableSpace) {
+                log.error("Warehouse {} capacity exceeded. Available: {}, Incoming: {}", 
+                        warehouse.getWarehouseId(), availableSpace, incomingQty);
+                throw new WarehouseCapacityException("Cannot receive shipment: Incoming quantity (" 
+                        + incomingQty + ") exceeds available space (" + availableSpace + ")");
+            }
+
+            // 4. Update Stock Level
             double updatedStock = warehouse.getCurrentStockLevel() + incomingQty;
-
-            if (updatedStock > (double) warehouse.getCapacity()) {
-                throw new WarehouseCapacityException("Cannot receive shipment: Warehouse capacity exceeded");
-            }
-
             warehouse.setCurrentStockLevel(updatedStock);
-            if (updatedStock == (double) warehouse.getCapacity()) {
+
+            // 5. Update Warehouse Status automatically
+            if (updatedStock >= (double) warehouse.getCapacity()) {
                 warehouse.setStatus(WarehouseStatus.FULL);
+                log.info("Warehouse {} is now FULL.", warehouse.getWarehouseId());
+            } else {
+                warehouse.setStatus(WarehouseStatus.AVAILABLE);
             }
+            
             warehouseRepository.save(warehouse);
 
+            // 6. Update Traceability status
             traceRecordRepository.findByProductionBatch_ProductionIdOrderByDateDescTraceIdDesc(shipment.getBatch().getProductionId())
                 .stream().findFirst().ifPresent(trace -> {
                     trace.setStatus(TraceStatus.ARRIVED_AT_WAREHOUSE);
@@ -236,6 +255,7 @@ public class LogisticsServiceImpl implements LogisticsService {
                 .warehouseId(w.getWarehouseId())
                 .location(w.getLocation())
                 .capacity(w.getCapacity())
+                .currentStockLevel(w.getCurrentStockLevel().longValue())
                 .status(w.getStatus())
                 .build();
     }

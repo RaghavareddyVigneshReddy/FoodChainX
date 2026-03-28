@@ -36,11 +36,18 @@ public class ComplianceRecordServiceImpl implements ComplianceRecordService {
     @Override
     @Auditable(action = "CREATE_COMPLIANCE_RECORD", resource = "COMPLIANCE")
     public ComplianceRecord createComplianceRecord(ComplianceRecord complianceRecord) {
-        complianceRecord.setDate(LocalDate.now());
+        if (complianceRecord.getDate() == null) {
+            complianceRecord.setDate(LocalDate.now());
+        }
         
+        // Logic: If metadata contains 'detailedNotes', sync it to the 'notes' field for legacy support
+        if (complianceRecord.getMetadata() != null && complianceRecord.getMetadata().containsKey("detailedNotes")) {
+            complianceRecord.setNotes(complianceRecord.getMetadata().get("detailedNotes").toString());
+        }
+
         ComplianceRecord savedRecord = complianceRecordRepository.save(complianceRecord);
         log.info("Regulator created a new {} compliance record for Entity: {}", 
-                 savedRecord.getType(), savedRecord.getEntityId());
+                savedRecord.getType(), savedRecord.getEntityId());
         
         return savedRecord;
     }

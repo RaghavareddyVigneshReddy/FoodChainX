@@ -1,6 +1,8 @@
 package com.cts.foodchainx.service;
 
 import com.cts.foodchainx.model.Audit;
+import com.cts.foodchainx.model.ComplianceRecord;
+
 import org.springframework.lang.NonNull;
 
 /**
@@ -40,4 +42,12 @@ public interface AuditService {
      * @throws jakarta.persistence.EntityNotFoundException if no audit exists with the given ID.
      */
     Audit closeAudit(@NonNull Long auditId);
+
+    /**
+     * Finalizes an audit and automatically generates a permanent Compliance Record.
+     * * @param auditId The ID of the audit to close.
+     * @param complianceRecord The structured compliance data (result, metadata, etc.)
+     * @return The updated Audit entity.
+     */
+    Audit finalizeAudit(@NonNull Long auditId, ComplianceRecord complianceRecord);
 }

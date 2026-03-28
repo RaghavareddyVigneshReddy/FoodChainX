@@ -2,11 +2,18 @@ package com.cts.foodchainx.serviceimpl;
 
 import com.cts.foodchainx.aspect.Auditable;
 import com.cts.foodchainx.enums.AuditStatus;
+import com.cts.foodchainx.enums.CertificationStatus;
+import com.cts.foodchainx.enums.ComplianceResult;
+import com.cts.foodchainx.enums.ComplianceType;
 import com.cts.foodchainx.exception.AuditNotFoundException;
 import com.cts.foodchainx.model.Audit;
+import com.cts.foodchainx.model.ComplianceRecord;
 import com.cts.foodchainx.repository.AuditRepository;
 import com.cts.foodchainx.service.AuditService;
+import com.cts.foodchainx.service.ComplianceRecordService;
+import com.cts.foodchainx.service.FarmService;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,6 +36,8 @@ import java.time.LocalDate;
 public class AuditServiceImpl implements AuditService {
 
     private final AuditRepository auditRepository;
+    private final ComplianceRecordService complianceRecordService;
+    private final FarmService farmService;
 
     /**
      * Initiates a new audit process and persists it to the database.
@@ -63,16 +72,55 @@ public class AuditServiceImpl implements AuditService {
      * @return The updated {@link Audit} entity.
      * @throws RuntimeException if no audit record is found for the given ID.
      */
+    /**
+     * Updated to finalize the process and create a permanent record.
+     */
     @Override
-    @Auditable(action = "CLOSE_AUDIT_RECORD", resource = "AUDIT_PROCESS")
-    public Audit closeAudit(@NonNull Long auditId) {
-        log.info("Closing Audit record with ID: {}", auditId);
-        
+    @Transactional
+    @Auditable(action = "FINALIZE_AUDIT_PROCESS", resource = "AUDIT_COMPLIANCE")
+    public Audit finalizeAudit(@NonNull Long auditId, ComplianceRecord complianceRecord) {
+        log.info("Finalizing Audit ID: {} and generating Compliance Record for Entity: {}", 
+                auditId, complianceRecord.getEntityId());
+
+        // 1. Fetch the existing Audit
         Audit audit = auditRepository.findById(auditId)
                 .orElseThrow(() -> new AuditNotFoundException(auditId));
 
-        audit.setStatus(AuditStatus.CLOSED);
+        // 2. Prevent re-finalizing a closed audit
+        if (audit.getStatus() == AuditStatus.CLOSED) {
+            throw new IllegalStateException("Audit with ID " + auditId + " is already CLOSED.");
+        }
 
+        // 3. Update Audit Status and sync findings
+        audit.setStatus(AuditStatus.CLOSED);
+        if (complianceRecord.getNotes() != null) {
+            audit.setFindings(complianceRecord.getNotes());
+        }
+        auditRepository.save(audit);
+
+        // 4. Delegate to Compliance Service to save the record
+        complianceRecordService.createComplianceRecord(complianceRecord);
+
+        // 5. AUTOMATION: Update Farm Status
+        // We check if the type is FARMER and update the status based on the result
+        if (complianceRecord.getType() == ComplianceType.FARMER) {
+            CertificationStatus newStatus = (complianceRecord.getResult() == ComplianceResult.PASSED) 
+                                            ? CertificationStatus.APPROVED 
+                                            : CertificationStatus.REJECTED;
+            
+            log.info("Automating Farm Status update to {} for Entity ID: {}", newStatus, complianceRecord.getEntityId());
+            farmService.updateStatus(complianceRecord.getEntityId(), newStatus);
+        }
+
+        return audit;
+    }
+
+    // Keep the old closeAudit for simple administrative closures if needed
+    @Override
+    public Audit closeAudit(@NonNull Long auditId) {
+        Audit audit = auditRepository.findById(auditId)
+                .orElseThrow(() -> new AuditNotFoundException(auditId));
+        audit.setStatus(AuditStatus.CLOSED);
         return auditRepository.save(audit);
     }
 }
